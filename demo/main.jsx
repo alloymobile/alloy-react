@@ -10,7 +10,7 @@ import App from "./App.jsx";
 import Cell from "./pages/Cell/Cell.jsx";           // now acts as Cell layout (with <Outlet/>)
 import Tissue from "./pages/Tissue.jsx";
 import Organ from "./pages/Organ.jsx";
-import IconPage from "./pages/cell/Icon.jsx";  // NEW
+import IconPage from "./pages/Cell/Icon.jsx";  // NEW
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
