@@ -2,19 +2,33 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// Toggle between demo (default) and library build using env var LIB=1
 const isLib = process.env.LIB === "1";
 
+/**
+ * One config for both:
+ * - LIB=1 vite build      -> builds the library to dist/
+ * - vite build            -> builds the demo    to dist/demo/
+ */
 export default defineConfig({
   plugins: [react()],
+
+  // Demo uses /demo as the root so index.html loads assets correctly in dev
   root: isLib ? process.cwd() : path.resolve(process.cwd(), "demo"),
+
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": path.resolve(__dirname, "src")
     },
+    // guard against duplicate React in dev (especially if linked locally)
+    dedupe: ["react", "react-dom"]
   },
+
+  // Make demo portable under any path (e.g., yoursite.com/dist/demo/)
+  base: isLib ? "/" : "./",
+
   build: isLib
     ? {
+        // -------- LIBRARY BUILD --------
         lib: {
           entry: path.resolve(__dirname, "src/index.jsx"),
           name: "alloy-react",
@@ -23,7 +37,8 @@ export default defineConfig({
           formats: ["es", "cjs"]
         },
         rollupOptions: {
-          external: ["react", "react-dom"],
+          // Critical: do NOT bundle React; also externalize the JSX runtime
+          external: ["react", "react-dom", "react/jsx-runtime"],
           output: {
             globals: {
               react: "React",
@@ -36,10 +51,13 @@ export default defineConfig({
         outDir: "dist"
       }
     : {
-        outDir: "dist-demo",
+        // -------- DEMO BUILD --------
+        outDir: "dist/demo",
         sourcemap: true,
-        emptyOutDir: true
+        // keep library files if you run build:lib before/after
+        emptyOutDir: false
       },
+
   server: {
     open: true,
     port: 5173
