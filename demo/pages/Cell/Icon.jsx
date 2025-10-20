@@ -83,20 +83,23 @@ export default function IconPage() {
 
       {/* Row 1 — Rendered icon (centered) */}
       <div className="row mb-1">
-        <div className="col-12 d-flex align-items-center justify-content-center" style={{ minHeight: 120 }}>
-          <AlloyIcon icon={new Icon({ iconClass: `${selected.iconClass} fa-3x` })} />
+        <div className="col-12 d-flex align-items-center justify-content-center">
+          <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
+            <code>{codeSample}</code>
+          </pre>
         </div>
       </div>
 
       {/* Row 2 — Two columns: Tag sample + Editable JSON */}
       <div className="row g-3 align-items-stretch mb-4">
-        <div className="col-12 col-lg-6">
-          <div className="fw-semibold mb-2">Tag Sample</div>
-          <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
-            <code>{codeSample}</code>
-          </pre>
+        <div className="col-12 col-lg-6 ">
+            <div className="text-center">
+                <span className="fw-semibold text-center">Icon</span>
+            </div>
+            <div className="d-flex justify-content-center align-items-center h-100">
+                <AlloyIcon icon={new Icon({ iconClass: `${selected.iconClass} fa-3x` })} />
+            </div>
         </div>
-
         <div className="col-12 col-lg-6">
           <div className="d-flex align-items-center justify-content-between mb-2">
             <span className="fw-semibold">Icon JSON (editable)</span>
