@@ -1,6 +1,6 @@
 // demo/pages/cell/Icon.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { AlloyIcon, Icon } from "../../../src";
+import { AlloyIcon, IconObject } from "../../../src";
 
 // Using the free FA metadata to build the icon list
 import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -25,7 +25,7 @@ const ALL_ICONS = [
 
 export default function IconPage() {
   const [selected, setSelected] = useState(
-    () => new Icon({ iconClass: (ALL_ICONS[0]?.cls) || "fa-solid fa-user" })
+    () => new IconObject({ iconClass: (ALL_ICONS[0]?.cls) || "fa-solid fa-user" })
   );
   const [jsonText, setJsonText] = useState(
     () => JSON.stringify({ id: selected.id, iconClass: selected.iconClass }, null, 2)
@@ -38,7 +38,7 @@ export default function IconPage() {
     setJsonError("");
   }, [selected]);
 
-  const codeSample = `<AlloyIcon icon={new Icon({ iconClass: "${selected.iconClass}" })} />`;
+  const codeSample = `<AlloyIcon icon={iconObject} />`;
 
   // Filter by name or class
   const filtered = useMemo(() => {
@@ -59,7 +59,7 @@ export default function IconPage() {
       if (!parsed.iconClass || typeof parsed.iconClass !== "string") {
         throw new Error(`Missing or invalid "iconClass".`);
       }
-      const next = new Icon({ id: parsed.id, iconClass: parsed.iconClass });
+      const next = new IconObject({ id: parsed.id, iconClass: parsed.iconClass });
       setSelected(next);
       setJsonError("");
     } catch (err) {
@@ -79,52 +79,58 @@ export default function IconPage() {
 
   return (
     <section id="icon" className="p-md-0">
-      <h3 className="mb-1 text-center">AlloyIcon</h3>
+ <h3 className="mb-1 text-center">AlloyIcon</h3>
 
-      {/* Row 1 — Rendered icon (centered) */}
-      <div className="row mb-1">
-        <div className="col-12 d-flex align-items-center justify-content-center">
-          <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
-            <code>{codeSample}</code>
-          </pre>
-        </div>
-      </div>
+  {/* Row 1 — Code sample (centered) */}
+  <div className="row mb-2">
+    <div className="col-12 d-flex align-items-center justify-content-center">
+      <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
+        <code>{codeSample}</code>
+      </pre>
+    </div>
+  </div>
 
-      {/* Row 2 — Two columns: Tag sample + Editable JSON */}
-      <div className="row g-3 align-items-stretch mb-4">
-        <div className="col-12 col-lg-6 ">
-            <div className="text-center">
-                <span className="fw-semibold text-center">Icon</span>
-            </div>
-            <div className="d-flex justify-content-center align-items-center h-100">
-                <AlloyIcon icon={new Icon({ iconClass: `${selected.iconClass} fa-3x` })} />
-            </div>
-        </div>
-        <div className="col-12 col-lg-6">
-          <div className="d-flex align-items-center justify-content-between mb-2">
-            <span className="fw-semibold">Icon JSON (editable)</span>
-            <button type="button" onClick={formatJson} className="btn btn-sm btn-outline-secondary">
-              <i className="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true" />
-              Format JSON
-            </button>
-          </div>
-          <textarea
-            className={`form-control font-monospace ${jsonError ? "is-invalid" : ""}`}
-            rows={8}
-            spellCheck={false}
-            value={jsonText}
-            onChange={handleJsonChange}
-            placeholder='{"iconClass":"fa-solid fa-user"}'
-          />
-          {jsonError ? (
-            <div className="invalid-feedback">{jsonError}</div>
-          ) : (
-            <div className="form-text">
-              Provide JSON with at least <code>iconClass</code>. Optional: <code>id</code>.
-            </div>
-          )}
-        </div>
+  {/* Row 2 — Rendered icon (centered) */}
+  <div className="row mb-3">
+    <div className="col-12 text-center">
+      <span className="fw-semibold d-block mb-2">Icon</span>
+      <div className="d-flex justify-content-center">
+        <AlloyIcon icon={new IconObject({ iconClass: `${selected.iconClass} fa-3x` })} />
       </div>
+    </div>
+  </div>
+
+  {/* Row 3 — Editable JSON (full width) */}
+  <div className="row mb-2">
+    <div className="col-12">
+      <div className="d-flex align-items-center justify-content-between mb-2">
+        <span className="fw-semibold">Icon JSON (editable)</span>
+        <button
+          type="button"
+          onClick={formatJson}
+          className="btn btn-sm btn-outline-secondary"
+        >
+          <i className="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true" />
+          Format JSON
+        </button>
+      </div>
+      <textarea
+        className={`form-control font-monospace ${jsonError ? "is-invalid" : ""}`}
+        rows={5}
+        spellCheck={false}
+        value={jsonText}
+        onChange={handleJsonChange}
+        placeholder='{"iconClass":"fa-solid fa-user"}'
+      />
+      {jsonError ? (
+        <div className="invalid-feedback">{jsonError}</div>
+      ) : (
+        <div className="form-text">
+          Provide JSON with at least <code>iconClass</code>. Optional: <code>id</code>.
+        </div>
+      )}
+    </div>
+    </div>
 
       {/* Search */}
       <div className="mb-3">
@@ -149,7 +155,7 @@ export default function IconPage() {
                 type="button"
                 className={`btn w-100 d-flex align-items-center justify-content-center py-3 ${active ? "btn-primary" : "btn-outline-secondary"}`}
                 title={it.name}
-                onClick={() => setSelected(new Icon({ iconClass: it.cls }))}
+                onClick={() => setSelected(new IconObject({ iconClass: it.cls }))}
               >
                 <i className={`${it.cls} fa-lg`} aria-hidden="true" />
               </button>

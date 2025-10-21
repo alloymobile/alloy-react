@@ -11,6 +11,9 @@ import Cell from "./pages/Cell/Cell.jsx";           // now acts as Cell layout (
 import Tissue from "./pages/Tissue.jsx";
 import Organ from "./pages/Organ.jsx";
 import IconPage from "./pages/Cell/Icon.jsx";  // NEW
+import LinkPage from "./pages/Cell/Link.jsx";
+import LinkIconPage from "./pages/Cell/LinkIcon.jsx";
+import LinkLogoPage from "./pages/Cell/LinkLogo.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -22,6 +25,9 @@ createRoot(document.getElementById("root")).render(
         <Route path="/cell" element={<Cell />}>
           <Route index element={<Navigate to="icon" replace />} />
           <Route path="icon" element={<IconPage />} />
+          <Route path="link" element={<LinkPage />} />
+          <Route path="link-icon" element={<LinkIconPage />} />
+          <Route path="link-logo" element={<LinkLogoPage />} />
         </Route>
 
         {/* Others (blank for now) */}

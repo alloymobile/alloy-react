@@ -12,7 +12,7 @@ function nextIconId() {
  * - id?: string  (auto-generated if omitted)
  * - iconClass: string  (Font Awesome classes, e.g., "fa-solid fa-user")
  */
-export class Icon {
+export class IconObject {
   /**
    * @param {{ id?: string, iconClass: string }} params
    */

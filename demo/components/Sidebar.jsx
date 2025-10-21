@@ -3,7 +3,11 @@ import { NavLink } from "react-router-dom";
 
 export default function Sidebar({ active }) {
   const items = active === "cell"
-    ? [{ label: "Icon", to: "/cell/icon", icon: "fa-solid fa-icons" }]
+    ? [ { label: "Icon", to: "/cell/icon", icon: "fa-solid fa-icons" },
+        { label: "Link", to: "/cell/link", icon: "fa-solid fa-link" },
+        { label: "LinkIcon", to: "/cell/link-icon", icon: "fa-solid fa-icons" },
+        { label: "LinkLogo", to: "/cell/link-logo", icon: "fa-solid fa-image" },
+    ]
     : [];
 
   return (
