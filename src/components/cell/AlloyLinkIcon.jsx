@@ -33,14 +33,13 @@ function useActiveClassIcon(className = "", active = "") {
 
 export class LinkIconObject {
   /**
-   * @param {{ id?: string, link: string, icon: Icon, name?: string, gap?: string|number, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
+   * @param {{ id?: string, link: string, icon: Icon, name?: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
    */
   constructor({
     id,
     href,
     icon,
     name,
-    gap = ".5rem",
     className,
     active,
     target,
@@ -53,9 +52,8 @@ export class LinkIconObject {
       throw new Error("LinkIconObject requires `icon` (Icon instance).");
     this.id = id ?? nextLinkIconId();
     this.href = href;
-    this.icon = icon;
+    this.icon = icon instanceof IconObject ? icon : new IconObject(icon);
     this.name = name; 
-    this.gap = gap;
     this.className = className ?? "";
     this.active = active ?? "";
     this.target = target;
@@ -90,15 +88,9 @@ export function AlloyLinkIcon({ linkIcon }) {
       title={linkIcon.title}
       {...events}
     >
-      <span
-        style={{
-          display: "inline-flex",
-          alignlinks: "center",
-          gap: hasLabel ? linkIcon.gap : 0,
-        }}
-      >
+      <span>
         <AlloyIcon icon={linkIcon.icon} />
-        {hasLabel && <span>{linkIcon.name}</span>}
+        {hasLabel && <span className="px-1">{linkIcon.name}</span>}
       </span>
     </a>
   );

@@ -38,7 +38,7 @@ export default function IconPage() {
     setJsonError("");
   }, [selected]);
 
-  const codeSample = `<AlloyIcon icon={iconObject} />`;
+  const codeSample = `<AlloyIcon icon={new IconObject(iconObject)} />`;
 
   // Filter by name or class
   const filtered = useMemo(() => {

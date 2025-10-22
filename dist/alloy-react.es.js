@@ -1,251 +1,468 @@
-import { jsx as c, jsxs as C } from "react/jsx-runtime";
-import { useRef as m, useState as l, useMemo as p } from "react";
-let w = 0;
-function v() {
-  return w += 1, `icon${w}`;
+import { jsx as d, jsxs as E } from "react/jsx-runtime";
+import { useRef as y, useState as h, useMemo as g, forwardRef as j, useImperativeHandle as D, useEffect as C } from "react";
+let A = 0;
+function _() {
+  return A += 1, `icon${A}`;
 }
-class A {
+class M {
   /**
    * @param {{ id?: string, iconClass: string }} params
    */
-  constructor({ id: s, iconClass: t }) {
-    if (!t) throw new Error("Icon requires iconClass");
-    this.id = s ?? v(), this.iconClass = t;
+  constructor({ id: e, iconClass: n }) {
+    if (!n) throw new Error("Icon requires iconClass");
+    this.id = e ?? _(), this.iconClass = n;
   }
 }
-function E({ icon: e }) {
-  if (!e) throw new Error("AlloyIcon requires `icon` prop (Icon instance).");
-  return /* @__PURE__ */ c("i", { id: e.id, className: e.iconClass, "aria-hidden": "true" });
+function N({ icon: s }) {
+  if (!s) throw new Error("AlloyIcon requires `icon` prop (Icon instance).");
+  return /* @__PURE__ */ d("i", { id: s.id, className: s.iconClass, "aria-hidden": "true" });
 }
-let g = 0;
-function M() {
-  return g += 1, `alloylink${g}`;
+let O = 0;
+function b() {
+  return O += 1, `alloylink${O}`;
 }
-function O(e = "", s = "") {
-  const [t, r] = l(!1), [o, n] = l(!1), [i, a] = l(!1);
+function $(s = "", e = "") {
+  const [n, r] = h(!1), [o, t] = h(!1), [i, l] = h(!1);
   return {
-    className: p(() => [e, (t || o || i) && s].filter(Boolean).join(" "), [e, s, t, o, i]),
+    className: g(() => [s, (n || o || i) && e].filter(Boolean).join(" "), [s, e, n, o, i]),
     events: {
       onMouseEnter: () => r(!0),
       onMouseLeave: () => {
-        r(!1), n(!1);
+        r(!1), t(!1);
       },
-      onMouseDown: () => n(!0),
-      onMouseUp: () => n(!1),
-      onFocus: () => a(!0),
-      onBlur: () => a(!1)
+      onMouseDown: () => t(!0),
+      onMouseUp: () => t(!1),
+      onFocus: () => l(!0),
+      onBlur: () => l(!1)
     }
   };
 }
-class q {
+class I {
   /**
    * @param {{ id?: string, name?: string, link: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e: any)=>void, title?: string }} p
    */
   constructor({
-    id: s,
-    name: t,
+    id: e,
+    name: n,
     href: r,
     className: o,
-    active: n,
+    active: t,
     target: i,
-    rel: a,
-    onClick: u,
-    title: h
+    rel: l,
+    onClick: c,
+    title: a
   }) {
     if (!r) throw new Error("LinkObject requires `href`.");
-    this.id = s ?? M(), this.name = t, this.href = r, this.className = o ?? "", this.active = n ?? "", this.target = i, this.rel = a, this.onClick = u, this.title = h;
+    this.id = e ?? b(), this.name = n, this.href = r, this.className = o ?? "", this.active = t ?? "", this.target = i, this.rel = l, this.onClick = c, this.title = a;
   }
 }
-function H({ link: e }) {
-  if (!e || !(e instanceof q))
+function se({ link: s }) {
+  if (!s || !(s instanceof I))
     throw new Error("AlloyLink requires `link` (LinkObject instance).");
-  if (!e.name) throw new Error("AlloyLink requires `link.name`.");
-  const s = m(e.id), { className: t, events: r } = O(e.className, e.active), o = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel;
-  return /* @__PURE__ */ c(
+  if (!s.name) throw new Error("AlloyLink requires `link.name`.");
+  const e = y(s.id), { className: n, events: r } = $(s.className, s.active), o = s.target === "_blank" ? s.rel ? `${s.rel} noopener noreferrer` : "noopener noreferrer" : s.rel;
+  return /* @__PURE__ */ d(
     "a",
     {
-      id: s.current,
-      href: e.href,
-      className: t,
-      target: e.target,
+      id: e.current,
+      href: s.href,
+      className: n,
+      target: s.target,
       rel: o,
-      onClick: e.onClick,
-      title: e.title,
+      onClick: s.onClick,
+      title: s.title,
       ...r,
-      children: /* @__PURE__ */ c("span", { children: e.name })
+      children: /* @__PURE__ */ d("span", { children: s.name })
     }
   );
 }
-let b = 0;
-function _() {
-  return b += 1, `alloylink${b}`;
+let F = 0;
+function H() {
+  return F += 1, `alloylink${F}`;
 }
-function N(e = "", s = "") {
-  const [t, r] = l(!1), [o, n] = l(!1), [i, a] = l(!1);
+function R(s = "", e = "") {
+  const [n, r] = h(!1), [o, t] = h(!1), [i, l] = h(!1);
   return {
-    className: p(
-      () => [e, (t || o || i) && s].filter(Boolean).join(" "),
-      [e, s, t, o, i]
+    className: g(
+      () => [s, (n || o || i) && e].filter(Boolean).join(" "),
+      [s, e, n, o, i]
     ),
     events: {
       onMouseEnter: () => r(!0),
       onMouseLeave: () => {
-        r(!1), n(!1);
+        r(!1), t(!1);
       },
-      onMouseDown: () => n(!0),
-      onMouseUp: () => n(!1),
-      onFocus: () => a(!0),
-      onBlur: () => a(!1)
+      onMouseDown: () => t(!0),
+      onMouseUp: () => t(!1),
+      onFocus: () => l(!0),
+      onBlur: () => l(!1)
     }
   };
 }
-class x {
+class P {
   /**
-   * @param {{ id?: string, link: string, icon: Icon, name?: string, gap?: string|number, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
+   * @param {{ id?: string, link: string, icon: Icon, name?: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
    */
   constructor({
-    id: s,
-    href: t,
+    id: e,
+    href: n,
     icon: r,
     name: o,
-    gap: n = ".5rem",
-    className: i,
-    active: a,
-    target: u,
-    rel: h,
-    onClick: f,
-    title: d
+    className: t,
+    active: i,
+    target: l,
+    rel: c,
+    onClick: a,
+    title: w
   }) {
-    if (!t) throw new Error("LinkIconObject requires `href`.");
-    if (!r || !(r instanceof A))
+    if (!n) throw new Error("LinkIconObject requires `href`.");
+    if (!r || !(r instanceof M))
       throw new Error("LinkIconObject requires `icon` (Icon instance).");
-    this.id = s ?? _(), this.href = t, this.icon = r, this.name = o, this.gap = n, this.className = i ?? "", this.active = a ?? "", this.target = u, this.rel = h, this.onClick = f, this.title = d;
+    this.id = e ?? H(), this.href = n, this.icon = r instanceof M ? r : new M(r), this.name = o, this.className = t ?? "", this.active = i ?? "", this.target = l, this.rel = c, this.onClick = a, this.title = w;
   }
 }
-function P({ linkIcon: e }) {
-  if (!e || !(e instanceof x))
+function ne({ linkIcon: s }) {
+  if (!s || !(s instanceof P))
     throw new Error("AlloyLinkIcon requires `linkIcon` (LinkIconObject instance).");
-  const s = m(e.id), { className: t, events: r } = N(e.className, e.active), o = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel, n = !!e.name;
-  return /* @__PURE__ */ c(
+  const e = y(s.id), { className: n, events: r } = R(s.className, s.active), o = s.target === "_blank" ? s.rel ? `${s.rel} noopener noreferrer` : "noopener noreferrer" : s.rel, t = !!s.name;
+  return /* @__PURE__ */ d(
     "a",
     {
-      id: s.current,
-      href: e.href,
-      className: t,
-      target: e.target,
+      id: e.current,
+      href: s.href,
+      className: n,
+      target: s.target,
       rel: o,
-      onClick: e.onClick,
-      title: e.title,
+      onClick: s.onClick,
+      title: s.title,
       ...r,
-      children: /* @__PURE__ */ C(
-        "span",
-        {
-          style: {
-            display: "inline-flex",
-            alignlinks: "center",
-            gap: n ? e.gap : 0
-          },
-          children: [
-            /* @__PURE__ */ c(E, { icon: e.icon }),
-            n && /* @__PURE__ */ c("span", { children: e.name })
-          ]
-        }
-      )
+      children: /* @__PURE__ */ E("span", { children: [
+        /* @__PURE__ */ d(N, { icon: s.icon }),
+        t && /* @__PURE__ */ d("span", { className: "px-1", children: s.name })
+      ] })
     }
   );
 }
-let y = 0;
-function B() {
-  return y += 1, `alloylink${y}`;
+let K = 0;
+function T() {
+  return K += 1, `alloylink${K}`;
 }
-function I(e = "", s = "") {
-  const [t, r] = l(!1), [o, n] = l(!1), [i, a] = l(!1);
+function z(s = "", e = "") {
+  const [n, r] = h(!1), [o, t] = h(!1), [i, l] = h(!1);
   return {
-    className: p(
-      () => [e, (t || o || i) && s].filter(Boolean).join(" "),
-      [e, s, t, o, i]
+    className: g(
+      () => [s, (n || o || i) && e].filter(Boolean).join(" "),
+      [s, e, n, o, i]
     ),
     events: {
       onMouseEnter: () => r(!0),
       onMouseLeave: () => {
-        r(!1), n(!1);
+        r(!1), t(!1);
       },
-      onMouseDown: () => n(!0),
-      onMouseUp: () => n(!1),
-      onFocus: () => a(!0),
-      onBlur: () => a(!1)
+      onMouseDown: () => t(!0),
+      onMouseUp: () => t(!1),
+      onFocus: () => l(!0),
+      onBlur: () => l(!1)
     }
   };
 }
-class $ {
+class G {
   /**
    * @param {{ id?: string, name?: string, link: string, logo: string, width?: number|string, height?: number|string, logoAlt?: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
    */
   constructor({
-    id: s,
-    name: t,
+    id: e,
+    name: n,
     href: r,
     logo: o,
-    width: n,
+    width: t,
     height: i,
-    logoAlt: a = "",
-    className: u,
-    active: h,
-    target: f,
-    rel: d,
-    onClick: L,
-    title: j
+    logoAlt: l = "",
+    className: c,
+    active: a,
+    target: w,
+    rel: u,
+    onClick: f,
+    title: v
   }) {
     if (!r) throw new Error("LinkLogoObject requires `href`.");
     if (!o) throw new Error("LinkLogoObject requires `logo`.");
-    this.id = s ?? B(), this.name = t, this.href = r, this.logo = o, this.width = n, this.height = i, this.logoAlt = a, this.className = u ?? "", this.active = h ?? "", this.target = f, this.rel = d, this.onClick = L, this.title = j;
+    this.id = e ?? T(), this.name = n, this.href = r, this.logo = o, this.width = t, this.height = i, this.logoAlt = l, this.className = c ?? "", this.active = a ?? "", this.target = w, this.rel = u, this.onClick = f, this.title = v;
   }
 }
-function U({ linkLogo: e }) {
-  if (!e || !(e instanceof $))
+function oe({ linkLogo: s }) {
+  if (!s || !(s instanceof G))
     throw new Error("AlloyLinkLogo requires `linkLogo` (LinkLogoObject instance).");
-  const s = m(e.id), { className: t, events: r } = I(e.className, e.active), o = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel, n = !!e.name;
-  return /* @__PURE__ */ c(
+  const e = y(s.id), { className: n, events: r } = z(s.className, s.active), o = s.target === "_blank" ? s.rel ? `${s.rel} noopener noreferrer` : "noopener noreferrer" : s.rel, t = !!s.name;
+  return /* @__PURE__ */ d(
     "a",
     {
-      id: s.current,
-      href: e.href,
-      className: t,
-      target: e.target,
+      id: e.current,
+      href: s.href,
+      className: n,
+      target: s.target,
       rel: o,
-      onClick: e.onClick,
-      title: e.title,
+      onClick: s.onClick,
+      title: s.title,
       ...r,
-      children: /* @__PURE__ */ C(
-        "span",
-        {
-          style: { display: "inline-flex", alignItems: "center", gap: ".6rem" },
-          children: [
-            /* @__PURE__ */ c(
-              "img",
-              {
-                src: e.logo,
-                alt: e.logoAlt || e.name,
-                width: e.width,
-                height: e.height,
-                style: { display: "inline-block" }
-              }
-            ),
-            n && /* @__PURE__ */ c("span", { children: e.name })
-          ]
-        }
-      )
+      children: /* @__PURE__ */ E("span", { children: [
+        /* @__PURE__ */ d(
+          "img",
+          {
+            src: s.logo,
+            alt: s.logoAlt || s.name,
+            width: s.width,
+            height: s.height,
+            style: { display: "inline-block" }
+          }
+        ),
+        t && /* @__PURE__ */ d("span", { className: "px-1", children: s.name })
+      ] })
     }
   );
 }
+let q = 0;
+function J() {
+  return q += 1, `alloybtn${q}`;
+}
+function Q(s = "", e = "") {
+  const [n, r] = h(!1), [o, t] = h(!1), [i, l] = h(!1);
+  return {
+    className: g(() => [s, (n || o || i) && e].filter(Boolean).join(" "), [s, e, n, o, i]),
+    events: {
+      onMouseEnter: () => r(!0),
+      onMouseLeave: () => {
+        r(!1), t(!1);
+      },
+      onMouseDown: () => t(!0),
+      onMouseUp: () => t(!1),
+      onFocus: () => l(!0),
+      onBlur: () => l(!1)
+    }
+  };
+}
+class V {
+  constructor(e) {
+    if (!e || !e.name) throw new Error("ButtonObject requires `name`.");
+    this.id = e.id ?? J(), this.name = e.name, this.className = e.className ?? "", this.active = e.active ?? "", this.disabled = !!e.disabled, this.title = e.title, this.ariaLabel = e.ariaLabel, this.tabIndex = e.tabIndex, this.onClick = e.onClick, this.onKeyDown = e.onKeyDown, this.onKeyUp = e.onKeyUp, this.onFocus = e.onFocus, this.onBlur = e.onBlur, this.onMouseEnter = e.onMouseEnter, this.onMouseLeave = e.onMouseLeave;
+  }
+}
+const re = j(function({ button: e, output: n }, r) {
+  if (!e || !(e instanceof V))
+    throw new Error("AlloyButton requires `button` (ButtonObject instance).");
+  const o = y(null), t = y(e.id), i = e.disabled, { className: l, events: c } = Q(e.className, e.active);
+  D(
+    r,
+    () => ({
+      el: o.current,
+      model: e,
+      focus: () => {
+        var u;
+        return (u = o.current) == null ? void 0 : u.focus();
+      },
+      click: () => {
+        var u;
+        return (u = o.current) == null ? void 0 : u.click();
+      }
+    }),
+    [e]
+  );
+  const a = (u, f) => (v) => {
+    f == null || f(v), n == null || n(e, v), u == null || u(v, e);
+  }, w = {
+    onClick: a(e.onClick),
+    onKeyDown: a(e.onKeyDown, c.onFocus),
+    onKeyUp: a(e.onKeyUp),
+    onFocus: a(e.onFocus, c.onFocus),
+    onBlur: a(e.onBlur, c.onBlur),
+    onMouseEnter: a(e.onMouseEnter, c.onMouseEnter),
+    onMouseLeave: a(e.onMouseLeave, c.onMouseLeave),
+    onMouseDown: a(void 0, c.onMouseDown),
+    onMouseUp: a(void 0, c.onMouseUp)
+  };
+  return /* @__PURE__ */ d(
+    "button",
+    {
+      id: t.current,
+      ref: o,
+      type: "button",
+      className: l,
+      title: e.title,
+      "aria-label": e.ariaLabel || e.name,
+      "aria-disabled": i || void 0,
+      disabled: i,
+      tabIndex: e.tabIndex,
+      ...w,
+      children: /* @__PURE__ */ d("span", { className: "px-2 align-middle", children: e.name })
+    }
+  );
+});
+let k = 0;
+function W() {
+  return k += 1, `alloybtnicon${k}`;
+}
+function X(s = "", e = "") {
+  const [n, r] = h(!1), [o, t] = h(!1), [i, l] = h(!1);
+  return {
+    className: g(() => [s, (n || o || i) && e].filter(Boolean).join(" "), [s, e, n, o, i]),
+    events: {
+      onMouseEnter: () => r(!0),
+      onMouseLeave: () => {
+        r(!1), t(!1);
+      },
+      onMouseDown: () => t(!0),
+      onMouseUp: () => t(!1),
+      onFocus: () => l(!0),
+      onBlur: () => l(!1)
+    }
+  };
+}
+class Y {
+  constructor(e) {
+    if (!e || !e.icon) throw new Error("ButtonIconObject requires `icon` (IconObject).");
+    this.id = e.id ?? W(), this.name = e.name, this.icon = e.icon instanceof M ? e.icon : new M(e.icon), this.className = e.className ?? "", this.active = e.active ?? "", this.disabled = !!e.disabled, this.title = e.title, this.ariaLabel = e.ariaLabel, this.tabIndex = e.tabIndex, this.onClick = e.onClick, this.onKeyDown = e.onKeyDown, this.onKeyUp = e.onKeyUp, this.onFocus = e.onFocus, this.onBlur = e.onBlur, this.onMouseEnter = e.onMouseEnter, this.onMouseLeave = e.onMouseLeave;
+  }
+}
+const te = j(function({ buttonIcon: e, output: n }, r) {
+  if (!e || !(e instanceof Y))
+    throw new Error("AlloyButtonIcon requires `buttonIcon` (ButtonIconObject instance).");
+  const o = y(null), t = y(e.id), i = e.disabled, { className: l, events: c } = X(e.className, e.active);
+  D(
+    r,
+    () => ({
+      el: o.current,
+      model: e,
+      focus: () => {
+        var f;
+        return (f = o.current) == null ? void 0 : f.focus();
+      },
+      click: () => {
+        var f;
+        return (f = o.current) == null ? void 0 : f.click();
+      }
+    }),
+    [e]
+  );
+  const a = (f, v) => (L) => {
+    v == null || v(L), n == null || n(e, L), f == null || f(L, e);
+  }, w = {
+    onClick: a(e.onClick),
+    onKeyDown: a(e.onKeyDown, c.onFocus),
+    onKeyUp: a(e.onKeyUp),
+    onFocus: a(e.onFocus, c.onFocus),
+    onBlur: a(e.onBlur, c.onBlur),
+    onMouseEnter: a(e.onMouseEnter, c.onMouseEnter),
+    onMouseLeave: a(e.onMouseLeave, c.onMouseLeave),
+    onMouseDown: a(void 0, c.onMouseDown),
+    onMouseUp: a(void 0, c.onMouseUp)
+  }, u = e.ariaLabel || e.name || "icon button";
+  return /* @__PURE__ */ E(
+    "button",
+    {
+      id: t.current,
+      ref: o,
+      type: "button",
+      className: l,
+      title: e.title,
+      "aria-label": u,
+      "aria-disabled": i || void 0,
+      disabled: i,
+      tabIndex: e.tabIndex,
+      ...w,
+      children: [
+        /* @__PURE__ */ d("span", { className: "d-inline-flex align-middle", children: /* @__PURE__ */ d(N, { icon: e.icon }) }),
+        e.name ? /* @__PURE__ */ d("span", { className: "px-2 align-middle", children: e.name }) : null
+      ]
+    }
+  );
+});
+let U = 0;
+function Z() {
+  return U += 1, `alloybtnsubmit${U}`;
+}
+class p {
+  constructor(e) {
+    if (!e || !e.name) throw new Error("ButtonSubmitObject requires `name`.");
+    if (!e.icon) throw new Error("ButtonSubmitObject requires `icon`.");
+    this.id = e.id ?? Z(), this.name = e.name, this.icon = e.icon instanceof M ? e.icon : new M(e.icon), this.className = e.className ?? "", this.disabled = !!e.disabled, this.loading = !!e.loading, this.title = e.title, this.ariaLabel = e.ariaLabel, this.tabIndex = e.tabIndex, this.onClick = e.onClick, this.onMouseDown = e.onMouseDown, this.onKeyDown = e.onKeyDown;
+  }
+}
+const ie = j(function({ buttonSubmit: e, output: n }, r) {
+  if (!e || !(e instanceof p))
+    throw new Error("AlloyButtonSubmit requires `buttonSubmit` (ButtonSubmitObject instance).");
+  const o = y(null), t = y(e.id), [i, l] = h(!!e.loading);
+  C(() => {
+    l(!!e.loading);
+  }, [e.loading]);
+  const c = e.disabled || i;
+  D(
+    r,
+    () => ({
+      el: o.current,
+      model: e,
+      focus: () => {
+        var m;
+        return (m = o.current) == null ? void 0 : m.focus();
+      },
+      click: () => {
+        var m;
+        return (m = o.current) == null ? void 0 : m.click();
+      }
+    }),
+    [e]
+  );
+  const a = y(!1);
+  C(() => {
+    i || (a.current = !1);
+  }, [i]);
+  const w = () => a.current || c ? !1 : (a.current = !0, e.loading = !0, e.disabled = !0, l(!0), !0), u = (m, B) => {
+    n == null || n(e, m), B == null || B(m, e);
+  }, f = (m) => {
+    w() && u(m, e.onClick);
+  }, v = (m) => {
+    w() && u(m, e.onMouseDown);
+  }, L = (m) => {
+    const B = m.key;
+    (B === "Enter" || B === " ") && w() && u(m, e.onKeyDown);
+  }, x = i;
+  return /* @__PURE__ */ E(
+    "button",
+    {
+      id: t.current,
+      ref: o,
+      type: "submit",
+      className: e.className,
+      title: e.title,
+      "aria-label": e.ariaLabel || e.name,
+      "aria-busy": i || void 0,
+      "aria-disabled": c || void 0,
+      disabled: c,
+      tabIndex: e.tabIndex,
+      onClick: f,
+      onMouseDown: v,
+      onKeyDown: L,
+      children: [
+        x && /* @__PURE__ */ d("span", { className: "d-inline-flex align-middle", children: /* @__PURE__ */ d(N, { icon: e.icon }) }),
+        /* @__PURE__ */ d("span", { className: x ? "px-2 align-middle" : "align-middle", children: e.name }),
+        i ? /* @__PURE__ */ d("span", { className: "ms-2 visually-hidden", "aria-live": "polite", children: "Loading…" }) : null
+      ]
+    }
+  );
+});
 export {
-  E as AlloyIcon,
-  H as AlloyLink,
-  P as AlloyLinkIcon,
-  U as AlloyLinkLogo,
-  A as IconObject,
-  x as LinkIconObject,
-  $ as LinkLogoObject,
-  q as LinkObject
+  re as AlloyButton,
+  te as AlloyButtonIcon,
+  ie as AlloyButtonSubmit,
+  N as AlloyIcon,
+  se as AlloyLink,
+  ne as AlloyLinkIcon,
+  oe as AlloyLinkLogo,
+  Y as ButtonIconObject,
+  V as ButtonObject,
+  p as ButtonSubmitObject,
+  M as IconObject,
+  P as LinkIconObject,
+  G as LinkLogoObject,
+  I as LinkObject
 };
 //# sourceMappingURL=alloy-react.es.js.map

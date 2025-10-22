@@ -33,7 +33,7 @@ export default function LinkIconPage() {
   }, [data]);
 
   // Normalize URL
-  const href = data?.href ?? data?.link ?? "#";
+  const href = data?.href ?? data?.href ?? "#";
 
   // Build LinkIconObject
   const linkIconObj = useMemo(
@@ -41,7 +41,7 @@ export default function LinkIconPage() {
     [data, href, iconInstance]
   );
 
-  const codeSample = `<AlloyLinkIcon linkIcon={linkIconObject} />`;
+  const codeSample = `<AlloyLinkIcon linkIcon={new LinkIconObject(linkIconObject)} />`;
 
   const formatJson = () => {
     try { setJsonText(JSON.stringify(JSON.parse(jsonText), null, 2)); } catch {}

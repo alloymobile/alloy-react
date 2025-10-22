@@ -28,7 +28,7 @@ export default function LinkPage() {
 
   const linkObj = useMemo(() => new LinkObject(data), [data]);
 
-  const codeSample = `<AlloyLink link={linkObject} />`;
+  const codeSample = `<AlloyLink link={new LinkObject(linkObject)} />`;
 
   const formatJson = () => {
     try { setJsonText(JSON.stringify(JSON.parse(jsonText), null, 2)); } catch {}

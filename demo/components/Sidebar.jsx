@@ -7,7 +7,10 @@ export default function Sidebar({ active }) {
         { label: "Link", to: "/cell/link", icon: "fa-solid fa-link" },
         { label: "LinkIcon", to: "/cell/link-icon", icon: "fa-solid fa-icons" },
         { label: "LinkLogo", to: "/cell/link-logo", icon: "fa-solid fa-image" },
-    ]
+        { label: "AlloyButton", to: "/cell/button", icon: "fa-solid fa-hand-pointer" }, 
+        { label: "AlloyButtonIcon", to: "/cell/button-icon", icon: "fa-solid fa-tablet-button" }, 
+        { label: "AlloyButtonSubmit", to: "/cell/button-submit", icon: "fa-solid fa-spinner" }, 
+      ]
     : [];
 
   return (

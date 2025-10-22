@@ -92,9 +92,7 @@ export function AlloyLinkLogo({ linkLogo }) {
       title={linkLogo.title}
       {...events}
     >
-      <span
-        style={{ display: "inline-flex", alignItems: "center", gap: ".6rem" }}
-      >
+      <span>
         <img
           src={linkLogo.logo}
           alt={linkLogo.logoAlt || linkLogo.name}
@@ -102,7 +100,7 @@ export function AlloyLinkLogo({ linkLogo }) {
           height={linkLogo.height}
           style={{ display: "inline-block" }}
         />
-        {hasLabel && <span>{linkLogo.name}</span>}
+        {hasLabel && <span className="px-1">{linkLogo.name}</span>}
       </span>
     </a>
   );

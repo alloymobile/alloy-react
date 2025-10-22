@@ -28,7 +28,7 @@ export default function LinkLogoPage() {
     }
   }, [jsonText]);
 
-  const href = data?.href ?? data?.link ?? "/";
+  const href = data?.href ?? data?.href ?? "/";
   const logoSrc = data?.logo ?? data?.logoSrc ?? "";
 
   const brand = useMemo(
@@ -36,7 +36,7 @@ export default function LinkLogoPage() {
     [data, href, logoSrc]
   );
 
-  const codeSample = `<AlloyLinkLogo linkLogo={linkLogoObject} />`;
+  const codeSample = `<AlloyLinkLogo linkLogo={new LinkLogoObject(linkLogoObject)} />`;
 
   const formatJson = () => {
     try { setJsonText(JSON.stringify(JSON.parse(jsonText), null, 2)); } catch {}

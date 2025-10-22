@@ -2,3 +2,6 @@ export { AlloyIcon, IconObject } from "./components/cell/AlloyIcon.jsx";
 export { AlloyLink, LinkObject } from "./components/cell/AlloyLink.jsx";
 export { AlloyLinkIcon, LinkIconObject } from "./components/cell/AlloyLinkIcon.jsx";
 export { AlloyLinkLogo, LinkLogoObject } from "./components/cell/AlloyLinkLogo.jsx";
+export { AlloyButton, ButtonObject } from "./components/cell/AlloyButton.jsx";
+export { AlloyButtonIcon, ButtonIconObject } from "./components/cell/AlloyButtonIcon.jsx";
+export { AlloyButtonSubmit, ButtonSubmitObject } from "./components/cell/AlloyButtonSubmit.jsx";
