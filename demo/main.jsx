@@ -17,6 +17,9 @@ import LinkLogoPage from "./pages/Cell/LinkLogo.jsx";
 import ButtonPage from "./pages/Cell/Button.jsx";
 import ButtonIconPage from "./pages/Cell/ButtonIcon.jsx";
 import ButtonSubmitPage from "./pages/Cell/ButtonSubmit.jsx";
+import InputPage from "./pages/Cell/Input.jsx";
+import InputIconPage from "./pages/Cell/InputIcon.jsx";
+import InputFloatingPage from "./pages/Cell/InputFloating.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -34,6 +37,9 @@ createRoot(document.getElementById("root")).render(
           <Route path="button" element={<ButtonPage />} />   
           <Route path="button-icon" element={<ButtonIconPage />} />   
           <Route path="button-submit" element={<ButtonSubmitPage />} /> 
+          <Route path="input" element={<InputPage />} /> 
+          <Route path="input-icon" element={<InputIconPage />} /> 
+          <Route path="input-floating" element={<InputFloatingPage />} />                     
         </Route>
 
         {/* Others (blank for now) */}

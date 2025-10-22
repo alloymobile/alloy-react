@@ -12,7 +12,7 @@ import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
 let __btnIconCounter = 0;
 function nextButtonIconId() {
   __btnIconCounter += 1;
-  return `alloybtnicon${__btnIconCounter}`;
+  return `alloyBtnicon${__btnIconCounter}`;
 }
 
 /* --------------- hover/press/focus → class merge --------------- */

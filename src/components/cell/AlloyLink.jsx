@@ -3,7 +3,7 @@ import React, { useMemo, useRef, useState } from "react";
 let __linkCounter = 0;
 function nextLinkId() {
   __linkCounter += 1;
-  return `alloylink${__linkCounter}`;
+  return `alloyLink${__linkCounter}`;
 }
 
 // ---- Active class hook ----

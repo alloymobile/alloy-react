@@ -4,7 +4,7 @@ import React from "react";
 let __iconCounter = 0;
 function nextIconId() {
   __iconCounter += 1;
-  return `icon${__iconCounter}`;
+  return `alloyIcon${__iconCounter}`;
 }
 
 /**

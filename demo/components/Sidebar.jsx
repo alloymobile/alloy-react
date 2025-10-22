@@ -10,6 +10,9 @@ export default function Sidebar({ active }) {
         { label: "AlloyButton", to: "/cell/button", icon: "fa-solid fa-hand-pointer" }, 
         { label: "AlloyButtonIcon", to: "/cell/button-icon", icon: "fa-solid fa-tablet-button" }, 
         { label: "AlloyButtonSubmit", to: "/cell/button-submit", icon: "fa-solid fa-spinner" }, 
+        { label: "AlloyInput", to: "/cell/input", icon: "fa-solid fa-arrows-down-to-line" }, 
+        { label: "AlloyInputIcon", to: "/cell/input-icon", icon: "fa-solid fa-box-open" }, 
+        { label: "AlloyInputFloating", to: "/cell/input-floating", icon: "fa-solid fa-calendar-days" }, 
       ]
     : [];
 
@@ -20,7 +23,7 @@ export default function Sidebar({ active }) {
         <div className="h5 mb-0">{active.charAt(0).toUpperCase() + active.slice(1)}</div>
       </div>
 
-      <nav className="nav flex-column p-2 bg-white">
+      <nav className="nav nav-pills nav-fill flex-column p-2">
         {items.length === 0 && (
           <div className="text-secondary small px-2 py-2">
             No items yet. We’ll add them as we design.

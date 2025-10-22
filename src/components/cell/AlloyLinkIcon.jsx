@@ -4,7 +4,7 @@ import { AlloyIcon,  IconObject } from "./AlloyIcon";
 let __iconLinkCounter = 0;
 function nextLinkIconId() {
   __iconLinkCounter += 1;
-  return `alloylink${__iconLinkCounter}`;
+  return `alloyLinkIcon${__iconLinkCounter}`;
 }
 
 function useActiveClassIcon(className = "", active = "") {

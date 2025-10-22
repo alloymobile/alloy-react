@@ -12,7 +12,7 @@ import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
 let __btnSubmitCounter = 0;
 function nextSubmitId() {
   __btnSubmitCounter += 1;
-  return `alloybtnsubmit${__btnSubmitCounter}`;
+  return `alloyBtnsubmit${__btnSubmitCounter}`;
 }
 
 /**

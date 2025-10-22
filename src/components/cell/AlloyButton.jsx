@@ -11,7 +11,7 @@ import React, {
 let __btnCounter = 0;
 function nextButtonId() {
   __btnCounter += 1;
-  return `alloybtn${__btnCounter}`;
+  return `alloyBtn${__btnCounter}`;
 }
 
 /* -------------------- hover/press/focus → class merge -------------------- */

@@ -5,3 +5,4 @@ export { AlloyLinkLogo, LinkLogoObject } from "./components/cell/AlloyLinkLogo.j
 export { AlloyButton, ButtonObject } from "./components/cell/AlloyButton.jsx";
 export { AlloyButtonIcon, ButtonIconObject } from "./components/cell/AlloyButtonIcon.jsx";
 export { AlloyButtonSubmit, ButtonSubmitObject } from "./components/cell/AlloyButtonSubmit.jsx";
+export { AlloyInput, InputObject } from "./components/cell/AlloyInput.jsx";

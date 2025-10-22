@@ -3,7 +3,7 @@ import React, { useMemo, useRef, useState } from "react";
 let __logoLinkCounter = 0;
 function nextLogoLinkId() {
   __logoLinkCounter += 1;
-  return `alloylink${__logoLinkCounter}`;
+  return `alloyLinkLogo${__logoLinkCounter}`;
 }
 
 function useActiveClassLogo(className = "", active = "") {
