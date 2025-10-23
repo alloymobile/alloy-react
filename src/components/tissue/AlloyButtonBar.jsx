@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+// src/components/tissue/AlloyButtonBar.jsx
+import React, { useEffect, useRef, useState } from "react";
 import AlloyButton, { ButtonObject } from "../cell/AlloyButton.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 
@@ -18,7 +19,7 @@ export class BarItem {
   }
 }
 
-/* ButtonBarObject (no inheritance) */
+/* ButtonBarObject (hydrates `buttons` by `type`, includes `selected`) */
 export class ButtonBarObject {
   /**
    * @param {{
@@ -27,24 +28,121 @@ export class ButtonBarObject {
    *   barName?: BarItem|object,
    *   type?: "AlloyButton"|"AlloyButtonIcon",
    *   buttonClass?: string,
-   *   buttons?: any[]
+   *   buttons?: any[],            // plain JSON or instances; hydrated here
+   *   selected?: string           // class name for selected item, e.g. "active"
    * }} p
    */
-  constructor({ id, className, barName, type, buttonClass, buttons } = {}) {
+  constructor({ id, className, barName, type, buttonClass, buttons, selected } = {}) {
     this.id = id ?? nextButtonBarId();
     this.className = className ?? "d-flex justify-content-center";
     this.barName = barName instanceof BarItem ? barName : new BarItem(barName ?? {});
     this.type = type ?? "AlloyButton";
     this.buttonClass = buttonClass ?? "nav-item";
-    this.buttons = Array.isArray(buttons) ? buttons.slice() : [];
+    this.selected = selected ?? "active";
+
+    const src = Array.isArray(buttons) ? buttons : [];
+    if (this.type === "AlloyButtonIcon") {
+      this.buttons = src.map((b) =>
+        b instanceof ButtonIconObject
+          ? b
+          : new ButtonIconObject({
+              id: b?.id,
+              name: b?.name,
+              icon: b?.icon, // ButtonIconObject will wrap plain {iconClass} into IconObject
+              className: b?.className,
+              active: b?.active,
+              disabled: b?.disabled,
+              title: b?.title,
+              ariaLabel: b?.ariaLabel,
+              tabIndex: b?.tabIndex,
+              onClick: b?.onClick,
+              onKeyDown: b?.onKeyDown,
+              onKeyUp: b?.onKeyUp,
+              onFocus: b?.onFocus,
+              onBlur: b?.onBlur,
+              onMouseEnter: b?.onMouseEnter,
+              onMouseLeave: b?.onMouseLeave,
+            })
+      );
+    } else {
+      // default: AlloyButton
+      this.buttons = src.map((b) =>
+        b instanceof ButtonObject
+          ? b
+          : new ButtonObject({
+              id: b?.id,
+              name: b?.name,
+              className: b?.className,
+              active: b?.active,
+              disabled: b?.disabled,
+              title: b?.title,
+              ariaLabel: b?.ariaLabel,
+              tabIndex: b?.tabIndex,
+              onClick: b?.onClick,
+              onKeyDown: b?.onKeyDown,
+              onKeyUp: b?.onKeyUp,
+              onFocus: b?.onFocus,
+              onBlur: b?.onBlur,
+              onMouseEnter: b?.onMouseEnter,
+              onMouseLeave: b?.onMouseLeave,
+            })
+      );
+    }
   }
+}
+
+/* Clone helper: return a NEW instance of the SAME CLASS with injected `active` */
+function cloneWithActive(item, activeClass, isSelected) {
+  const active = isSelected ? activeClass : "";
+
+  if (item instanceof ButtonObject) {
+    return new ButtonObject({
+      id: item.id,
+      name: item.name,
+      className: item.className,
+      active,
+      disabled: item.disabled,
+      title: item.title,
+      ariaLabel: item.ariaLabel,
+      tabIndex: item.tabIndex,
+      onClick: item.onClick,
+      onKeyDown: item.onKeyDown,
+      onKeyUp: item.onKeyUp,
+      onFocus: item.onFocus,
+      onBlur: item.onBlur,
+      onMouseEnter: item.onMouseEnter,
+      onMouseLeave: item.onMouseLeave,
+    });
+  }
+
+  if (item instanceof ButtonIconObject) {
+    return new ButtonIconObject({
+      id: item.id,
+      name: item.name,
+      icon: item.icon, // keep IconObject instance
+      className: item.className,
+      active,
+      disabled: item.disabled,
+      title: item.title,
+      ariaLabel: item.ariaLabel,
+      tabIndex: item.tabIndex,
+      onClick: item.onClick,
+      onKeyDown: item.onKeyDown,
+      onKeyUp: item.onKeyUp,
+      onFocus: item.onFocus,
+      onBlur: item.onBlur,
+      onMouseEnter: item.onMouseEnter,
+      onMouseLeave: item.onMouseLeave,
+    });
+  }
+
+  return item;
 }
 
 /**
  * Props:
  *  - buttonBar: ButtonBarObject (required)
  *  - output?: (self: ButtonObject|ButtonIconObject, e?: any) => void
- *      // Receives the EXACT child ButtonObject/ButtonIconObject and the DOM event.
  */
 export function AlloyButtonBar({ buttonBar, output }) {
   if (!buttonBar || !(buttonBar instanceof ButtonBarObject)) {
@@ -52,6 +150,12 @@ export function AlloyButtonBar({ buttonBar, output }) {
   }
 
   const ulIdRef = useRef(buttonBar.id);
+  const [selectedId, setSelectedId] = useState("");
+
+  // Reset selection when the bar instance changes (or on mount)
+  useEffect(() => {
+    setSelectedId("");
+  }, [buttonBar]);
 
   const Title = () =>
     buttonBar.barName?.show ? (
@@ -60,8 +164,14 @@ export function AlloyButtonBar({ buttonBar, output }) {
       </div>
     ) : null;
 
-  // Re-emit child's output to parent (same instance + event)
-  const passUp = (self, e) => { output?.(self, e); };
+  // Re-emit child's output AND set selection on click
+  const passUp = (self, e) => {
+    if (e?.type === "click") {
+      const nextId = self?.id ?? "";
+      setSelectedId(nextId);
+    }
+    output?.(self, e);
+  };
 
   const renderAlloyButton = () => (
     <>
@@ -71,9 +181,11 @@ export function AlloyButtonBar({ buttonBar, output }) {
           if (!(item instanceof ButtonObject)) {
             throw new Error("AlloyButtonBar (type='AlloyButton') requires ButtonObject items.");
           }
+          const isSelected = (item?.id ?? "") === selectedId;
+          const cloned = cloneWithActive(item, buttonBar.selected, isSelected);
           return (
             <li key={(item?.id ?? idx) + "-li"} className={buttonBar.buttonClass}>
-              <AlloyButton button={item} output={passUp} />
+              <AlloyButton button={cloned} output={passUp} />
             </li>
           );
         })}
@@ -89,9 +201,11 @@ export function AlloyButtonBar({ buttonBar, output }) {
           if (!(item instanceof ButtonIconObject)) {
             throw new Error("AlloyButtonBar (type='AlloyButtonIcon') requires ButtonIconObject items.");
           }
+          const isSelected = (item?.id ?? "") === selectedId;
+          const cloned = cloneWithActive(item, buttonBar.selected, isSelected);
           return (
             <li key={(item?.id ?? idx) + "-li"} className={buttonBar.buttonClass}>
-              <AlloyButtonIcon buttonIcon={item} output={passUp} />
+              <AlloyButtonIcon buttonIcon={cloned} output={passUp} />
             </li>
           );
         })}

@@ -1,10 +1,10 @@
-// src/components/AlloyLinkBar.jsx
-import React, { useRef } from "react";
-import AlloyLink, { LinkObject } from "../cell/AlloyLink"
+// src/components/tissue/AlloyLinkBar.jsx
+import React, { useEffect, useRef, useState } from "react";
+import AlloyLink, { LinkObject } from "../cell/AlloyLink";
 import AlloyLinkIcon, { LinkIconObject } from "../cell/AlloyLinkIcon";
 import AlloyLinkLogo, { LinkLogoObject } from "../cell/AlloyLinkLogo";
 
-/* ── ID generators (same pattern as LinkObject) ───────────────────────────── */
+/* ── ID generators ───────────────────────────────────────────────────────── */
 let __barItemCounter = 0;
 function nextBarItemId() {
   __barItemCounter += 1;
@@ -17,7 +17,7 @@ function nextLinkBarId() {
   return `linkBar${__linkBarCounter}`;
 }
 
-/* ── BarItem ──────────────────────────────────────────────────────────────── */
+/* ── BarItem ─────────────────────────────────────────────────────────────── */
 export class BarItem {
   /**
    * @param {{ id?: string, name?: string, className?: string, show?: boolean }} p
@@ -30,40 +30,163 @@ export class BarItem {
   }
 }
 
-/* ── LinkBarObject (merged, no inheritance, no `selected`) ────────────────── */
+/* ── LinkBarObject (hydrates `links` by `type`) ───────────────────────────── */
 /**
  * @param {{
  *   id?: string,
- *   className?: string,
+ *   className?: string,              // applied to <ul>
  *   barName?: BarItem|object,
  *   type?: "AlloyLink"|"AlloyLinkIcon"|"AlloyLinkLogo",
- *   linkClass?: string,
- *   links?: any[]
+ *   linkClass?: string,              // applied to each <li>
+ *   links?: any[],                   // plain JSON or instances → hydrated here
+ *   selected?: string                // class name applied to the selected item (e.g. "active")
  * }} p
  */
 export class LinkBarObject {
-  constructor({ id, className, barName, type, linkClass, links } = {}) {
+  constructor({ id, className, barName, type, linkClass, links, selected } = {}) {
     this.id = id ?? nextLinkBarId();
     this.className = className ?? "d-flex justify-content-center";
     this.barName = barName instanceof BarItem ? barName : new BarItem(barName ?? {});
     this.type = type ?? "AlloyLink";
     this.linkClass = linkClass ?? "nav-item";
-    this.links = Array.isArray(links) ? links.slice() : [];
+    this.selected = selected ?? "active";
+
+    // 🔽 Hydrate links to proper instances based on `type`
+    const src = Array.isArray(links) ? links : [];
+    switch (this.type) {
+      case "AlloyLinkIcon":
+        this.links = src.map((l) =>
+          l instanceof LinkIconObject
+            ? l
+            : new LinkIconObject({
+                id: l?.id,
+                href: l?.href,
+                icon: l?.icon, // LinkIconObject ctor will wrap plain icon into IconObject
+                name: l?.name,
+                className: l?.className,
+                active: l?.active,
+                target: l?.target,
+                rel: l?.rel,
+                onClick: l?.onClick,
+                title: l?.title,
+              })
+        );
+        break;
+
+      case "AlloyLinkLogo":
+        this.links = src.map((l) =>
+          l instanceof LinkLogoObject
+            ? l
+            : new LinkLogoObject({
+                id: l?.id,
+                name: l?.name,
+                href: l?.href,
+                logo: l?.logo,
+                width: l?.width,
+                height: l?.height,
+                logoAlt: l?.logoAlt,
+                className: l?.className,
+                active: l?.active,
+                target: l?.target,
+                rel: l?.rel,
+                onClick: l?.onClick,
+                title: l?.title,
+              })
+        );
+        break;
+
+      case "AlloyLink":
+      default:
+        this.links = src.map((l) =>
+          l instanceof LinkObject
+            ? l
+            : new LinkObject({
+                id: l?.id,
+                name: l?.name,
+                href: l?.href,
+                className: l?.className,
+                active: l?.active,
+                target: l?.target,
+                rel: l?.rel,
+                onClick: l?.onClick,
+                title: l?.title,
+              })
+        );
+        break;
+    }
   }
 }
 
-/* ── Component (requires LinkBarObject instance) ──────────────────────────── */
+/* ── small helper: inject active + click without mutating original model ─── */
+function cloneWithActiveAndClick(item, activeClass, isSelected, wrappedOnClick) {
+  const active = isSelected ? activeClass : "";
+
+  if (item instanceof LinkObject) {
+    return new LinkObject({
+      id: item.id,
+      name: item.name,
+      href: item.href,
+      className: item.className,
+      active,
+      target: item.target,
+      rel: item.rel,
+      onClick: wrappedOnClick,
+      title: item.title,
+    });
+  }
+
+  if (item instanceof LinkIconObject) {
+    return new LinkIconObject({
+      id: item.id,
+      href: item.href,
+      icon: item.icon,
+      name: item.name,
+      className: item.className,
+      active,
+      target: item.target,
+      rel: item.rel,
+      onClick: wrappedOnClick,
+      title: item.title,
+    });
+  }
+
+  if (item instanceof LinkLogoObject) {
+    return new LinkLogoObject({
+      id: item.id,
+      name: item.name,
+      href: item.href,
+      logo: item.logo,
+      width: item.width,
+      height: item.height,
+      logoAlt: item.logoAlt,
+      className: item.className,
+      active,
+      target: item.target,
+      rel: item.rel,
+      onClick: wrappedOnClick,
+      title: item.title,
+    });
+  }
+
+  return item;
+}
+
+/* ── Component: AlloyLinkBar ─────────────────────────────────────────────── */
 /**
- * AlloyLinkBar — accepts ONLY a LinkBarObject instance via `linkBar`.
- * Mirrors Angular ngSwitch: AlloyLink / AlloyLinkIcon / AlloyLinkLogo / default→AlloyLink
+ * Accepts ONLY a hydrated LinkBarObject; ensures only ONE link has the selected class.
  */
 export function AlloyLinkBar({ linkBar }) {
   if (!linkBar || !(linkBar instanceof LinkBarObject)) {
     throw new Error("AlloyLinkBar requires `linkBar` (LinkBarObject instance).");
   }
 
-  // Stabilize the <ul> id like you do in AlloyLink
   const ulIdRef = useRef(linkBar.id);
+  const [selectedId, setSelectedId] = useState("");
+
+  // Reset selection when the bar instance changes (or on mount)
+  useEffect(() => {
+    setSelectedId("");
+  }, [linkBar]);
 
   const Title = () =>
     linkBar.barName?.show ? (
@@ -71,6 +194,16 @@ export function AlloyLinkBar({ linkBar }) {
         {linkBar.barName.name}
       </div>
     ) : null;
+
+  // Wrap original onClick: set selection, then call original
+  function wrapOnClick(item) {
+    const original = item.onClick;
+    return (e) => {
+      const nextId = item.id || `${item.href || ""}-${item.name || ""}`;
+      setSelectedId(nextId);
+      original?.(e);
+    };
+  }
 
   const renderAlloyLink = () => (
     <>
@@ -82,9 +215,16 @@ export function AlloyLinkBar({ linkBar }) {
               "AlloyLinkBar (type='AlloyLink') requires each `links` item to be a LinkObject instance."
             );
           }
+          const isSelected = (item?.id ?? "") === selectedId;
+          const cloned = cloneWithActiveAndClick(
+            item,
+            linkBar.selected,
+            isSelected,
+            wrapOnClick(item)
+          );
           return (
             <li key={(item?.id ?? idx) + "-li"} className={linkBar.linkClass}>
-              <AlloyLink link={item} />
+              <AlloyLink link={cloned} />
             </li>
           );
         })}
@@ -102,9 +242,16 @@ export function AlloyLinkBar({ linkBar }) {
               "AlloyLinkBar (type='AlloyLinkIcon') requires each `links` item to be a LinkIconObject instance."
             );
           }
+          const isSelected = (item?.id ?? "") === selectedId;
+          const cloned = cloneWithActiveAndClick(
+            item,
+            linkBar.selected,
+            isSelected,
+            wrapOnClick(item)
+          );
           return (
             <li key={(item?.id ?? idx) + "-li"} className={linkBar.linkClass}>
-              <AlloyLinkIcon linkIcon={item} />
+              <AlloyLinkIcon linkIcon={cloned} />
             </li>
           );
         })}
@@ -122,9 +269,16 @@ export function AlloyLinkBar({ linkBar }) {
               "AlloyLinkBar (type='AlloyLinkLogo') requires each `links` item to be a LinkLogoObject instance."
             );
           }
+          const isSelected = (item?.id ?? "") === selectedId;
+          const cloned = cloneWithActiveAndClick(
+            item,
+            linkBar.selected,
+            isSelected,
+            wrapOnClick(item)
+          );
           return (
             <li key={(item?.id ?? idx) + "-li"} className={linkBar.linkClass}>
-              <AlloyLinkLogo linkLogo={item} />
+              <AlloyLinkLogo linkLogo={cloned} />
             </li>
           );
         })}

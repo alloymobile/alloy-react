@@ -1,6 +1,6 @@
 {
   "name": "alloy-react",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": false,
   "description": "Alloy React components with demo (Bootstrap + Font Awesome).",
   "type": "module",

@@ -1,8 +1,6 @@
 // demo/pages/tissue/ButtonBar.jsx
 import React, { useMemo, useState } from "react";
-
-// Bar + model
-import { AlloyButtonBar, ButtonBarObject, ButtonObject, ButtonIconObject, IconObject } from "../../../src";
+import { AlloyButtonBar, ButtonBarObject } from "../../../src";
 
 /* ─────────────────────────── Defaults (editable) ─────────────────────────── */
 
@@ -11,11 +9,12 @@ const DEFAULT_JSON_BTN = JSON.stringify(
     type: "AlloyButton",
     className: "nav justify-content-center gap-2",
     buttonClass: "nav-item",
+    selected: "active",   // bar-level selected class
     barName: { show: true, name: "Actions", className: "text-center fw-semibold mb-2" },
     buttons: [
-      { id: "save",  name: "Save",   className: "btn btn-primary",          active: "active" },
-      { id: "reset", name: "Reset",  className: "btn btn-outline-secondary", active: "active" },
-      { id: "del",   name: "Delete", className: "btn btn-danger",            active: "active" }
+      { id: "save",  name: "Save",   className: "btn btn-primary" },
+      { id: "reset", name: "Reset",  className: "btn btn-outline-secondary" },
+      { id: "del",   name: "Delete", className: "btn btn-danger" }
     ]
   },
   null,
@@ -27,84 +26,17 @@ const DEFAULT_JSON_BTN_ICON = JSON.stringify(
     type: "AlloyButtonIcon",
     className: "nav justify-content-center gap-2",
     buttonClass: "nav-item",
+    selected: "active",   // bar-level selected class
     barName: { show: true, name: "Shortcuts", className: "text-center fw-semibold mb-2" },
     buttons: [
-      { id: "homeI", name: "Home",   icon: { iconClass: "fa-solid fa-house" }, className: "btn btn-light", active: "active" },
-      { id: "codeI", name: "Code",   icon: { iconClass: "fa-solid fa-code"  }, className: "btn btn-light", active: "active" },
-      { id: "userI", name: "Profile",icon: { iconClass: "fa-regular fa-user"}, className: "btn btn-light", active: "active" }
+      { id: "homeI", name: "Home",    icon: { iconClass: "fa-solid fa-house" }, className: "btn btn-light" },
+      { id: "codeI", name: "Code",    icon: { iconClass: "fa-solid fa-code"  }, className: "btn btn-light" },
+      { id: "userI", name: "Profile", icon: { iconClass: "fa-regular fa-user"}, className: "btn btn-light" }
     ]
   },
   null,
   2
 );
-
-/* ───────────────────── Hydration: JSON → proper instances ─────────────────── */
-
-function toButtonObjects(type, arr) {
-  if (!Array.isArray(arr)) return [];
-  if (type === "AlloyButtonIcon") {
-    return arr.map((b) => {
-      if (b instanceof ButtonIconObject) return b;
-      const icon = b?.icon instanceof IconObject ? b.icon : new IconObject(b?.icon || {});
-      return new ButtonIconObject({
-        id: b?.id,
-        name: b?.name,
-        icon,
-        className: b?.className,
-        active: b?.active,
-        disabled: b?.disabled,
-        title: b?.title,
-        ariaLabel: b?.ariaLabel,
-        tabIndex: b?.tabIndex,
-        onClick: b?.onClick,
-        onKeyDown: b?.onKeyDown,
-        onKeyUp: b?.onKeyUp,
-        onFocus: b?.onFocus,
-        onBlur: b?.onBlur,
-        onMouseEnter: b?.onMouseEnter,
-        onMouseLeave: b?.onMouseLeave,
-      });
-    });
-  }
-  // AlloyButton (default)
-  return arr.map((b) => {
-    if (b instanceof ButtonObject) return b;
-    return new ButtonObject({
-      id: b?.id,
-      name: b?.name,
-      className: b?.className,
-      active: b?.active,
-      disabled: b?.disabled,
-      title: b?.title,
-      ariaLabel: b?.ariaLabel,
-      tabIndex: b?.tabIndex,
-      onClick: b?.onClick,
-      onKeyDown: b?.onKeyDown,
-      onKeyUp: b?.onKeyUp,
-      onFocus: b?.onFocus,
-      onBlur: b?.onBlur,
-      onMouseEnter: b?.onMouseEnter,
-      onMouseLeave: b?.onMouseLeave,
-    });
-  });
-}
-
-function hydrateButtonBar(fromJson) {
-  const type = fromJson?.type ?? "AlloyButton";
-  const buttons = toButtonObjects(type, fromJson?.buttons || []);
-  return new ButtonBarObject({
-    id: fromJson?.id,
-    className: fromJson?.className ?? "nav justify-content-center gap-2",
-    barName: fromJson?.barName ?? {
-      show: true,
-      name: type === "AlloyButton" ? "Actions" : "Shortcuts",
-      className: "text-center fw-semibold mb-2",
-    },
-    type,
-    buttonClass: fromJson?.buttonClass ?? "nav-item",
-    buttons,
-  });
-}
 
 /* ───────────────────────── UI helpers ─────────────────────────────────────── */
 
@@ -115,21 +47,18 @@ function tagSnippet(type) {
 }
 
 function buildOutputPayload(self, e) {
-  // full selected ButtonObject / ButtonIconObject, plus DOM event type
   return {
     event: e?.type ?? "unknown",
     button: {
-      // include the key fields; you can dump whole object if you prefer
       id: self?.id,
       name: self?.name,
       className: self?.className,
-      active: self?.active,
+      active: self?.active,       // will include bar's selected class when chosen
       disabled: !!self?.disabled,
       title: self?.title,
       ariaLabel: self?.ariaLabel,
       tabIndex: self?.tabIndex,
-      // for ButtonIconObject, show icon class if present
-      iconClass: self?.icon?.iconClass,
+      iconClass: self?.icon?.iconClass, // present for ButtonIconObject
     },
   };
 }
@@ -143,10 +72,18 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
     try {
       setParseError("");
       const parsed = JSON.parse(jsonState);
-      return hydrateButtonBar(parsed);
+      // 🔑 Hydration happens inside ButtonBarObject
+      return new ButtonBarObject(parsed);
     } catch (e) {
       setParseError(String(e.message || e));
-      return hydrateButtonBar({ type: title, buttons: [] });
+      return new ButtonBarObject({
+        type: title,
+        className: "nav justify-content-center gap-2",
+        barName: { show: true, name: title === "AlloyButton" ? "Actions" : "Shortcuts", className: "text-center fw-semibold mb-2" },
+        buttonClass: "nav-item",
+        selected: "active",
+        buttons: [],
+      });
     }
   }, [jsonState, title]);
 
@@ -172,7 +109,8 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
         <div className="col-12 text-center">
           <AlloyButtonBar buttonBar={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
-            Tip: Hover, focus, keydown/keyup, click — all emit via <code>output</code>.
+            Tip: Hover, focus, keydown/keyup, click — all emit via <code>output</code>.  
+            Only one button is “selected” at a time (class from <code>selected</code>).
           </div>
         </div>
       </div>
@@ -206,14 +144,8 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
           />
           {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
           <div className="form-text">
-            <ul className="m-0 ps-3">
-              <li>
-                For <code>AlloyButton</code>: items become <code>new ButtonObject(&#123; name, ... &#125;)</code>.
-              </li>
-              <li>
-                For <code>AlloyButtonIcon</code>: items become <code>new ButtonIconObject(&#123; icon: new IconObject(&#123; iconClass &#125;), ... &#125;)</code>.
-              </li>
-            </ul>
+            The constructor of <code>ButtonBarObject</code> hydrates <code>buttons</code> to
+            <code>ButtonObject</code> or <code>ButtonIconObject</code> based on <code>type</code>.
           </div>
         </div>
 
@@ -235,7 +167,9 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
             onChange={(e) => setOutputJson(e.target.value)}
             spellCheck={false}
           />
-          <div className="form-text">Updates on every interaction with any button.</div>
+          <div className="form-text">
+            Includes the full clicked button’s model (id, name, className, etc.).
+          </div>
         </div>
       </div>
     </div>

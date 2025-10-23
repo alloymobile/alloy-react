@@ -22,6 +22,10 @@ import InputIconPage from "./pages/Cell/InputIcon.jsx";
 import InputFloatingPage from "./pages/Cell/InputFloating.jsx";
 import LinkBarPage from "./pages/Tissue/LinkBar.jsx";
 import ButtonBarPage from "./pages/Tissue/ButtonBar.jsx";
+import NavBarPage from "./pages/Tissue/NavBar.jsx";
+import TablePage from "./pages/Tissue/Table.jsx";
+import TableLinkPage from "./pages/Tissue/TableLink.jsx";
+import TableActionPage from "./pages/Tissue/TableAction.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -49,6 +53,10 @@ createRoot(document.getElementById("root")).render(
           <Route index element={<Navigate to="link-bar" replace />} />
           <Route path="link-bar" element={<LinkBarPage />} />
           <Route path="button-bar" element={<ButtonBarPage />} />
+          <Route path="nav-bar" element={<NavBarPage />} />
+          <Route path="table" element={<TablePage />} />
+          <Route path="table-link" element={<TableLinkPage />} />
+          <Route path="table-action" element={<TableActionPage />} />
         </Route>
         <Route path="/organ" element={<Organ />} />
       </Route>
