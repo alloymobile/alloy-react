@@ -1,20 +1,27 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom"; // ensure this import exists
 
 export default function Sidebar({ active }) {
-  const items = active === "cell"
-    ? [ { label: "Icon", to: "/cell/icon", icon: "fa-solid fa-icons" },
-        { label: "Link", to: "/cell/link", icon: "fa-solid fa-link" },
-        { label: "LinkIcon", to: "/cell/link-icon", icon: "fa-solid fa-icons" },
-        { label: "LinkLogo", to: "/cell/link-logo", icon: "fa-solid fa-image" },
-        { label: "AlloyButton", to: "/cell/button", icon: "fa-solid fa-hand-pointer" }, 
-        { label: "AlloyButtonIcon", to: "/cell/button-icon", icon: "fa-solid fa-tablet-button" }, 
-        { label: "AlloyButtonSubmit", to: "/cell/button-submit", icon: "fa-solid fa-spinner" }, 
-        { label: "AlloyInput", to: "/cell/input", icon: "fa-solid fa-arrows-down-to-line" }, 
-        { label: "AlloyInputIcon", to: "/cell/input-icon", icon: "fa-solid fa-box-open" }, 
-        { label: "AlloyInputFloating", to: "/cell/input-floating", icon: "fa-solid fa-calendar-days" }, 
-      ]
-    : [];
+  const items =
+    active === "cell"
+      ? [
+          { label: "Icon", to: "/cell/icon", icon: "fa-solid fa-icons" },
+          { label: "Link", to: "/cell/link", icon: "fa-solid fa-link" },
+          { label: "LinkIcon", to: "/cell/link-icon", icon: "fa-solid fa-icons" },
+          { label: "LinkLogo", to: "/cell/link-logo", icon: "fa-solid fa-image" },
+          { label: "AlloyButton", to: "/cell/button", icon: "fa-solid fa-hand-pointer" },
+          { label: "AlloyButtonIcon", to: "/cell/button-icon", icon: "fa-solid fa-tablet-button" },
+          { label: "AlloyButtonSubmit", to: "/cell/button-submit", icon: "fa-solid fa-spinner" },
+          { label: "AlloyInput", to: "/cell/input", icon: "fa-solid fa-arrows-down-to-line" },
+          { label: "AlloyInputIcon", to: "/cell/input-icon", icon: "fa-solid fa-box-open" },
+          { label: "AlloyInputFloating", to: "/cell/input-floating", icon: "fa-solid fa-calendar-days" },
+        ]
+      : active === "tissue"
+      ? [
+          // 👇 New tissue item
+          { label: "AlloyLinkBar", to: "/tissue/link-bar", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyButtonBar", to: "/tissue/button-bar", icon: "fa-solid fa-bars-progress" },
+        ]
+      : [];
 
   return (
     <div className="d-flex flex-column h-100">

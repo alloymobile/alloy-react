@@ -6,3 +6,5 @@ export { AlloyButton, ButtonObject } from "./components/cell/AlloyButton.jsx";
 export { AlloyButtonIcon, ButtonIconObject } from "./components/cell/AlloyButtonIcon.jsx";
 export { AlloyButtonSubmit, ButtonSubmitObject } from "./components/cell/AlloyButtonSubmit.jsx";
 export { AlloyInput, InputObject } from "./components/cell/AlloyInput.jsx";
+export { AlloyLinkBar, LinkBarObject } from "./components/tissue/AlloyLinkBar.jsx"
+export { AlloyButtonBar, ButtonBarObject } from "./components/tissue/AlloyButtonBar.jsx"

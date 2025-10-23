@@ -8,7 +8,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 import App from "./App.jsx";
 import Cell from "./pages/Cell/Cell.jsx";           // now acts as Cell layout (with <Outlet/>)
-import Tissue from "./pages/Tissue.jsx";
+import Tissue from "./pages/Tissue/Tissue.jsx";
 import Organ from "./pages/Organ.jsx";
 import IconPage from "./pages/Cell/Icon.jsx";  // NEW
 import LinkPage from "./pages/Cell/Link.jsx";
@@ -20,6 +20,8 @@ import ButtonSubmitPage from "./pages/Cell/ButtonSubmit.jsx";
 import InputPage from "./pages/Cell/Input.jsx";
 import InputIconPage from "./pages/Cell/InputIcon.jsx";
 import InputFloatingPage from "./pages/Cell/InputFloating.jsx";
+import LinkBarPage from "./pages/Tissue/LinkBar.jsx";
+import ButtonBarPage from "./pages/Tissue/ButtonBar.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -43,7 +45,11 @@ createRoot(document.getElementById("root")).render(
         </Route>
 
         {/* Others (blank for now) */}
-        <Route path="/tissue" element={<Tissue />} />
+        <Route path="/tissue" element={<Tissue />}>
+          <Route index element={<Navigate to="link-bar" replace />} />
+          <Route path="link-bar" element={<LinkBarPage />} />
+          <Route path="button-bar" element={<ButtonBarPage />} />
+        </Route>
         <Route path="/organ" element={<Organ />} />
       </Route>
     </Routes>
