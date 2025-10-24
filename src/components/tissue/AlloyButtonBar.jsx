@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import AlloyButton, { ButtonObject } from "../cell/AlloyButton.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
+import { IconObject } from "../cell/AlloyIcon.jsx";
 
 /* ids */
 let __barItemCounter = 0;
@@ -48,7 +49,7 @@ export class ButtonBarObject {
           : new ButtonIconObject({
               id: b?.id,
               name: b?.name,
-              icon: b?.icon, // ButtonIconObject will wrap plain {iconClass} into IconObject
+              icon:b?.icon instanceof IconObject ? b?.icon : new IconObject(b?.icon), 
               className: b?.className,
               active: b?.active,
               disabled: b?.disabled,

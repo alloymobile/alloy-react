@@ -23,7 +23,7 @@ const DEFAULT_INPUT = JSON.stringify(
 );
 
 /* ---------------------- Tag snippet (display only) ---------------------- */
-const TAG_SNIPPET = `<AlloyTableLink table={new TableLinkObject(tableObject)} output={handleOutput} />`;
+const TAG_SNIPPET = `<AlloyTableLink tableLink={new TableLinkObject(tableLinkObject)} output={handleOutput} />`;
 
 /* ---------------------- Page ---------------------- */
 export default function TableLinkPage() {
@@ -76,7 +76,7 @@ export default function TableLinkPage() {
       {/* Row 2 — Live table */}
       <div className="row mb-4">
         <div className="col-12">
-          <AlloyTableLink table={model} output={handleOutput} />
+          <AlloyTableLink tableLink={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
             Sorting is server-driven. Clicking a header only emits the intent; cells navigate using <code>&lt;Link&gt;</code> to <code>{`"${model.link}/:id"`}</code>.
           </div>

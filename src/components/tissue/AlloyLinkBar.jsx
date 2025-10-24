@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import AlloyLink, { LinkObject } from "../cell/AlloyLink";
 import AlloyLinkIcon, { LinkIconObject } from "../cell/AlloyLinkIcon";
 import AlloyLinkLogo, { LinkLogoObject } from "../cell/AlloyLinkLogo";
+import { IconObject } from "../cell/AlloyIcon";
 
 /* ── ID generators ───────────────────────────────────────────────────────── */
 let __barItemCounter = 0;
@@ -61,7 +62,7 @@ export class LinkBarObject {
             : new LinkIconObject({
                 id: l?.id,
                 href: l?.href,
-                icon: l?.icon, // LinkIconObject ctor will wrap plain icon into IconObject
+                icon: l?.icon instanceof IconObject ? l?.icon : new IconObject(l?.icon),
                 name: l?.name,
                 className: l?.className,
                 active: l?.active,

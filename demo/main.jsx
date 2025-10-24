@@ -26,6 +26,14 @@ import NavBarPage from "./pages/Tissue/NavBar.jsx";
 import TablePage from "./pages/Tissue/Table.jsx";
 import TableLinkPage from "./pages/Tissue/TableLink.jsx";
 import TableActionPage from "./pages/Tissue/TableAction.jsx";
+import CardPage from "./pages/Tissue/Card.jsx";
+import CardIconPage from "./pages/Tissue/CardIcon.jsx";
+import CardImagePage from "./pages/Tissue/Cardimage.jsx";
+import CardActionPage from "./pages/Tissue/CardAction.jsx";
+import CardIconActionPage from "./pages/Tissue/CardIconAction.jsx";
+import CardImageActionPage from "./pages/Tissue/CardImageAction.jsx";
+import { AlloyForm } from "../src/index.jsx";
+import FormPage from "./pages/Tissue/Form.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -57,6 +65,13 @@ createRoot(document.getElementById("root")).render(
           <Route path="table" element={<TablePage />} />
           <Route path="table-link" element={<TableLinkPage />} />
           <Route path="table-action" element={<TableActionPage />} />
+          <Route path="card" element={<CardPage />} />    
+          <Route path="card-icon" element={<CardIconPage />} />    
+          <Route path="card-image" element={<CardImagePage />} />   
+          <Route path="card-action" element={<CardActionPage />} />      
+          <Route path="card-icon-action" element={<CardIconActionPage />} />                                  
+          <Route path="card-image-action" element={<CardImageActionPage />} />           
+          <Route path="form" element={<FormPage />} />  
         </Route>
         <Route path="/organ" element={<Organ />} />
       </Route>

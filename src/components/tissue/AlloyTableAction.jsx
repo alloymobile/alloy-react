@@ -63,25 +63,25 @@ export class TableActionObject {
 /* ---------------------- Component ---------------------- */
 /**
  * Props:
- *  - table: TableActionObject (required)
+ *  - tableAction: TableActionObject (required)
  *  - output?: (payload: any) => void
  *      Emits:
  *        • { type: "column", name, dir } on header click (you sort on server)
  *        • { type: "action", action, row } when an action button is clicked
  *        • { type: "navigate", to, id, row } when a row cell link is clicked
  */
-export function AlloyTableAction({ table, output }) {
-  if (!table || !(table instanceof TableActionObject)) {
-    throw new Error("AlloyTableAction requires `table` (TableActionObject instance).");
+export function AlloyTableAction({ tableAction, output }) {
+  if (!tableAction || !(tableAction instanceof TableActionObject)) {
+    throw new Error("AlloyTableAction requires `tableAction` (TableActionObject instance).");
   }
 
-  const tblIdRef = useRef(table.id);
-  const headerKeys = useMemo(() => getHeaderKeys(table.rows), [table.rows]);
+  const tblIdRef = useRef(tableAction.id);
+  const headerKeys = useMemo(() => getHeaderKeys(tableAction.rows), [tableAction.rows]);
 
   // Local sort indicator (UI only; server actually sorts)
   const [sort, setSort] = useState({ col: "", dir: "asc" });
 
-  function onHeaderClick(colName) {
+  function handleHeaderClick(colName) {
     const nextDir = sort.col === colName && sort.dir === "asc" ? "desc" : "asc";
     setSort({ col: colName, dir: nextDir });
     output?.({ type: "column", name: colName, dir: nextDir });
@@ -109,28 +109,35 @@ export function AlloyTableAction({ table, output }) {
   }
 
   return (
-    <table id={tblIdRef.current} className={table.className}>
-      <caption className="caption-top text-center">{table.name}</caption>
+    <table id={tblIdRef.current} className={tableAction.className}>
+      <caption className="caption-top text-center">{tableAction.name}</caption>
       <thead>
         <tr>
           <th scope="col">Type</th>
           {headerKeys.map((key) => {
             const isActive = sort.col === key;
-            const rotateClass = isActive && sort.dir === "desc" ? "rotate-180" : "";
+            const isDesc = isActive && sort.dir === "desc";
             return (
               <th key={`h-${key}`} scope="col">
-                <button
-                  type="button"
-                  className="btn btn-link p-0 text-decoration-none"
-                  onClick={() => onHeaderClick(key)}
+                <span
+                  onClick={() => handleHeaderClick(key)}
+                  style={{ userSelect: "none" }}
                 >
                   {capitalize(key)}
                   {isActive && (
-                    <span className={`ms-1 align-middle ${rotateClass}`} aria-hidden="true">
-                      <AlloyIcon icon={table.sort} />
+                    <span
+                      className="ms-1 d-inline-flex align-middle"
+                      aria-hidden="true"
+                      title={isDesc ? "Sorted descending" : "Sorted ascending"}
+                      style={{
+                        transform: isDesc ? "rotate(180deg)" : "none",
+                        transition: "transform 120ms",
+                      }}
+                    >
+                      <AlloyIcon icon={tableAction.sort} />
                     </span>
                   )}
-                </button>
+                </span>
               </th>
             );
           })}
@@ -141,24 +148,24 @@ export function AlloyTableAction({ table, output }) {
       </thead>
 
       <tbody>
-        {table.rows.map((row, idx) => {
+        {tableAction.rows.map((row, idx) => {
           const rowId = row?.id ?? idx;
 
           // Reuse the SAME actions bar instance for each row (no cloning)
-          const rowBar = table.actions;
+          const rowBar = tableAction.actions;
 
           return (
             <tr key={rowId}>
               <td>
-                <AlloyIcon icon={table.icon} />
+                <AlloyIcon icon={tableAction.icon} />
               </td>
 
-              {/* Cells — optionally wrapped in <Link> if table.link is provided */}
+              {/* Cells — optionally wrapped in <Link> if tableAction.link is provided */}
               {headerKeys.map((key) => {
-                const to = table.link ? `${table.link}/${rowId}` : "";
+                const to = tableAction.link ? `${tableAction.link}/${rowId}` : "";
                 return (
                   <td key={`${rowId}-${key}`}>
-                    {table.link ? (
+                    {tableAction.link ? (
                       <Link
                         to={to}
                         onClick={() => output?.({ type: "navigate", to, id: rowId, row })}

@@ -1,4 +1,3 @@
-// src/components/tissue/AlloyTableLink.jsx
 import React, { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
@@ -66,17 +65,17 @@ function getHeaderKeys(rows) {
  *
  * Notes:
  *  - No client sorting; header click only toggles local icon + emits column intent.
- *  - Each data cell (except icon column) navigates to `${table.link}/${row.id}`.
+ *  - Each data cell (except icon column) navigates to `${tableLink.link}/${row.id}`.
  */
-export function AlloyTableLink({ table, output }) {
-  if (!table || !(table instanceof TableLinkObject)) {
-    throw new Error("AlloyTableLink requires `table` (TableLinkObject instance).");
+export function AlloyTableLink({ tableLink, output }) {
+  if (!tableLink || !(tableLink instanceof TableLinkObject)) {
+    throw new Error("AlloyTableLink requires `tableLink` (TableLinkObject instance).");
   }
 
-  const tableIdRef = useRef(table.id);
+  const tableIdRef = useRef(tableLink.id);
   const [sort, setSort] = useState({ col: "", dir: "asc" }); // icon-only
 
-  const headerKeys = useMemo(() => getHeaderKeys(table.rows), [table.rows]);
+  const headerKeys = useMemo(() => getHeaderKeys(tableLink.rows), [tableLink.rows]);
 
   const handleHeaderClick = (name) => {
     if (!name) return;
@@ -86,8 +85,8 @@ export function AlloyTableLink({ table, output }) {
   };
 
   return (
-    <table id={tableIdRef.current} className={table.className}>
-      <caption className="caption-top text-center">{table.name}</caption>
+    <table id={tableIdRef.current} className={tableLink.className}>
+      <caption className="caption-top text-center">{tableLink.name}</caption>
 
       <thead>
         <tr>
@@ -98,7 +97,6 @@ export function AlloyTableLink({ table, output }) {
             return (
               <th key={key} scope="col">
                 <span
-                  className="cursor"
                   onClick={() => handleHeaderClick(key)}
                   style={{ userSelect: "none" }}
                 >
@@ -113,7 +111,7 @@ export function AlloyTableLink({ table, output }) {
                         transition: "transform 120ms",
                       }}
                     >
-                      <AlloyIcon icon={table.sort} />
+                      <AlloyIcon icon={tableLink.sort} />
                     </span>
                   )}
                 </span>
@@ -124,18 +122,18 @@ export function AlloyTableLink({ table, output }) {
       </thead>
 
       <tbody>
-        {(table.rows ?? []).length > 0 ? (
-          (table.rows ?? []).map((row, idx) => {
+        {(tableLink.rows ?? []).length > 0 ? (
+          (tableLink.rows ?? []).map((row, idx) => {
             const rowId = row?.id ?? idx;
-            const toBase = table.link.endsWith("/")
-              ? table.link.slice(0, -1)
-              : table.link;
+            const toBase = tableLink.link.endsWith("/")
+              ? tableLink.link.slice(0, -1)
+              : tableLink.link;
             const to = `${toBase}/${rowId}`;
 
             return (
               <tr key={rowId}>
                 <td>
-                  <AlloyIcon icon={table.icon} />
+                  <AlloyIcon icon={tableLink.icon} />
                 </td>
 
                 {/* Each cell is a <Link> to `${link}/${id}` (id column excluded) */}

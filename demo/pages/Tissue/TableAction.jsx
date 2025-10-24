@@ -2,11 +2,12 @@
 import React, { useMemo, useState } from "react";
 import { AlloyTableAction, TableActionObject } from "../../../src";
 
-/* ---------------------- Default editable JSON ---------------------- */
-const DEFAULT_INPUT = JSON.stringify(
+/* ---------------------- Default editable JSONs ---------------------- */
+// 1) Text buttons
+const DEFAULT_BUTTONS = JSON.stringify(
   {
-    id: "userTableAction01",
-    name: "Users (row actions)",
+    id: "userTableAction_btn",
+    name: "Users (text actions)",
     className: "table table-hover align-middle",
     // When provided, each non-id cell becomes a Link to `${link}/{row.id}`:
     link: "/users",
@@ -20,7 +21,7 @@ const DEFAULT_INPUT = JSON.stringify(
     ],
     actions: {
       // Renders the SAME bar instance in each row (no cloning)
-      type: "AlloyButton",                            // or "AlloyButtonIcon"
+      type: "AlloyButton",
       className: "nav justify-content-end gap-2",
       buttonClass: "nav-item",
       barName: { show: false },
@@ -34,21 +35,83 @@ const DEFAULT_INPUT = JSON.stringify(
   2
 );
 
+// 2) Icon buttons (can have titles + iconClass; names optional)
+const DEFAULT_ICON_BUTTONS = JSON.stringify(
+  {
+    id: "userTableAction_iconbtn",
+    name: "Users (icon actions)",
+    className: "table table-hover align-middle",
+    link: "/users",
+    rows: [
+      { id: 201, name: "Grace Hopper",   role: "Owner", joined: "2021-11-03" },
+      { id: 202, name: "Alan Turing",    role: "Admin", joined: "2020-06-12" },
+      { id: 203, name: "Barbara Liskov", role: "User",  joined: "2022-02-18" }
+    ],
+    // Leading column icon (table-wide)
+    icon: { iconClass: "fa-solid fa-user-gear" },
+    // Sort icon
+    sort: { iconClass: "fa-solid fa-arrow-down" },
+    actions: {
+      type: "AlloyButtonIcon", // icon-only bar
+      className: "nav justify-content-end gap-2",
+      buttonClass: "nav-item",
+      selected: "active",
+      barName: { show: false },
+      buttons: [
+        { title: "Edit", name: "Edit", className: "btn btn-outline",   ariaLabel: "Edit",   icon: { iconClass: "fa-regular fa-pen-to-square" } },
+        { title: "Delete", name: "Delete", className: "btn btn-outline", ariaLabel: "Delete", icon: { iconClass: "fa-regular fa-trash-can" } }
+      ]
+    }
+  },
+  null,
+  2
+);
+
+// 3) Icon buttons with NO `name` fields (pure icons) + different table icon
+const DEFAULT_ACTION_ICON = JSON.stringify(
+  {
+    id: "userTableAction_tableicon",
+    name: "Users (icon-only, no names; different table icon)",
+    className: "table table-hover align-middle",
+    link: "/users",
+    rows: [
+      { id: 301, name: "Katherine Johnson", role: "Admin",  joined: "2023-07-09" },
+      { id: 302, name: "John von Neumann",  role: "User",   joined: "2024-01-25" },
+      { id: 303, name: "Donald Knuth",      role: "Owner",  joined: "2022-10-05" }
+    ],
+    // Different leading icon so this tab is visually distinct
+    icon: { iconClass: "fa-solid fa-id-badge" },
+    sort: { iconClass: "fa-solid fa-arrow-down" },
+    actions: {
+      type: "AlloyButtonIcon", // icon-only bar
+      className: "nav justify-content-end gap-2",
+      buttonClass: "nav-item",
+      barName: { show: false },
+      buttons: [
+        // NOTE: no `name` field — icons render without text
+        { title: "Edit", className: "btn btn-outline-dark",  ariaLabel: "Edit",   icon: { iconClass: "fa-regular fa-pen-to-square" } },
+        { title: "Delete", className: "btn btn-outline-dark", ariaLabel: "Delete", icon: { iconClass: "fa-regular fa-trash-can" } }
+      ]
+    }
+  },
+  null,
+  2
+);
+
 /* ---------------------- Tag snippet (display only) ---------------------- */
-const TAG_SNIPPET = `<AlloyTableAction table={new TableActionObject(tableObject)} output={handleOutput} />`;
+const TAG_SNIPPET = `<AlloyTableAction table={new TableActionObject(tableActionObject)} output={handleOutput} />`;
 
-/* ---------------------- Page ---------------------- */
-export default function TableActionPage() {
-  const [inputJson, setInputJson] = useState(DEFAULT_INPUT);
+/* ---------------------- Utilities ---------------------- */
+function preamble() {
+  return [
+    "// Header click → { type: 'column', name, dir }  (ask server for sorted rows).",
+    "// Action click → { type: 'action', action, row }",
+    "// Row cell click (when `link` present) → { type: 'navigate', to, id, row }"
+  ].join("\n");
+}
+
+function useParsedModel(inputJson) {
   const [parseError, setParseError] = useState("");
-  const [outputJson, setOutputJson] = useState(
-    [
-      "// Header click → { type: 'column', name, dir }  (ask server for sorted rows).",
-      "// Action click → { type: 'action', action, row }",
-      "// Row cell click (when `link` present) → { type: 'navigate', to, id, row }"
-    ].join("\n")
-  );
-
   const model = useMemo(() => {
     try {
       setParseError("");
@@ -71,15 +134,73 @@ export default function TableActionPage() {
       });
     }
   }, [inputJson]);
+  return { model, parseError, setParseError };
+}
 
-  function handleOutput(payload) {
-    // For demo, show payload.
-    // In app:
-    //   - { type:'column', name, dir } -> call API, update rows
-    //   - { type:'action', action, row } -> perform edit/delete etc.
-    //   - { type:'navigate', to, id, row } -> navigate programmatically if desired
-    setOutputJson(JSON.stringify(payload, null, 2));
+/* ---------------------- Page with Tabs ---------------------- */
+export default function TableActionPage() {
+  const TABS = ["ActionButton", "ActionIconButton", "ActionIcon"];
+  const [active, setActive] = useState("ActionButton");
+
+  const [jsonBtn, setJsonBtn] = useState(DEFAULT_BUTTONS);
+  const [jsonIconBtn, setJsonIconBtn] = useState(DEFAULT_ICON_BUTTONS);
+  const [jsonActionIcon, setJsonActionIcon] = useState(DEFAULT_ACTION_ICON);
+
+  const [outBtn, setOutBtn] = useState(preamble());
+  const [outIconBtn, setOutIconBtn] = useState(preamble());
+  const [outActionIcon, setOutActionIcon] = useState(preamble());
+
+  const { model: modelBtn,        parseError: errBtn }        = useParsedModel(jsonBtn);
+  const { model: modelIconBtn,    parseError: errIconBtn }    = useParsedModel(jsonIconBtn);
+  const { model: modelActionIcon, parseError: errActionIcon } = useParsedModel(jsonActionIcon);
+
+  function handleOutput(tab, payload) {
+    const s = JSON.stringify(payload, null, 2);
+    if (tab === "ActionButton") setOutBtn(s);
+    if (tab === "ActionIconButton") setOutIconBtn(s);
+    if (tab === "ActionIcon") setOutActionIcon(s);
   }
+
+  function resetTab(tab) {
+    if (tab === "ActionButton") {
+      setJsonBtn(DEFAULT_BUTTONS);
+      setOutBtn(preamble());
+    } else if (tab === "ActionIconButton") {
+      setJsonIconBtn(DEFAULT_ICON_BUTTONS);
+      setOutIconBtn(preamble());
+    } else {
+      setJsonActionIcon(DEFAULT_ACTION_ICON);
+      setOutActionIcon(preamble());
+    }
+  }
+
+  // Active tab bindings
+  const bindings = {
+    ActionButton: {
+      inputJson: jsonBtn,
+      setInputJson: setJsonBtn,
+      parseError: errBtn,
+      outputJson: outBtn,
+      setOutputJson: setOutBtn,
+      model: modelBtn
+    },
+    ActionIconButton: {
+      inputJson: jsonIconBtn,
+      setInputJson: setJsonIconBtn,
+      parseError: errIconBtn,
+      outputJson: outIconBtn,
+      setOutputJson: setOutIconBtn,
+      model: modelIconBtn
+    },
+    ActionIcon: {
+      inputJson: jsonActionIcon,
+      setInputJson: setJsonActionIcon,
+      parseError: errActionIcon,
+      outputJson: outActionIcon,
+      setOutputJson: setOutActionIcon,
+      model: modelActionIcon
+    }
+  }[active];
 
   return (
     <div className="container py-3">
@@ -94,51 +215,63 @@ export default function TableActionPage() {
         </div>
       </div>
 
-      {/* Row 2 — Live table */}
+      {/* Tabs */}
+      <ul className="nav nav-tabs mb-3">
+        {TABS.map((t) => (
+          <li className="nav-item" key={t}>
+            <button
+              type="button"
+              className={`nav-link ${active === t ? "active" : ""}`}
+              onClick={() => setActive(t)}
+            >
+              {t}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {/* Row 2 — Live table (per tab) */}
       <div className="row mb-4">
         <div className="col-12">
-          <AlloyTableAction table={model} output={handleOutput} />
+          <AlloyTableAction
+            tableAction={bindings.model}
+            output={(payload) => handleOutput(active, payload)}
+          />
           <div className="small text-secondary mt-2">
-            Server-sorted. Actions render via <code>AlloyButtonBar</code> in the last column.  
-            If <code>link</code> is set, each data cell links to <code>{`"${model.link}/{row.id}"`}</code>.
+            Server-sorted. Actions render via <code>AlloyButtonBar</code> in the last column.{" "}
+            If <code>link</code> is set, each data cell links to{" "}
+            <code>{`"${bindings.model.link}/{row.id}"`}</code>.
           </div>
         </div>
       </div>
 
-      {/* Row 3 — Input JSON (editable) and Output panel */}
+      {/* Row 3 — Input JSON (editable) and Output panel (per tab) */}
       <div className="row g-3 align-items-stretch">
         {/* Left: Input JSON */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">Input JSON (editable)</span>
+            <span className="fw-semibold">Input JSON (editable) — {active}</span>
             <div className="d-flex gap-2">
               <button
                 type="button"
                 className="btn btn-sm btn-outline-secondary"
-                onClick={() => {
-                  setInputJson(DEFAULT_INPUT);
-                  setOutputJson(
-                    [
-                      "// Header click → { type: 'column', name, dir }  (ask server for sorted rows).",
-                      "// Action click → { type: 'action', action, row }",
-                      "// Row cell click (when `link` present) → { type: 'navigate', to, id, row }"
-                    ].join("\n")
-                  );
-                }}
+                onClick={() => resetTab(active)}
               >
-                Reset
+                Reset {active}
               </button>
             </div>
           </div>
 
           <textarea
-            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
+            className={`form-control font-monospace ${bindings.parseError ? "is-invalid" : ""}`}
             rows={18}
-            value={inputJson}
-            onChange={(e) => setInputJson(e.target.value)}
+            value={bindings.inputJson}
+            onChange={(e) => bindings.setInputJson(e.target.value)}
             spellCheck={false}
           />
-          {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
+          {bindings.parseError && (
+            <div className="invalid-feedback d-block mt-1">{bindings.parseError}</div>
+          )}
           <div className="form-text">
             Columns derive from the first row’s keys (excluding <code>id</code>).  
             The same <code>actions</code> bar instance is used in every row.  
@@ -155,7 +288,7 @@ export default function TableActionPage() {
             <button
               type="button"
               className="btn btn-sm btn-outline-danger"
-              onClick={() => setOutputJson("// cleared")}
+              onClick={() => bindings.setOutputJson("// cleared")}
             >
               Clear
             </button>
@@ -163,8 +296,8 @@ export default function TableActionPage() {
           <textarea
             className="form-control font-monospace"
             rows={18}
-            value={outputJson}
-            onChange={(e) => setOutputJson(e.target.value)}
+            value={bindings.outputJson}
+            onChange={(e) => bindings.setOutputJson(e.target.value)}
             spellCheck={false}
           />
           <div className="form-text">

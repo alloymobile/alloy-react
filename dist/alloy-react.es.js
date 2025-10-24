@@ -1,214 +1,214 @@
-import { jsx as c, jsxs as g, Fragment as T } from "react/jsx-runtime";
-import * as y from "react";
-import { useRef as k, useState as x, useMemo as S, forwardRef as le, useImperativeHandle as de, useEffect as J } from "react";
+import { jsx as r, jsxs as N, Fragment as q } from "react/jsx-runtime";
+import * as p from "react";
+import { useRef as O, useState as C, useMemo as S, forwardRef as fe, useImperativeHandle as ye, useEffect as X } from "react";
 import "react-dom";
-let pe = 0;
-function Qe() {
-  return pe += 1, `alloyIcon${pe}`;
+let xe = 0;
+function ht() {
+  return xe += 1, `alloyIcon${xe}`;
 }
-class N {
+class w {
   /**
    * @param {{ id?: string, iconClass: string }} params
    */
-  constructor({ id: n, iconClass: a }) {
+  constructor({ id: t, iconClass: a }) {
     if (!a) throw new Error("Icon requires iconClass");
-    this.id = n ?? Qe(), this.iconClass = a;
+    this.id = t ?? ht(), this.iconClass = a;
   }
 }
-function I({ icon: e }) {
+function k({ icon: e }) {
   if (!e) throw new Error("AlloyIcon requires `icon` prop (Icon instance).");
-  return /* @__PURE__ */ c("i", { id: e.id, className: e.iconClass, "aria-hidden": "true" });
+  return /* @__PURE__ */ r("i", { id: e.id, className: e.iconClass, "aria-hidden": "true" });
 }
-let ge = 0;
-function et() {
-  return ge += 1, `alloyLink${ge}`;
+let be = 0;
+function mt() {
+  return be += 1, `alloyLink${be}`;
 }
-function tt(e = "", n = "") {
-  const [a, s] = x(!1), [r, i] = x(!1), [l, d] = x(!1);
+function ft(e = "", t = "") {
+  const [a, i] = C(!1), [o, l] = C(!1), [u, s] = C(!1);
   return {
-    className: S(() => [e, (a || r || l) && n].filter(Boolean).join(" "), [e, n, a, r, l]),
+    className: S(() => [e, (a || o || u) && t].filter(Boolean).join(" "), [e, t, a, o, u]),
     events: {
-      onMouseEnter: () => s(!0),
+      onMouseEnter: () => i(!0),
       onMouseLeave: () => {
-        s(!1), i(!1);
+        i(!1), l(!1);
       },
-      onMouseDown: () => i(!0),
-      onMouseUp: () => i(!1),
-      onFocus: () => d(!0),
-      onBlur: () => d(!1)
-    }
-  };
-}
-class _ {
-  /**
-   * @param {{ id?: string, name?: string, link: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e: any)=>void, title?: string }} p
-   */
-  constructor({
-    id: n,
-    name: a,
-    href: s,
-    className: r,
-    active: i,
-    target: l,
-    rel: d,
-    onClick: o,
-    title: t
-  }) {
-    if (!s) throw new Error("LinkObject requires `href`.");
-    this.id = n ?? et(), this.name = a, this.href = s, this.className = r ?? "", this.active = i ?? "", this.target = l, this.rel = d, this.onClick = o, this.title = t;
-  }
-}
-function nt({ link: e }) {
-  if (!e || !(e instanceof _))
-    throw new Error("AlloyLink requires `link` (LinkObject instance).");
-  if (!e.name) throw new Error("AlloyLink requires `link.name`.");
-  const n = k(e.id), { className: a, events: s } = tt(e.className, e.active), r = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel;
-  return /* @__PURE__ */ c(
-    "a",
-    {
-      id: n.current,
-      href: e.href,
-      className: a,
-      target: e.target,
-      rel: r,
-      onClick: e.onClick,
-      title: e.title,
-      ...s,
-      children: /* @__PURE__ */ c("span", { children: e.name })
-    }
-  );
-}
-let Ne = 0;
-function at() {
-  return Ne += 1, `alloyLinkIcon${Ne}`;
-}
-function rt(e = "", n = "") {
-  const [a, s] = x(!1), [r, i] = x(!1), [l, d] = x(!1);
-  return {
-    className: S(
-      () => [e, (a || r || l) && n].filter(Boolean).join(" "),
-      [e, n, a, r, l]
-    ),
-    events: {
-      onMouseEnter: () => s(!0),
-      onMouseLeave: () => {
-        s(!1), i(!1);
-      },
-      onMouseDown: () => i(!0),
-      onMouseUp: () => i(!1),
-      onFocus: () => d(!0),
-      onBlur: () => d(!1)
+      onMouseDown: () => l(!0),
+      onMouseUp: () => l(!1),
+      onFocus: () => s(!0),
+      onBlur: () => s(!1)
     }
   };
 }
 class R {
   /**
-   * @param {{ id?: string, link: string, icon: Icon, name?: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
+   * @param {{ id?: string, name?: string, link: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e: any)=>void, title?: string }} p
    */
   constructor({
-    id: n,
-    href: a,
-    icon: s,
-    name: r,
-    className: i,
+    id: t,
+    name: a,
+    href: i,
+    className: o,
     active: l,
-    target: d,
-    rel: o,
-    onClick: t,
-    title: u
+    target: u,
+    rel: s,
+    onClick: c,
+    title: n
   }) {
-    if (!a) throw new Error("LinkIconObject requires `href`.");
-    if (!s || !(s instanceof N))
-      throw new Error("LinkIconObject requires `icon` (Icon instance).");
-    this.id = n ?? at(), this.href = a, this.icon = s instanceof N ? s : new N(s), this.name = r, this.className = i ?? "", this.active = l ?? "", this.target = d, this.rel = o, this.onClick = t, this.title = u;
+    if (!i) throw new Error("LinkObject requires `href`.");
+    this.id = t ?? mt(), this.name = a, this.href = i, this.className = o ?? "", this.active = l ?? "", this.target = u, this.rel = s, this.onClick = c, this.title = n;
   }
 }
-function st({ linkIcon: e }) {
+function yt({ link: e }) {
   if (!e || !(e instanceof R))
-    throw new Error("AlloyLinkIcon requires `linkIcon` (LinkIconObject instance).");
-  const n = k(e.id), { className: a, events: s } = rt(e.className, e.active), r = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel, i = !!e.name;
-  return /* @__PURE__ */ c(
+    throw new Error("AlloyLink requires `link` (LinkObject instance).");
+  if (!e.name) throw new Error("AlloyLink requires `link.name`.");
+  const t = O(e.id), { className: a, events: i } = ft(e.className, e.active), o = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel;
+  return /* @__PURE__ */ r(
     "a",
     {
-      id: n.current,
+      id: t.current,
       href: e.href,
       className: a,
       target: e.target,
-      rel: r,
+      rel: o,
       onClick: e.onClick,
       title: e.title,
-      ...s,
-      children: /* @__PURE__ */ g("span", { children: [
-        /* @__PURE__ */ c(I, { icon: e.icon }),
-        i && /* @__PURE__ */ c("span", { className: "px-1", children: e.name })
+      ...i,
+      children: /* @__PURE__ */ r("span", { children: e.name })
+    }
+  );
+}
+let Ee = 0;
+function vt() {
+  return Ee += 1, `alloyLinkIcon${Ee}`;
+}
+function pt(e = "", t = "") {
+  const [a, i] = C(!1), [o, l] = C(!1), [u, s] = C(!1);
+  return {
+    className: S(
+      () => [e, (a || o || u) && t].filter(Boolean).join(" "),
+      [e, t, a, o, u]
+    ),
+    events: {
+      onMouseEnter: () => i(!0),
+      onMouseLeave: () => {
+        i(!1), l(!1);
+      },
+      onMouseDown: () => l(!0),
+      onMouseUp: () => l(!1),
+      onFocus: () => s(!0),
+      onBlur: () => s(!1)
+    }
+  };
+}
+class $ {
+  /**
+   * @param {{ id?: string, link: string, icon: Icon, name?: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
+   */
+  constructor({
+    id: t,
+    href: a,
+    icon: i,
+    name: o,
+    className: l,
+    active: u,
+    target: s,
+    rel: c,
+    onClick: n,
+    title: h
+  }) {
+    if (!a) throw new Error("LinkIconObject requires `href`.");
+    if (!i || !(i instanceof w))
+      throw new Error("LinkIconObject requires `icon` (Icon instance).");
+    this.id = t ?? vt(), this.href = a, this.icon = i instanceof w ? i : new w(i), this.name = o, this.className = l ?? "", this.active = u ?? "", this.target = s, this.rel = c, this.onClick = n, this.title = h;
+  }
+}
+function Nt({ linkIcon: e }) {
+  if (!e || !(e instanceof $))
+    throw new Error("AlloyLinkIcon requires `linkIcon` (LinkIconObject instance).");
+  const t = O(e.id), { className: a, events: i } = pt(e.className, e.active), o = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel, l = !!e.name;
+  return /* @__PURE__ */ r(
+    "a",
+    {
+      id: t.current,
+      href: e.href,
+      className: a,
+      target: e.target,
+      rel: o,
+      onClick: e.onClick,
+      title: e.title,
+      ...i,
+      children: /* @__PURE__ */ N("span", { children: [
+        /* @__PURE__ */ r(k, { icon: e.icon }),
+        l && /* @__PURE__ */ r("span", { className: "px-1", children: e.name })
       ] })
     }
   );
 }
-let we = 0;
-function ot() {
-  return we += 1, `alloyLinkLogo${we}`;
+let Le = 0;
+function gt() {
+  return Le += 1, `alloyLinkLogo${Le}`;
 }
-function it(e = "", n = "") {
-  const [a, s] = x(!1), [r, i] = x(!1), [l, d] = x(!1);
+function wt(e = "", t = "") {
+  const [a, i] = C(!1), [o, l] = C(!1), [u, s] = C(!1);
   return {
     className: S(
-      () => [e, (a || r || l) && n].filter(Boolean).join(" "),
-      [e, n, a, r, l]
+      () => [e, (a || o || u) && t].filter(Boolean).join(" "),
+      [e, t, a, o, u]
     ),
     events: {
-      onMouseEnter: () => s(!0),
+      onMouseEnter: () => i(!0),
       onMouseLeave: () => {
-        s(!1), i(!1);
+        i(!1), l(!1);
       },
-      onMouseDown: () => i(!0),
-      onMouseUp: () => i(!1),
-      onFocus: () => d(!0),
-      onBlur: () => d(!1)
+      onMouseDown: () => l(!0),
+      onMouseUp: () => l(!1),
+      onFocus: () => s(!0),
+      onBlur: () => s(!1)
     }
   };
 }
-class M {
+class j {
   /**
    * @param {{ id?: string, name?: string, link: string, logo: string, width?: number|string, height?: number|string, logoAlt?: string, className?: string, active?: string, target?: string, rel?: string, onClick?: (e:any)=>void, title?: string }} p
    */
   constructor({
-    id: n,
+    id: t,
     name: a,
-    href: s,
-    logo: r,
-    width: i,
-    height: l,
-    logoAlt: d = "",
-    className: o,
-    active: t,
-    target: u,
-    rel: h,
-    onClick: f,
-    title: w
+    href: i,
+    logo: o,
+    width: l,
+    height: u,
+    logoAlt: s = "",
+    className: c,
+    active: n,
+    target: h,
+    rel: d,
+    onClick: m,
+    title: g
   }) {
-    if (!s) throw new Error("LinkLogoObject requires `href`.");
-    if (!r) throw new Error("LinkLogoObject requires `logo`.");
-    this.id = n ?? ot(), this.name = a, this.href = s, this.logo = r, this.width = i, this.height = l, this.logoAlt = d, this.className = o ?? "", this.active = t ?? "", this.target = u, this.rel = h, this.onClick = f, this.title = w;
+    if (!i) throw new Error("LinkLogoObject requires `href`.");
+    if (!o) throw new Error("LinkLogoObject requires `logo`.");
+    this.id = t ?? gt(), this.name = a, this.href = i, this.logo = o, this.width = l, this.height = u, this.logoAlt = s, this.className = c ?? "", this.active = n ?? "", this.target = h, this.rel = d, this.onClick = m, this.title = g;
   }
 }
-function Fe({ linkLogo: e }) {
-  if (!e || !(e instanceof M))
+function Ge({ linkLogo: e }) {
+  if (!e || !(e instanceof j))
     throw new Error("AlloyLinkLogo requires `linkLogo` (LinkLogoObject instance).");
-  const n = k(e.id), { className: a, events: s } = it(e.className, e.active), r = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel, i = !!e.name;
-  return /* @__PURE__ */ c(
+  const t = O(e.id), { className: a, events: i } = wt(e.className, e.active), o = e.target === "_blank" ? e.rel ? `${e.rel} noopener noreferrer` : "noopener noreferrer" : e.rel, l = !!e.name;
+  return /* @__PURE__ */ r(
     "a",
     {
-      id: n.current,
+      id: t.current,
       href: e.href,
       className: a,
       target: e.target,
-      rel: r,
+      rel: o,
       onClick: e.onClick,
       title: e.title,
-      ...s,
-      children: /* @__PURE__ */ g("span", { children: [
-        /* @__PURE__ */ c(
+      ...i,
+      children: /* @__PURE__ */ N("span", { children: [
+        /* @__PURE__ */ r(
           "img",
           {
             src: e.logo,
@@ -218,458 +218,457 @@ function Fe({ linkLogo: e }) {
             style: { display: "inline-block" }
           }
         ),
-        i && /* @__PURE__ */ c("span", { className: "px-1", children: e.name })
+        l && /* @__PURE__ */ r("span", { className: "px-1", children: e.name })
       ] })
     }
   );
 }
-let xe = 0;
-function ct() {
-  return xe += 1, `alloyBtn${xe}`;
+let Ae = 0;
+function Ct() {
+  return Ae += 1, `alloyBtn${Ae}`;
 }
-function lt(e = "", n = "") {
-  const [a, s] = x(!1), [r, i] = x(!1), [l, d] = x(!1);
+function xt(e = "", t = "") {
+  const [a, i] = C(!1), [o, l] = C(!1), [u, s] = C(!1);
   return {
-    className: S(() => [e, (a || r || l) && n].filter(Boolean).join(" "), [e, n, a, r, l]),
+    className: S(() => [e, (a || o || u) && t].filter(Boolean).join(" "), [e, t, a, o, u]),
     events: {
-      onMouseEnter: () => s(!0),
+      onMouseEnter: () => i(!0),
       onMouseLeave: () => {
-        s(!1), i(!1);
+        i(!1), l(!1);
       },
-      onMouseDown: () => i(!0),
-      onMouseUp: () => i(!1),
-      onFocus: () => d(!0),
-      onBlur: () => d(!1)
+      onMouseDown: () => l(!0),
+      onMouseUp: () => l(!1),
+      onFocus: () => s(!0),
+      onBlur: () => s(!1)
     }
   };
 }
-class $ {
-  constructor(n) {
-    if (!n || !n.name) throw new Error("ButtonObject requires `name`.");
-    this.id = n.id ?? ct(), this.name = n.name, this.className = n.className ?? "", this.active = n.active ?? "", this.disabled = !!n.disabled, this.title = n.title, this.ariaLabel = n.ariaLabel, this.tabIndex = n.tabIndex, this.onClick = n.onClick, this.onKeyDown = n.onKeyDown, this.onKeyUp = n.onKeyUp, this.onFocus = n.onFocus, this.onBlur = n.onBlur, this.onMouseEnter = n.onMouseEnter, this.onMouseLeave = n.onMouseLeave;
+class F {
+  constructor(t) {
+    if (!t || !t.name) throw new Error("ButtonObject requires `name`.");
+    this.id = t.id ?? Ct(), this.name = t.name, this.className = t.className ?? "", this.active = t.active ?? "", this.disabled = !!t.disabled, this.title = t.title, this.ariaLabel = t.ariaLabel, this.tabIndex = t.tabIndex, this.onClick = t.onClick, this.onKeyDown = t.onKeyDown, this.onKeyUp = t.onKeyUp, this.onFocus = t.onFocus, this.onBlur = t.onBlur, this.onMouseEnter = t.onMouseEnter, this.onMouseLeave = t.onMouseLeave;
   }
 }
-const dt = le(function({ button: n, output: a }, s) {
-  if (!n || !(n instanceof $))
+const bt = fe(function({ button: t, output: a }, i) {
+  if (!t || !(t instanceof F))
     throw new Error("AlloyButton requires `button` (ButtonObject instance).");
-  const r = k(null), i = k(n.id), l = n.disabled, { className: d, events: o } = lt(n.className, n.active);
-  de(
-    s,
+  const o = O(null), l = O(t.id), u = t.disabled, { className: s, events: c } = xt(t.className, t.active);
+  ye(
+    i,
     () => ({
-      el: r.current,
-      model: n,
+      el: o.current,
+      model: t,
       focus: () => {
-        var h;
-        return (h = r.current) == null ? void 0 : h.focus();
+        var d;
+        return (d = o.current) == null ? void 0 : d.focus();
       },
       click: () => {
-        var h;
-        return (h = r.current) == null ? void 0 : h.click();
+        var d;
+        return (d = o.current) == null ? void 0 : d.click();
       }
     }),
-    [n]
+    [t]
   );
-  const t = (h, f) => (w) => {
-    f == null || f(w), a == null || a(n, w), h == null || h(w, n);
-  }, u = {
-    onClick: t(n.onClick),
-    onKeyDown: t(n.onKeyDown, o.onFocus),
-    onKeyUp: t(n.onKeyUp),
-    onFocus: t(n.onFocus, o.onFocus),
-    onBlur: t(n.onBlur, o.onBlur),
-    onMouseEnter: t(n.onMouseEnter, o.onMouseEnter),
-    onMouseLeave: t(n.onMouseLeave, o.onMouseLeave),
-    onMouseDown: t(void 0, o.onMouseDown),
-    onMouseUp: t(void 0, o.onMouseUp)
+  const n = (d, m) => (g) => {
+    m == null || m(g), a == null || a(t, g), d == null || d(g, t);
+  }, h = {
+    onClick: n(t.onClick),
+    onKeyDown: n(t.onKeyDown, c.onFocus),
+    onKeyUp: n(t.onKeyUp),
+    onFocus: n(t.onFocus, c.onFocus),
+    onBlur: n(t.onBlur, c.onBlur),
+    onMouseEnter: n(t.onMouseEnter, c.onMouseEnter),
+    onMouseLeave: n(t.onMouseLeave, c.onMouseLeave),
+    onMouseDown: n(void 0, c.onMouseDown),
+    onMouseUp: n(void 0, c.onMouseUp)
   };
-  return /* @__PURE__ */ c(
+  return /* @__PURE__ */ r(
     "button",
     {
-      id: i.current,
-      ref: r,
+      id: l.current,
+      ref: o,
       type: "button",
-      className: d,
-      title: n.title,
-      "aria-label": n.ariaLabel || n.name,
-      "aria-disabled": l || void 0,
-      disabled: l,
-      tabIndex: n.tabIndex,
-      ...u,
-      children: /* @__PURE__ */ c("span", { className: "px-2 align-middle", children: n.name })
+      className: s,
+      title: t.title,
+      "aria-label": t.ariaLabel || t.name,
+      "aria-disabled": u || void 0,
+      disabled: u,
+      tabIndex: t.tabIndex,
+      ...h,
+      children: /* @__PURE__ */ r("span", { className: "px-2 align-middle", children: t.name })
     }
   );
 });
-let Ce = 0;
-function ut() {
-  return Ce += 1, `alloyBtnicon${Ce}`;
+let Oe = 0;
+function Et() {
+  return Oe += 1, `alloyBtnicon${Oe}`;
 }
-function ht(e = "", n = "") {
-  const [a, s] = x(!1), [r, i] = x(!1), [l, d] = x(!1);
+function Lt(e = "", t = "") {
+  const [a, i] = C(!1), [o, l] = C(!1), [u, s] = C(!1);
   return {
-    className: S(() => [e, (a || r || l) && n].filter(Boolean).join(" "), [e, n, a, r, l]),
+    className: S(() => [e, (a || o || u) && t].filter(Boolean).join(" "), [e, t, a, o, u]),
     events: {
-      onMouseEnter: () => s(!0),
+      onMouseEnter: () => i(!0),
       onMouseLeave: () => {
-        s(!1), i(!1);
+        i(!1), l(!1);
       },
-      onMouseDown: () => i(!0),
-      onMouseUp: () => i(!1),
-      onFocus: () => d(!0),
-      onBlur: () => d(!1)
+      onMouseDown: () => l(!0),
+      onMouseUp: () => l(!1),
+      onFocus: () => s(!0),
+      onBlur: () => s(!1)
     }
   };
 }
-class b {
-  constructor(n) {
-    if (!n || !n.icon) throw new Error("ButtonIconObject requires `icon` (IconObject).");
-    this.id = n.id ?? ut(), this.name = n.name, this.icon = n.icon instanceof N ? n.icon : new N(n.icon), this.className = n.className ?? "", this.active = n.active ?? "", this.disabled = !!n.disabled, this.title = n.title, this.ariaLabel = n.ariaLabel, this.tabIndex = n.tabIndex, this.onClick = n.onClick, this.onKeyDown = n.onKeyDown, this.onKeyUp = n.onKeyUp, this.onFocus = n.onFocus, this.onBlur = n.onBlur, this.onMouseEnter = n.onMouseEnter, this.onMouseLeave = n.onMouseLeave;
+class I {
+  constructor(t) {
+    if (!t || !t.icon) throw new Error("ButtonIconObject requires `icon` (IconObject).");
+    this.id = t.id ?? Et(), this.name = t.name, this.icon = t.icon instanceof w ? t.icon : new w(t.icon), this.className = t.className ?? "", this.active = t.active ?? "", this.disabled = !!t.disabled, this.title = t.title, this.ariaLabel = t.ariaLabel, this.tabIndex = t.tabIndex, this.onClick = t.onClick, this.onKeyDown = t.onKeyDown, this.onKeyUp = t.onKeyUp, this.onFocus = t.onFocus, this.onBlur = t.onBlur, this.onMouseEnter = t.onMouseEnter, this.onMouseLeave = t.onMouseLeave;
   }
 }
-const ft = le(function({ buttonIcon: n, output: a }, s) {
-  if (!n || !(n instanceof b))
+const At = fe(function({ buttonIcon: t, output: a }, i) {
+  if (!t || !(t instanceof I))
     throw new Error("AlloyButtonIcon requires `buttonIcon` (ButtonIconObject instance).");
-  const r = k(null), i = k(n.id), l = n.disabled, { className: d, events: o } = ht(n.className, n.active);
-  de(
-    s,
+  const o = O(null), l = O(t.id), u = t.disabled, { className: s, events: c } = Lt(t.className, t.active);
+  ye(
+    i,
     () => ({
-      el: r.current,
-      model: n,
+      el: o.current,
+      model: t,
       focus: () => {
-        var f;
-        return (f = r.current) == null ? void 0 : f.focus();
+        var m;
+        return (m = o.current) == null ? void 0 : m.focus();
       },
       click: () => {
-        var f;
-        return (f = r.current) == null ? void 0 : f.click();
+        var m;
+        return (m = o.current) == null ? void 0 : m.click();
       }
     }),
-    [n]
+    [t]
   );
-  const t = (f, w) => (v) => {
-    w == null || w(v), a == null || a(n, v), f == null || f(v, n);
-  }, u = {
-    onClick: t(n.onClick),
-    onKeyDown: t(n.onKeyDown, o.onFocus),
-    onKeyUp: t(n.onKeyUp),
-    onFocus: t(n.onFocus, o.onFocus),
-    onBlur: t(n.onBlur, o.onBlur),
-    onMouseEnter: t(n.onMouseEnter, o.onMouseEnter),
-    onMouseLeave: t(n.onMouseLeave, o.onMouseLeave),
-    onMouseDown: t(void 0, o.onMouseDown),
-    onMouseUp: t(void 0, o.onMouseUp)
-  }, h = n.ariaLabel || n.name || "icon button";
-  return /* @__PURE__ */ g(
+  const n = (m, g) => (f) => {
+    g == null || g(f), a == null || a(t, f), m == null || m(f, t);
+  }, h = {
+    onClick: n(t.onClick),
+    onKeyDown: n(t.onKeyDown, c.onFocus),
+    onKeyUp: n(t.onKeyUp),
+    onFocus: n(t.onFocus, c.onFocus),
+    onBlur: n(t.onBlur, c.onBlur),
+    onMouseEnter: n(t.onMouseEnter, c.onMouseEnter),
+    onMouseLeave: n(t.onMouseLeave, c.onMouseLeave),
+    onMouseDown: n(void 0, c.onMouseDown),
+    onMouseUp: n(void 0, c.onMouseUp)
+  }, d = t.ariaLabel || t.name || "icon button";
+  return /* @__PURE__ */ N(
     "button",
     {
-      id: i.current,
-      ref: r,
+      id: l.current,
+      ref: o,
       type: "button",
-      className: d,
-      title: n.title,
-      "aria-label": h,
-      "aria-disabled": l || void 0,
-      disabled: l,
-      tabIndex: n.tabIndex,
-      ...u,
+      className: s,
+      title: t.title,
+      "aria-label": d,
+      "aria-disabled": u || void 0,
+      disabled: u,
+      tabIndex: t.tabIndex,
+      ...h,
       children: [
-        /* @__PURE__ */ c("span", { className: "d-inline-flex align-middle", children: /* @__PURE__ */ c(I, { icon: n.icon }) }),
-        n.name ? /* @__PURE__ */ c("span", { className: "px-2 align-middle", children: n.name }) : null
+        /* @__PURE__ */ r("span", { className: "d-inline-flex align-middle", children: /* @__PURE__ */ r(k, { icon: t.icon }) }),
+        t.name ? /* @__PURE__ */ r("span", { className: "px-2 align-middle", children: t.name }) : null
       ]
     }
   );
 });
-let Le = 0;
-function mt() {
-  return Le += 1, `alloyBtnsubmit${Le}`;
+let ke = 0;
+function Ot() {
+  return ke += 1, `alloyBtnsubmit${ke}`;
 }
-class vt {
-  constructor(n) {
-    if (!n || !n.name) throw new Error("ButtonSubmitObject requires `name`.");
-    if (!n.icon) throw new Error("ButtonSubmitObject requires `icon`.");
-    this.id = n.id ?? mt(), this.name = n.name, this.icon = n.icon instanceof N ? n.icon : new N(n.icon), this.className = n.className ?? "", this.disabled = !!n.disabled, this.loading = !!n.loading, this.title = n.title, this.ariaLabel = n.ariaLabel, this.tabIndex = n.tabIndex, this.onClick = n.onClick, this.onMouseDown = n.onMouseDown, this.onKeyDown = n.onKeyDown;
+class Z {
+  constructor(t) {
+    if (!t || !t.name) throw new Error("ButtonSubmitObject requires `name`.");
+    if (!t.icon) throw new Error("ButtonSubmitObject requires `icon`.");
+    this.id = t.id ?? Ot(), this.name = t.name, this.icon = t.icon instanceof w ? t.icon : new w(t.icon), this.className = t.className ?? "", this.disabled = !!t.disabled, this.loading = !!t.loading, this.title = t.title, this.ariaLabel = t.ariaLabel, this.tabIndex = t.tabIndex, this.onClick = t.onClick, this.onMouseDown = t.onMouseDown, this.onKeyDown = t.onKeyDown;
   }
 }
-const _n = le(function({ buttonSubmit: n, output: a }, s) {
-  if (!n || !(n instanceof vt))
+const kt = fe(function({ buttonSubmit: t, output: a }, i) {
+  if (!t || !(t instanceof Z))
     throw new Error("AlloyButtonSubmit requires `buttonSubmit` (ButtonSubmitObject instance).");
-  const r = k(null), i = k(n.id), [l, d] = x(!!n.loading);
-  J(() => {
-    d(!!n.loading);
-  }, [n.loading]);
-  const o = n.disabled || l;
-  de(
-    s,
+  const o = O(null), l = O(t.id), [u, s] = C(!!t.loading);
+  X(() => {
+    s(!!t.loading);
+  }, [t.loading]);
+  const c = t.disabled || u;
+  ye(
+    i,
     () => ({
-      el: r.current,
-      model: n,
+      el: o.current,
+      model: t,
       focus: () => {
-        var m;
-        return (m = r.current) == null ? void 0 : m.focus();
+        var y;
+        return (y = o.current) == null ? void 0 : y.focus();
       },
       click: () => {
-        var m;
-        return (m = r.current) == null ? void 0 : m.click();
+        var y;
+        return (y = o.current) == null ? void 0 : y.click();
       }
     }),
-    [n]
+    [t]
   );
-  const t = k(!1);
-  J(() => {
-    l || (t.current = !1);
-  }, [l]);
-  const u = () => t.current || o ? !1 : (t.current = !0, n.loading = !0, n.disabled = !0, d(!0), !0), h = (m, O) => {
-    a == null || a(n, m), O == null || O(m, n);
-  }, f = (m) => {
-    u() && h(m, n.onClick);
-  }, w = (m) => {
-    u() && h(m, n.onMouseDown);
-  }, v = (m) => {
-    const O = m.key;
-    (O === "Enter" || O === " ") && u() && h(m, n.onKeyDown);
-  }, p = l;
-  return /* @__PURE__ */ g(
+  const n = O(!1);
+  X(() => {
+    u || (n.current = !1);
+  }, [u]);
+  const h = () => n.current || c ? !1 : (n.current = !0, t.loading = !0, t.disabled = !0, s(!0), !0), d = (y, A) => {
+    a == null || a(t, y), A == null || A(y, t);
+  }, m = (y) => {
+    h() && d(y, t.onClick);
+  }, g = (y) => {
+    h() && d(y, t.onMouseDown);
+  }, f = (y) => {
+    const A = y.key;
+    (A === "Enter" || A === " ") && h() && d(y, t.onKeyDown);
+  }, v = u;
+  return /* @__PURE__ */ N(
     "button",
     {
-      id: i.current,
-      ref: r,
+      id: l.current,
+      ref: o,
       type: "submit",
-      className: n.className,
-      title: n.title,
-      "aria-label": n.ariaLabel || n.name,
-      "aria-busy": l || void 0,
-      "aria-disabled": o || void 0,
-      disabled: o,
-      tabIndex: n.tabIndex,
-      onClick: f,
-      onMouseDown: w,
-      onKeyDown: v,
+      className: t.className,
+      title: t.title,
+      "aria-label": t.ariaLabel || t.name,
+      "aria-busy": u || void 0,
+      "aria-disabled": c || void 0,
+      disabled: c,
+      tabIndex: t.tabIndex,
+      onClick: m,
+      onMouseDown: g,
+      onKeyDown: f,
       children: [
-        p && /* @__PURE__ */ c("span", { className: "d-inline-flex align-middle", children: /* @__PURE__ */ c(I, { icon: n.icon }) }),
-        /* @__PURE__ */ c("span", { className: p ? "px-2 align-middle" : "align-middle", children: n.name }),
-        l ? /* @__PURE__ */ c("span", { className: "ms-2 visually-hidden", "aria-live": "polite", children: "Loading…" }) : null
+        v && /* @__PURE__ */ r("span", { className: "d-inline-flex align-middle", children: /* @__PURE__ */ r(k, { icon: t.icon }) }),
+        /* @__PURE__ */ r("span", { className: v ? "px-2 align-middle" : "align-middle", children: t.name }),
+        u ? /* @__PURE__ */ r("span", { className: "ms-2 visually-hidden", "aria-live": "polite", children: "Loading…" }) : null
       ]
     }
   );
 });
-let Ee = 0;
-function yt() {
-  return Ee += 1, `alloyinput${Ee}`;
+let Se = 0;
+function St() {
+  return Se += 1, `alloyinput${Se}`;
 }
-class Rn {
-  constructor(n) {
+class je {
+  constructor(t) {
     const {
       id: a,
-      name: s,
-      type: r = "text",
-      label: i = "",
-      value: l = r === "checkbox" ? [] : "",
-      layout: d = "text",
-      icon: o,
-      placeholder: t = "",
-      required: u = !1,
-      minLength: h,
-      maxLength: f,
-      min: w,
-      max: v,
-      pattern: p,
-      matchWith: m,
-      passwordStrength: O,
-      options: C = [],
-      validators: A = [],
+      name: i,
+      type: o = "text",
+      label: l = "",
+      value: u = o === "checkbox" ? [] : "",
+      layout: s = "text",
+      icon: c,
+      placeholder: n = "",
+      required: h = !1,
+      minLength: d,
+      maxLength: m,
+      min: g,
+      max: f,
+      pattern: v,
+      matchWith: y,
+      passwordStrength: A,
+      options: x = [],
+      validators: L = [],
       ...E
-    } = n || {};
-    if (!s) throw new Error("InputObject requires a 'name' field");
-    if (["icon", "floating"].includes(d) && !o)
+    } = t || {};
+    if (!i) throw new Error("InputObject requires a 'name' field");
+    if (["icon", "floating"].includes(s) && !c)
       throw new Error("Icon is required for icon and floating layouts");
-    this.id = a ?? yt(), this.name = s, this.type = r, this.label = i, this.value = l, this.layout = d, this.icon = o instanceof N ? o : o ? new N(o) : void 0, this.placeholder = t, this.required = u, this.minLength = h, this.maxLength = f, this.min = w, this.max = v, this.pattern = p, this.matchWith = m, this.passwordStrength = O, this.options = C, this.validators = A, Object.assign(this, E);
+    this.id = a ?? St(), this.name = i, this.type = o, this.label = l, this.value = u, this.layout = s, this.icon = c instanceof w ? c : c ? new w(c) : void 0, this.placeholder = n, this.required = h, this.minLength = d, this.maxLength = m, this.min = g, this.max = f, this.pattern = v, this.matchWith = y, this.passwordStrength = A, this.options = x, this.validators = L, Object.assign(this, E);
   }
 }
-function Sn({ input: e, output: n }) {
-  const [a, s] = x(e.value), [r, i] = x(!1), l = (v) => {
-    const p = [], m = typeof v == "string" ? v.trim() : v;
-    return e.required && (Array.isArray(m) && m.length === 0 || !Array.isArray(m) && (m === "" || m === !1)) && p.push("This field is required."), e.minLength && typeof m == "string" && m.length < e.minLength && p.push(`Minimum length is ${e.minLength}`), e.maxLength && typeof m == "string" && m.length > e.maxLength && p.push(`Maximum length is ${e.maxLength}`), e.pattern && typeof m == "string" && !new RegExp(e.pattern).test(m) && p.push("Invalid format."), e.passwordStrength && typeof m == "string" && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(m) && p.push("Password is too weak."), p;
-  }, d = (v) => {
-    const p = l(v);
-    n == null || n({
+function jt({ input: e, output: t }) {
+  const [a, i] = C(e.value), [o, l] = C(!1), u = (f) => {
+    const v = [], y = typeof f == "string" ? f.trim() : f;
+    return e.required && (Array.isArray(y) && y.length === 0 || !Array.isArray(y) && (y === "" || y === !1)) && v.push("This field is required."), e.minLength && typeof y == "string" && y.length < e.minLength && v.push(`Minimum length is ${e.minLength}`), e.maxLength && typeof y == "string" && y.length > e.maxLength && v.push(`Maximum length is ${e.maxLength}`), e.pattern && typeof y == "string" && !new RegExp(e.pattern).test(y) && v.push("Invalid format."), e.passwordStrength && typeof y == "string" && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(y) && v.push("Password is too weak."), v;
+  }, s = (f) => {
+    const v = u(f);
+    t == null || t({
       id: e.id,
       name: e.name,
-      value: v,
-      valid: p.length === 0,
-      error: p.length > 0,
-      errors: p
+      value: f,
+      valid: v.length === 0,
+      error: v.length > 0,
+      errors: v
     });
-  }, o = () => i(!0), t = r && l(a).length > 0, u = t && /* @__PURE__ */ c("div", { className: "mt-2", "aria-live": "polite", children: l(a).map((v, p) => /* @__PURE__ */ c("div", { className: "alert alert-danger py-2 mb-2", role: "alert", children: v }, p)) }), h = {
+  }, c = () => l(!0), n = o && u(a).length > 0, h = n && /* @__PURE__ */ r("div", { className: "mt-2", "aria-live": "polite", children: u(a).map((f, v) => /* @__PURE__ */ r("div", { className: "alert alert-danger py-2 mb-2", role: "alert", children: f }, v)) }), d = {
     name: e.name,
     placeholder: e.placeholder,
-    onBlur: o,
-    "aria-invalid": t || void 0
-  }, f = (v) => {
-    const p = v.target.value;
+    onBlur: c,
+    "aria-invalid": n || void 0
+  }, m = (f) => {
+    const v = f.target.value;
     if (e.type === "checkbox") {
-      const m = Array.isArray(a) ? [...a] : [], O = m.indexOf(p);
-      O > -1 ? m.splice(O, 1) : m.push(p), s(m), d(m);
+      const y = Array.isArray(a) ? [...a] : [], A = y.indexOf(v);
+      A > -1 ? y.splice(A, 1) : y.push(v), i(y), s(y);
     } else
-      s(p), d(p);
-  }, w = () => e.type === "textarea" ? /* @__PURE__ */ c("textarea", { ...h, value: a, className: `form-control${t ? " is-invalid" : ""}` }) : e.type === "select" ? /* @__PURE__ */ c("select", { ...h, value: a, className: `form-select${t ? " is-invalid" : ""}`, onChange: f, children: e.options.map((v) => /* @__PURE__ */ c("option", { value: v.value, children: v.label }, v.value)) }) : e.type === "radio" ? /* @__PURE__ */ g("div", { children: [
-    /* @__PURE__ */ c("label", { className: "form-label d-block mb-2", children: e.label }),
-    e.options.map((v, p) => /* @__PURE__ */ g("div", { className: "form-check", children: [
-      /* @__PURE__ */ c(
+      i(v), s(v);
+  }, g = () => e.type === "textarea" ? /* @__PURE__ */ r("textarea", { ...d, value: a, className: `form-control${n ? " is-invalid" : ""}` }) : e.type === "select" ? /* @__PURE__ */ r("select", { ...d, value: a, className: `form-select${n ? " is-invalid" : ""}`, onChange: m, children: e.options.map((f) => /* @__PURE__ */ r("option", { value: f.value, children: f.label }, f.value)) }) : e.type === "radio" ? /* @__PURE__ */ N("div", { children: [
+    /* @__PURE__ */ r("label", { className: "form-label d-block mb-2", children: e.label }),
+    e.options.map((f, v) => /* @__PURE__ */ N("div", { className: "form-check", children: [
+      /* @__PURE__ */ r(
         "input",
         {
           type: "radio",
-          id: `${e.id}_${p}`,
-          className: `form-check-input${t ? " is-invalid" : ""}`,
+          id: `${e.id}_${v}`,
+          className: `form-check-input${n ? " is-invalid" : ""}`,
           name: e.name,
-          value: v.value,
-          checked: a === v.value,
-          onChange: (m) => {
-            s(m.target.value), d(m.target.value);
+          value: f.value,
+          checked: a === f.value,
+          onChange: (y) => {
+            i(y.target.value), s(y.target.value);
           }
         }
       ),
-      /* @__PURE__ */ c("label", { className: "form-check-label", htmlFor: `${e.id}_${p}`, children: v.label })
-    ] }, p))
-  ] }) : e.type === "checkbox" ? /* @__PURE__ */ g("div", { children: [
-    /* @__PURE__ */ c("label", { className: "form-label d-block mb-2", children: e.label }),
-    e.options.map((v, p) => /* @__PURE__ */ g("div", { className: "form-check", children: [
-      /* @__PURE__ */ c(
+      /* @__PURE__ */ r("label", { className: "form-check-label", htmlFor: `${e.id}_${v}`, children: f.label })
+    ] }, v))
+  ] }) : e.type === "checkbox" ? /* @__PURE__ */ N("div", { children: [
+    /* @__PURE__ */ r("label", { className: "form-label d-block mb-2", children: e.label }),
+    e.options.map((f, v) => /* @__PURE__ */ N("div", { className: "form-check", children: [
+      /* @__PURE__ */ r(
         "input",
         {
           type: "checkbox",
-          id: `${e.id}_${p}`,
-          className: `form-check-input${t ? " is-invalid" : ""}`,
+          id: `${e.id}_${v}`,
+          className: `form-check-input${n ? " is-invalid" : ""}`,
           name: e.name,
-          value: v.value,
-          checked: Array.isArray(a) && a.includes(v.value),
-          onChange: f
+          value: f.value,
+          checked: Array.isArray(a) && a.includes(f.value),
+          onChange: m
         }
       ),
-      /* @__PURE__ */ c("label", { className: "form-check-label", htmlFor: `${e.id}_${p}`, children: v.label })
-    ] }, p))
-  ] }) : /* @__PURE__ */ c("input", { ...h, type: e.type, value: a, onChange: f, className: `form-control${t ? " is-invalid" : ""}` });
-  return e.layout === "floating" ? /* @__PURE__ */ g("div", { className: "mb-3", children: [
-    /* @__PURE__ */ g("div", { className: "form-floating", children: [
-      w(),
-      /* @__PURE__ */ g("label", { htmlFor: e.id, children: [
-        e.icon && /* @__PURE__ */ c(I, { icon: e.icon }),
+      /* @__PURE__ */ r("label", { className: "form-check-label", htmlFor: `${e.id}_${v}`, children: f.label })
+    ] }, v))
+  ] }) : /* @__PURE__ */ r("input", { ...d, type: e.type, value: a, onChange: m, className: `form-control${n ? " is-invalid" : ""}` });
+  return e.layout === "floating" ? /* @__PURE__ */ N("div", { className: "mb-3", children: [
+    /* @__PURE__ */ N("div", { className: "form-floating", children: [
+      g(),
+      /* @__PURE__ */ N("label", { htmlFor: e.id, children: [
+        e.icon && /* @__PURE__ */ r(k, { icon: e.icon }),
         " ",
         e.label
       ] })
     ] }),
-    u
-  ] }) : e.layout === "icon" ? /* @__PURE__ */ g("div", { className: "mb-3", children: [
-    /* @__PURE__ */ c("label", { htmlFor: e.id, className: "form-label", children: e.label }),
-    /* @__PURE__ */ g("div", { className: "input-group", children: [
-      /* @__PURE__ */ c("span", { className: "input-group-text", children: /* @__PURE__ */ c(I, { icon: e.icon }) }),
-      w()
+    h
+  ] }) : e.layout === "icon" ? /* @__PURE__ */ N("div", { className: "mb-3", children: [
+    /* @__PURE__ */ r("label", { htmlFor: e.id, className: "form-label", children: e.label }),
+    /* @__PURE__ */ N("div", { className: "input-group", children: [
+      /* @__PURE__ */ r("span", { className: "input-group-text", children: /* @__PURE__ */ r(k, { icon: e.icon }) }),
+      g()
     ] }),
-    u
-  ] }) : /* @__PURE__ */ g("div", { className: "mb-3", children: [
-    ["text", "textarea", "number", "email", "password", "date"].includes(e.type) && /* @__PURE__ */ c("label", { htmlFor: e.id, className: "form-label", children: e.label }),
-    w(),
-    u
+    h
+  ] }) : /* @__PURE__ */ N("div", { className: "mb-3", children: [
+    ["text", "textarea", "number", "email", "password", "date"].includes(e.type) && /* @__PURE__ */ r("label", { htmlFor: e.id, className: "form-label", children: e.label }),
+    g(),
+    h
   ] });
 }
-let Ae = 0;
-function pt() {
-  return Ae += 1, `barItem${Ae}`;
+let Me = 0;
+function Mt() {
+  return Me += 1, `barItem${Me}`;
 }
-let Oe = 0;
-function gt() {
-  return Oe += 1, `linkBar${Oe}`;
+let _e = 0;
+function _t() {
+  return _e += 1, `linkBar${_e}`;
 }
-let ke = class {
+let De = class {
   /**
    * @param {{ id?: string, name?: string, className?: string, show?: boolean }} p
    */
-  constructor({ id: n, name: a, className: s, show: r } = {}) {
-    this.id = n ?? pt(), this.name = a ?? "Bar Item", this.className = s ?? "", this.show = typeof r == "boolean" ? r : !1;
+  constructor({ id: t, name: a, className: i, show: o } = {}) {
+    this.id = t ?? Mt(), this.name = a ?? "Bar Item", this.className = i ?? "", this.show = typeof o == "boolean" ? o : !1;
   }
 };
-class re {
-  constructor({ id: n, className: a, barName: s, type: r, linkClass: i, links: l, selected: d } = {}) {
-    this.id = n ?? gt(), this.className = a ?? "d-flex justify-content-center", this.barName = s instanceof ke ? s : new ke(s ?? {}), this.type = r ?? "AlloyLink", this.linkClass = i ?? "nav-item", this.selected = d ?? "active";
-    const o = Array.isArray(l) ? l : [];
+class M {
+  constructor({ id: t, className: a, barName: i, type: o, linkClass: l, links: u, selected: s } = {}) {
+    this.id = t ?? _t(), this.className = a ?? "d-flex justify-content-center", this.barName = i instanceof De ? i : new De(i ?? {}), this.type = o ?? "AlloyLink", this.linkClass = l ?? "nav-item", this.selected = s ?? "active";
+    const c = Array.isArray(u) ? u : [];
     switch (this.type) {
       case "AlloyLinkIcon":
-        this.links = o.map(
-          (t) => t instanceof R ? t : new R({
-            id: t == null ? void 0 : t.id,
-            href: t == null ? void 0 : t.href,
-            icon: t == null ? void 0 : t.icon,
-            // LinkIconObject ctor will wrap plain icon into IconObject
-            name: t == null ? void 0 : t.name,
-            className: t == null ? void 0 : t.className,
-            active: t == null ? void 0 : t.active,
-            target: t == null ? void 0 : t.target,
-            rel: t == null ? void 0 : t.rel,
-            onClick: t == null ? void 0 : t.onClick,
-            title: t == null ? void 0 : t.title
+        this.links = c.map(
+          (n) => n instanceof $ ? n : new $({
+            id: n == null ? void 0 : n.id,
+            href: n == null ? void 0 : n.href,
+            icon: (n == null ? void 0 : n.icon) instanceof w ? n == null ? void 0 : n.icon : new w(n == null ? void 0 : n.icon),
+            name: n == null ? void 0 : n.name,
+            className: n == null ? void 0 : n.className,
+            active: n == null ? void 0 : n.active,
+            target: n == null ? void 0 : n.target,
+            rel: n == null ? void 0 : n.rel,
+            onClick: n == null ? void 0 : n.onClick,
+            title: n == null ? void 0 : n.title
           })
         );
         break;
       case "AlloyLinkLogo":
-        this.links = o.map(
-          (t) => t instanceof M ? t : new M({
-            id: t == null ? void 0 : t.id,
-            name: t == null ? void 0 : t.name,
-            href: t == null ? void 0 : t.href,
-            logo: t == null ? void 0 : t.logo,
-            width: t == null ? void 0 : t.width,
-            height: t == null ? void 0 : t.height,
-            logoAlt: t == null ? void 0 : t.logoAlt,
-            className: t == null ? void 0 : t.className,
-            active: t == null ? void 0 : t.active,
-            target: t == null ? void 0 : t.target,
-            rel: t == null ? void 0 : t.rel,
-            onClick: t == null ? void 0 : t.onClick,
-            title: t == null ? void 0 : t.title
+        this.links = c.map(
+          (n) => n instanceof j ? n : new j({
+            id: n == null ? void 0 : n.id,
+            name: n == null ? void 0 : n.name,
+            href: n == null ? void 0 : n.href,
+            logo: n == null ? void 0 : n.logo,
+            width: n == null ? void 0 : n.width,
+            height: n == null ? void 0 : n.height,
+            logoAlt: n == null ? void 0 : n.logoAlt,
+            className: n == null ? void 0 : n.className,
+            active: n == null ? void 0 : n.active,
+            target: n == null ? void 0 : n.target,
+            rel: n == null ? void 0 : n.rel,
+            onClick: n == null ? void 0 : n.onClick,
+            title: n == null ? void 0 : n.title
           })
         );
         break;
       case "AlloyLink":
       default:
-        this.links = o.map(
-          (t) => t instanceof _ ? t : new _({
-            id: t == null ? void 0 : t.id,
-            name: t == null ? void 0 : t.name,
-            href: t == null ? void 0 : t.href,
-            className: t == null ? void 0 : t.className,
-            active: t == null ? void 0 : t.active,
-            target: t == null ? void 0 : t.target,
-            rel: t == null ? void 0 : t.rel,
-            onClick: t == null ? void 0 : t.onClick,
-            title: t == null ? void 0 : t.title
+        this.links = c.map(
+          (n) => n instanceof R ? n : new R({
+            id: n == null ? void 0 : n.id,
+            name: n == null ? void 0 : n.name,
+            href: n == null ? void 0 : n.href,
+            className: n == null ? void 0 : n.className,
+            active: n == null ? void 0 : n.active,
+            target: n == null ? void 0 : n.target,
+            rel: n == null ? void 0 : n.rel,
+            onClick: n == null ? void 0 : n.onClick,
+            title: n == null ? void 0 : n.title
           })
         );
         break;
     }
   }
 }
-function te(e, n, a, s) {
-  const r = a ? n : "";
-  return e instanceof _ ? new _({
+function ce(e, t, a, i) {
+  const o = a ? t : "";
+  return e instanceof R ? new R({
     id: e.id,
     name: e.name,
     href: e.href,
     className: e.className,
-    active: r,
+    active: o,
     target: e.target,
     rel: e.rel,
-    onClick: s,
+    onClick: i,
     title: e.title
-  }) : e instanceof R ? new R({
+  }) : e instanceof $ ? new $({
     id: e.id,
     href: e.href,
     icon: e.icon,
     name: e.name,
     className: e.className,
-    active: r,
+    active: o,
     target: e.target,
     rel: e.rel,
-    onClick: s,
+    onClick: i,
     title: e.title
-  }) : e instanceof M ? new M({
+  }) : e instanceof j ? new j({
     id: e.id,
     name: e.name,
     href: e.href,
@@ -678,102 +677,102 @@ function te(e, n, a, s) {
     height: e.height,
     logoAlt: e.logoAlt,
     className: e.className,
-    active: r,
+    active: o,
     target: e.target,
     rel: e.rel,
-    onClick: s,
+    onClick: i,
     title: e.title
   }) : e;
 }
-function Nt({ linkBar: e }) {
-  if (!e || !(e instanceof re))
+function ee({ linkBar: e }) {
+  if (!e || !(e instanceof M))
     throw new Error("AlloyLinkBar requires `linkBar` (LinkBarObject instance).");
-  const n = k(e.id), [a, s] = x("");
-  J(() => {
-    s("");
+  const t = O(e.id), [a, i] = C("");
+  X(() => {
+    i("");
   }, [e]);
-  const r = () => {
-    var t;
-    return (t = e.barName) != null && t.show ? /* @__PURE__ */ c("div", { id: e.barName.id, className: e.barName.className, children: e.barName.name }) : null;
+  const o = () => {
+    var n;
+    return (n = e.barName) != null && n.show ? /* @__PURE__ */ r("div", { id: e.barName.id, className: e.barName.className, children: e.barName.name }) : null;
   };
-  function i(t) {
-    const u = t.onClick;
-    return (h) => {
-      const f = t.id || `${t.href || ""}-${t.name || ""}`;
-      s(f), u == null || u(h);
+  function l(n) {
+    const h = n.onClick;
+    return (d) => {
+      const m = n.id || `${n.href || ""}-${n.name || ""}`;
+      i(m), h == null || h(d);
     };
   }
-  const l = () => /* @__PURE__ */ g(T, { children: [
-    /* @__PURE__ */ c(r, {}),
-    /* @__PURE__ */ c("ul", { id: n.current, className: e.className, children: e.links.map((t, u) => {
-      if (!(t instanceof _))
+  const u = () => /* @__PURE__ */ N(q, { children: [
+    /* @__PURE__ */ r(o, {}),
+    /* @__PURE__ */ r("ul", { id: t.current, className: e.className, children: e.links.map((n, h) => {
+      if (!(n instanceof R))
         throw new Error(
           "AlloyLinkBar (type='AlloyLink') requires each `links` item to be a LinkObject instance."
         );
-      const h = ((t == null ? void 0 : t.id) ?? "") === a, f = te(
-        t,
+      const d = ((n == null ? void 0 : n.id) ?? "") === a, m = ce(
+        n,
         e.selected,
-        h,
-        i(t)
+        d,
+        l(n)
       );
-      return /* @__PURE__ */ c("li", { className: e.linkClass, children: /* @__PURE__ */ c(nt, { link: f }) }, ((t == null ? void 0 : t.id) ?? u) + "-li");
+      return /* @__PURE__ */ r("li", { className: e.linkClass, children: /* @__PURE__ */ r(yt, { link: m }) }, ((n == null ? void 0 : n.id) ?? h) + "-li");
     }) })
-  ] }), d = () => /* @__PURE__ */ g(T, { children: [
-    /* @__PURE__ */ c(r, {}),
-    /* @__PURE__ */ c("ul", { id: n.current, className: e.className, children: e.links.map((t, u) => {
-      if (!(t instanceof R))
+  ] }), s = () => /* @__PURE__ */ N(q, { children: [
+    /* @__PURE__ */ r(o, {}),
+    /* @__PURE__ */ r("ul", { id: t.current, className: e.className, children: e.links.map((n, h) => {
+      if (!(n instanceof $))
         throw new Error(
           "AlloyLinkBar (type='AlloyLinkIcon') requires each `links` item to be a LinkIconObject instance."
         );
-      const h = ((t == null ? void 0 : t.id) ?? "") === a, f = te(
-        t,
+      const d = ((n == null ? void 0 : n.id) ?? "") === a, m = ce(
+        n,
         e.selected,
-        h,
-        i(t)
+        d,
+        l(n)
       );
-      return /* @__PURE__ */ c("li", { className: e.linkClass, children: /* @__PURE__ */ c(st, { linkIcon: f }) }, ((t == null ? void 0 : t.id) ?? u) + "-li");
+      return /* @__PURE__ */ r("li", { className: e.linkClass, children: /* @__PURE__ */ r(Nt, { linkIcon: m }) }, ((n == null ? void 0 : n.id) ?? h) + "-li");
     }) })
-  ] }), o = () => /* @__PURE__ */ g(T, { children: [
-    /* @__PURE__ */ c(r, {}),
-    /* @__PURE__ */ c("ul", { id: n.current, className: e.className, children: e.links.map((t, u) => {
-      if (!(t instanceof M))
+  ] }), c = () => /* @__PURE__ */ N(q, { children: [
+    /* @__PURE__ */ r(o, {}),
+    /* @__PURE__ */ r("ul", { id: t.current, className: e.className, children: e.links.map((n, h) => {
+      if (!(n instanceof j))
         throw new Error(
           "AlloyLinkBar (type='AlloyLinkLogo') requires each `links` item to be a LinkLogoObject instance."
         );
-      const h = ((t == null ? void 0 : t.id) ?? "") === a, f = te(
-        t,
+      const d = ((n == null ? void 0 : n.id) ?? "") === a, m = ce(
+        n,
         e.selected,
-        h,
-        i(t)
+        d,
+        l(n)
       );
-      return /* @__PURE__ */ c("li", { className: e.linkClass, children: /* @__PURE__ */ c(Fe, { linkLogo: f }) }, ((t == null ? void 0 : t.id) ?? u) + "-li");
+      return /* @__PURE__ */ r("li", { className: e.linkClass, children: /* @__PURE__ */ r(Ge, { linkLogo: m }) }, ((n == null ? void 0 : n.id) ?? h) + "-li");
     }) })
   ] });
   switch (e.type) {
     case "AlloyLink":
-      return /* @__PURE__ */ c("nav", { "data-type": "AlloyLink", children: l() });
+      return /* @__PURE__ */ r("nav", { "data-type": "AlloyLink", children: u() });
     case "AlloyLinkIcon":
-      return /* @__PURE__ */ c("nav", { "data-type": "AlloyLinkIcon", children: d() });
+      return /* @__PURE__ */ r("nav", { "data-type": "AlloyLinkIcon", children: s() });
     case "AlloyLinkLogo":
-      return /* @__PURE__ */ c("nav", { "data-type": "AlloyLinkLogo", children: o() });
+      return /* @__PURE__ */ r("nav", { "data-type": "AlloyLinkLogo", children: c() });
     default:
-      return /* @__PURE__ */ c("nav", { "data-type": "AlloyLink", children: l() });
+      return /* @__PURE__ */ r("nav", { "data-type": "AlloyLink", children: u() });
   }
 }
-let wt = 0;
-function xt() {
-  return `barItem${++wt}`;
+let Dt = 0;
+function Rt() {
+  return `barItem${++Dt}`;
 }
-let Ct = 0;
-function Lt() {
-  return `buttonBar${++Ct}`;
+let $t = 0;
+function Bt() {
+  return `buttonBar${++$t}`;
 }
-class Ie {
-  constructor({ id: n, name: a, className: s, show: r } = {}) {
-    this.id = n ?? xt(), this.name = a ?? "Bar", this.className = s ?? "", this.show = typeof r == "boolean" ? r : !1;
+class Re {
+  constructor({ id: t, name: a, className: i, show: o } = {}) {
+    this.id = t ?? Rt(), this.name = a ?? "Bar", this.className = i ?? "", this.show = typeof o == "boolean" ? o : !1;
   }
 }
-class se {
+class _ {
   /**
    * @param {{
    *   id?: string,
@@ -785,57 +784,56 @@ class se {
    *   selected?: string           // class name for selected item, e.g. "active"
    * }} p
    */
-  constructor({ id: n, className: a, barName: s, type: r, buttonClass: i, buttons: l, selected: d } = {}) {
-    this.id = n ?? Lt(), this.className = a ?? "d-flex justify-content-center", this.barName = s instanceof Ie ? s : new Ie(s ?? {}), this.type = r ?? "AlloyButton", this.buttonClass = i ?? "nav-item", this.selected = d ?? "active";
-    const o = Array.isArray(l) ? l : [];
-    this.type === "AlloyButtonIcon" ? this.buttons = o.map(
-      (t) => t instanceof b ? t : new b({
-        id: t == null ? void 0 : t.id,
-        name: t == null ? void 0 : t.name,
-        icon: t == null ? void 0 : t.icon,
-        // ButtonIconObject will wrap plain {iconClass} into IconObject
-        className: t == null ? void 0 : t.className,
-        active: t == null ? void 0 : t.active,
-        disabled: t == null ? void 0 : t.disabled,
-        title: t == null ? void 0 : t.title,
-        ariaLabel: t == null ? void 0 : t.ariaLabel,
-        tabIndex: t == null ? void 0 : t.tabIndex,
-        onClick: t == null ? void 0 : t.onClick,
-        onKeyDown: t == null ? void 0 : t.onKeyDown,
-        onKeyUp: t == null ? void 0 : t.onKeyUp,
-        onFocus: t == null ? void 0 : t.onFocus,
-        onBlur: t == null ? void 0 : t.onBlur,
-        onMouseEnter: t == null ? void 0 : t.onMouseEnter,
-        onMouseLeave: t == null ? void 0 : t.onMouseLeave
+  constructor({ id: t, className: a, barName: i, type: o, buttonClass: l, buttons: u, selected: s } = {}) {
+    this.id = t ?? Bt(), this.className = a ?? "d-flex justify-content-center", this.barName = i instanceof Re ? i : new Re(i ?? {}), this.type = o ?? "AlloyButton", this.buttonClass = l ?? "nav-item", this.selected = s ?? "active";
+    const c = Array.isArray(u) ? u : [];
+    this.type === "AlloyButtonIcon" ? this.buttons = c.map(
+      (n) => n instanceof I ? n : new I({
+        id: n == null ? void 0 : n.id,
+        name: n == null ? void 0 : n.name,
+        icon: (n == null ? void 0 : n.icon) instanceof w ? n == null ? void 0 : n.icon : new w(n == null ? void 0 : n.icon),
+        className: n == null ? void 0 : n.className,
+        active: n == null ? void 0 : n.active,
+        disabled: n == null ? void 0 : n.disabled,
+        title: n == null ? void 0 : n.title,
+        ariaLabel: n == null ? void 0 : n.ariaLabel,
+        tabIndex: n == null ? void 0 : n.tabIndex,
+        onClick: n == null ? void 0 : n.onClick,
+        onKeyDown: n == null ? void 0 : n.onKeyDown,
+        onKeyUp: n == null ? void 0 : n.onKeyUp,
+        onFocus: n == null ? void 0 : n.onFocus,
+        onBlur: n == null ? void 0 : n.onBlur,
+        onMouseEnter: n == null ? void 0 : n.onMouseEnter,
+        onMouseLeave: n == null ? void 0 : n.onMouseLeave
       })
-    ) : this.buttons = o.map(
-      (t) => t instanceof $ ? t : new $({
-        id: t == null ? void 0 : t.id,
-        name: t == null ? void 0 : t.name,
-        className: t == null ? void 0 : t.className,
-        active: t == null ? void 0 : t.active,
-        disabled: t == null ? void 0 : t.disabled,
-        title: t == null ? void 0 : t.title,
-        ariaLabel: t == null ? void 0 : t.ariaLabel,
-        tabIndex: t == null ? void 0 : t.tabIndex,
-        onClick: t == null ? void 0 : t.onClick,
-        onKeyDown: t == null ? void 0 : t.onKeyDown,
-        onKeyUp: t == null ? void 0 : t.onKeyUp,
-        onFocus: t == null ? void 0 : t.onFocus,
-        onBlur: t == null ? void 0 : t.onBlur,
-        onMouseEnter: t == null ? void 0 : t.onMouseEnter,
-        onMouseLeave: t == null ? void 0 : t.onMouseLeave
+    ) : this.buttons = c.map(
+      (n) => n instanceof F ? n : new F({
+        id: n == null ? void 0 : n.id,
+        name: n == null ? void 0 : n.name,
+        className: n == null ? void 0 : n.className,
+        active: n == null ? void 0 : n.active,
+        disabled: n == null ? void 0 : n.disabled,
+        title: n == null ? void 0 : n.title,
+        ariaLabel: n == null ? void 0 : n.ariaLabel,
+        tabIndex: n == null ? void 0 : n.tabIndex,
+        onClick: n == null ? void 0 : n.onClick,
+        onKeyDown: n == null ? void 0 : n.onKeyDown,
+        onKeyUp: n == null ? void 0 : n.onKeyUp,
+        onFocus: n == null ? void 0 : n.onFocus,
+        onBlur: n == null ? void 0 : n.onBlur,
+        onMouseEnter: n == null ? void 0 : n.onMouseEnter,
+        onMouseLeave: n == null ? void 0 : n.onMouseLeave
       })
     );
   }
 }
-function Me(e, n, a) {
-  const s = a ? n : "";
-  return e instanceof $ ? new $({
+function $e(e, t, a) {
+  const i = a ? t : "";
+  return e instanceof F ? new F({
     id: e.id,
     name: e.name,
     className: e.className,
-    active: s,
+    active: i,
     disabled: e.disabled,
     title: e.title,
     ariaLabel: e.ariaLabel,
@@ -847,13 +845,13 @@ function Me(e, n, a) {
     onBlur: e.onBlur,
     onMouseEnter: e.onMouseEnter,
     onMouseLeave: e.onMouseLeave
-  }) : e instanceof b ? new b({
+  }) : e instanceof I ? new I({
     id: e.id,
     name: e.name,
     icon: e.icon,
     // keep IconObject instance
     className: e.className,
-    active: s,
+    active: i,
     disabled: e.disabled,
     title: e.title,
     ariaLabel: e.ariaLabel,
@@ -867,62 +865,62 @@ function Me(e, n, a) {
     onMouseLeave: e.onMouseLeave
   }) : e;
 }
-function Et({ buttonBar: e, output: n }) {
-  if (!e || !(e instanceof se))
+function te({ buttonBar: e, output: t }) {
+  if (!e || !(e instanceof _))
     throw new Error("AlloyButtonBar requires `buttonBar` (ButtonBarObject instance).");
-  const a = k(e.id), [s, r] = x("");
-  J(() => {
-    r("");
+  const a = O(e.id), [i, o] = C("");
+  X(() => {
+    o("");
   }, [e]);
-  const i = () => {
-    var t;
-    return (t = e.barName) != null && t.show ? /* @__PURE__ */ c("div", { id: e.barName.id, className: e.barName.className, children: e.barName.name }) : null;
-  }, l = (t, u) => {
-    if ((u == null ? void 0 : u.type) === "click") {
-      const h = (t == null ? void 0 : t.id) ?? "";
-      r(h);
+  const l = () => {
+    var n;
+    return (n = e.barName) != null && n.show ? /* @__PURE__ */ r("div", { id: e.barName.id, className: e.barName.className, children: e.barName.name }) : null;
+  }, u = (n, h) => {
+    if ((h == null ? void 0 : h.type) === "click") {
+      const d = (n == null ? void 0 : n.id) ?? "";
+      o(d);
     }
-    n == null || n(t, u);
-  }, d = () => /* @__PURE__ */ g(T, { children: [
-    /* @__PURE__ */ c(i, {}),
-    /* @__PURE__ */ c("ul", { id: a.current, className: e.className, children: e.buttons.map((t, u) => {
-      if (!(t instanceof $))
+    t == null || t(n, h);
+  }, s = () => /* @__PURE__ */ N(q, { children: [
+    /* @__PURE__ */ r(l, {}),
+    /* @__PURE__ */ r("ul", { id: a.current, className: e.className, children: e.buttons.map((n, h) => {
+      if (!(n instanceof F))
         throw new Error("AlloyButtonBar (type='AlloyButton') requires ButtonObject items.");
-      const h = ((t == null ? void 0 : t.id) ?? "") === s, f = Me(t, e.selected, h);
-      return /* @__PURE__ */ c("li", { className: e.buttonClass, children: /* @__PURE__ */ c(dt, { button: f, output: l }) }, ((t == null ? void 0 : t.id) ?? u) + "-li");
+      const d = ((n == null ? void 0 : n.id) ?? "") === i, m = $e(n, e.selected, d);
+      return /* @__PURE__ */ r("li", { className: e.buttonClass, children: /* @__PURE__ */ r(bt, { button: m, output: u }) }, ((n == null ? void 0 : n.id) ?? h) + "-li");
     }) })
-  ] }), o = () => /* @__PURE__ */ g(T, { children: [
-    /* @__PURE__ */ c(i, {}),
-    /* @__PURE__ */ c("ul", { id: a.current, className: e.className, children: e.buttons.map((t, u) => {
-      if (!(t instanceof b))
+  ] }), c = () => /* @__PURE__ */ N(q, { children: [
+    /* @__PURE__ */ r(l, {}),
+    /* @__PURE__ */ r("ul", { id: a.current, className: e.className, children: e.buttons.map((n, h) => {
+      if (!(n instanceof I))
         throw new Error("AlloyButtonBar (type='AlloyButtonIcon') requires ButtonIconObject items.");
-      const h = ((t == null ? void 0 : t.id) ?? "") === s, f = Me(t, e.selected, h);
-      return /* @__PURE__ */ c("li", { className: e.buttonClass, children: /* @__PURE__ */ c(ft, { buttonIcon: f, output: l }) }, ((t == null ? void 0 : t.id) ?? u) + "-li");
+      const d = ((n == null ? void 0 : n.id) ?? "") === i, m = $e(n, e.selected, d);
+      return /* @__PURE__ */ r("li", { className: e.buttonClass, children: /* @__PURE__ */ r(At, { buttonIcon: m, output: u }) }, ((n == null ? void 0 : n.id) ?? h) + "-li");
     }) })
   ] });
   switch (e.type) {
     case "AlloyButton":
-      return /* @__PURE__ */ c("nav", { "data-type": "AlloyButton", children: d() });
+      return /* @__PURE__ */ r("nav", { "data-type": "AlloyButton", children: s() });
     case "AlloyButtonIcon":
-      return /* @__PURE__ */ c("nav", { "data-type": "AlloyButtonIcon", children: o() });
+      return /* @__PURE__ */ r("nav", { "data-type": "AlloyButtonIcon", children: c() });
     default:
-      return /* @__PURE__ */ c("nav", { "data-type": "AlloyButton", children: d() });
+      return /* @__PURE__ */ r("nav", { "data-type": "AlloyButton", children: s() });
   }
 }
-let De = 0;
-function At() {
-  return De += 1, `navbar${De}`;
+let Be = 0;
+function Ft() {
+  return Be += 1, `navbar${Be}`;
 }
-function Ot(e, n) {
-  if (!Array.isArray(n)) return [];
+function It(e, t) {
+  if (!Array.isArray(t)) return [];
   switch (e) {
     case "AlloyLinkIcon":
-      return n.map(
-        (a) => a instanceof R ? a : new R({
+      return t.map(
+        (a) => a instanceof $ ? a : new $({
           id: a == null ? void 0 : a.id,
           name: a == null ? void 0 : a.name,
           href: a == null ? void 0 : a.href,
-          icon: (a == null ? void 0 : a.icon) instanceof N ? a.icon : new N((a == null ? void 0 : a.icon) || {}),
+          icon: (a == null ? void 0 : a.icon) instanceof w ? a.icon : new w((a == null ? void 0 : a.icon) || {}),
           className: a == null ? void 0 : a.className,
           // no per-item active; bar will inject selected class
           target: a == null ? void 0 : a.target,
@@ -932,8 +930,8 @@ function Ot(e, n) {
         })
       );
     case "AlloyLinkLogo":
-      return n.map(
-        (a) => a instanceof M ? a : new M({
+      return t.map(
+        (a) => a instanceof j ? a : new j({
           id: a == null ? void 0 : a.id,
           name: a == null ? void 0 : a.name,
           href: a == null ? void 0 : a.href,
@@ -950,8 +948,8 @@ function Ot(e, n) {
       );
     case "AlloyLink":
     default:
-      return n.map(
-        (a) => a instanceof _ ? a : new _({
+      return t.map(
+        (a) => a instanceof R ? a : new R({
           id: a == null ? void 0 : a.id,
           name: a == null ? void 0 : a.name,
           href: a == null ? void 0 : a.href,
@@ -965,10 +963,10 @@ function Ot(e, n) {
       );
   }
 }
-class kt {
-  constructor({ id: n, className: a, logo: s, linkBar: r } = {}) {
-    if (this.id = n ?? At(), this.className = a ?? "navbar navbar-expand-lg navbar-light bg-light", this.logo = s instanceof M ? s : new M(
-      s || {
+class Ut {
+  constructor({ id: t, className: a, logo: i, linkBar: o } = {}) {
+    if (this.id = t ?? Ft(), this.className = a ?? "navbar navbar-expand-lg navbar-light bg-light", this.logo = i instanceof j ? i : new j(
+      i || {
         href: "/",
         logo: "/logos/alloy.svg",
         name: "Alloy",
@@ -977,30 +975,30 @@ class kt {
         logoAlt: "Alloy",
         className: "navbar-brand d-flex align-items-center gap-2"
       }
-    ), r instanceof re)
-      this.linkBar = r;
+    ), o instanceof M)
+      this.linkBar = o;
     else {
-      const i = (r == null ? void 0 : r.type) ?? "AlloyLink", l = Ot(i, (r == null ? void 0 : r.links) || []);
-      this.linkBar = new re({
-        id: r == null ? void 0 : r.id,
-        className: (r == null ? void 0 : r.className) ?? "navbar-nav ms-auto mb-2 mb-lg-0 gap-2",
-        barName: (r == null ? void 0 : r.barName) ?? { show: !1 },
-        type: i,
-        linkClass: (r == null ? void 0 : r.linkClass) ?? "nav-item",
-        links: l,
-        selected: (r == null ? void 0 : r.selected) ?? "active"
+      const l = (o == null ? void 0 : o.type) ?? "AlloyLink", u = It(l, (o == null ? void 0 : o.links) || []);
+      this.linkBar = new M({
+        id: o == null ? void 0 : o.id,
+        className: (o == null ? void 0 : o.className) ?? "navbar-nav ms-auto mb-2 mb-lg-0 gap-2",
+        barName: (o == null ? void 0 : o.barName) ?? { show: !1 },
+        type: l,
+        linkClass: (o == null ? void 0 : o.linkClass) ?? "nav-item",
+        links: u,
+        selected: (o == null ? void 0 : o.selected) ?? "active"
         // navbar demos want 'active'
       });
     }
   }
 }
-function bn({ navBar: e }) {
-  if (!e || !(e instanceof kt))
+function Yn({ navBar: e }) {
+  if (!e || !(e instanceof Ut))
     throw new Error("AlloyNavBar requires `navBar` (NavBarObject instance).");
-  const n = k(e.id), a = `${n.current}-collapse`;
-  return /* @__PURE__ */ c("nav", { id: n.current, className: e.className, children: /* @__PURE__ */ g("div", { className: "container-fluid", children: [
-    /* @__PURE__ */ c(Fe, { linkLogo: e.logo }),
-    /* @__PURE__ */ c(
+  const t = O(e.id), a = `${t.current}-collapse`;
+  return /* @__PURE__ */ r("nav", { id: t.current, className: e.className, children: /* @__PURE__ */ N("div", { className: "container-fluid", children: [
+    /* @__PURE__ */ r(Ge, { linkLogo: e.logo }),
+    /* @__PURE__ */ r(
       "button",
       {
         className: "navbar-toggler",
@@ -1010,74 +1008,74 @@ function bn({ navBar: e }) {
         "aria-controls": a,
         "aria-expanded": "false",
         "aria-label": "Toggle navigation",
-        children: /* @__PURE__ */ c("span", { className: "navbar-toggler-icon" })
+        children: /* @__PURE__ */ r("span", { className: "navbar-toggler-icon" })
       }
     ),
-    /* @__PURE__ */ c("div", { className: "position-relative navbar-collapse collapse justify-content-end", id: a, children: /* @__PURE__ */ c(Nt, { linkBar: e.linkBar }) })
+    /* @__PURE__ */ r("div", { className: "position-relative navbar-collapse collapse justify-content-end", id: a, children: /* @__PURE__ */ r(ee, { linkBar: e.linkBar }) })
   ] }) });
 }
-function It(e) {
+function Tt(e) {
   return typeof e != "string" ? "" : e.charAt(0).toUpperCase() + e.slice(1);
 }
-let _e = 0;
-function Mt() {
-  return _e += 1, `table${_e}`;
+let Fe = 0;
+function Pt() {
+  return Fe += 1, `table${Fe}`;
 }
-class Dt {
-  constructor(n = {}) {
-    this.id = n.id ?? Mt(), this.className = n.className ?? "table", this.name = n.name ?? "table", this.rows = Array.isArray(n.rows) ? n.rows.slice() : [];
-    const a = new N({ iconClass: "fa-solid fa-user" }), s = new N({ iconClass: "fa-solid fa-arrow-down" });
-    this.icon = n.icon instanceof N ? n.icon : new N(n.icon || a), this.sort = n.sort instanceof N ? n.sort : new N(n.sort || s);
+class qt {
+  constructor(t = {}) {
+    this.id = t.id ?? Pt(), this.className = t.className ?? "table", this.name = t.name ?? "table", this.rows = Array.isArray(t.rows) ? t.rows.slice() : [];
+    const a = new w({ iconClass: "fa-solid fa-user" }), i = new w({ iconClass: "fa-solid fa-arrow-down" });
+    this.icon = t.icon instanceof w ? t.icon : new w(t.icon || a), this.sort = t.sort instanceof w ? t.sort : new w(t.sort || i);
   }
 }
-function _t(e) {
-  return !e || e.length === 0 ? [] : Object.keys(e[0]).filter((n) => n !== "id");
+function Kt(e) {
+  return !e || e.length === 0 ? [] : Object.keys(e[0]).filter((t) => t !== "id");
 }
-function jn({ table: e, output: n }) {
-  if (!e || !(e instanceof Dt))
+function Xn({ table: e, output: t }) {
+  if (!e || !(e instanceof qt))
     throw new Error("AlloyTable requires `table` (TableObject instance).");
-  const a = k(e.id), [s, r] = x({ col: "", dir: "asc" }), i = S(() => _t(e.rows), [e.rows]), l = (o) => {
-    if (!o) return;
-    const t = s.col === o && s.dir === "asc" ? "desc" : "asc";
-    r({ col: o, dir: t }), n == null || n({ type: "column", name: o, dir: t });
-  }, d = (o) => {
-    n == null || n({ type: "row", id: o });
+  const a = O(e.id), [i, o] = C({ col: "", dir: "asc" }), l = S(() => Kt(e.rows), [e.rows]), u = (c) => {
+    if (!c) return;
+    const n = i.col === c && i.dir === "asc" ? "desc" : "asc";
+    o({ col: c, dir: n }), t == null || t({ type: "column", name: c, dir: n });
+  }, s = (c) => {
+    t == null || t({ type: "row", id: c });
   };
-  return /* @__PURE__ */ g("table", { id: a.current, className: e.className, children: [
-    /* @__PURE__ */ c("caption", { className: "caption-top text-center", children: e.name }),
-    /* @__PURE__ */ c("thead", { children: /* @__PURE__ */ g("tr", { children: [
-      /* @__PURE__ */ c("th", { scope: "col", children: "Type" }),
-      i.map((o) => {
-        const t = s.col === o, u = t && s.dir === "desc";
-        return /* @__PURE__ */ c("th", { scope: "col", children: /* @__PURE__ */ g(
+  return /* @__PURE__ */ N("table", { id: a.current, className: e.className, children: [
+    /* @__PURE__ */ r("caption", { className: "caption-top text-center", children: e.name }),
+    /* @__PURE__ */ r("thead", { children: /* @__PURE__ */ N("tr", { children: [
+      /* @__PURE__ */ r("th", { scope: "col", children: "Type" }),
+      l.map((c) => {
+        const n = i.col === c, h = n && i.dir === "desc";
+        return /* @__PURE__ */ r("th", { scope: "col", children: /* @__PURE__ */ N(
           "span",
           {
-            onClick: () => l(o),
+            onClick: () => u(c),
             style: { userSelect: "none" },
             children: [
-              It(o),
-              t && /* @__PURE__ */ c(
+              Tt(c),
+              n && /* @__PURE__ */ r(
                 "span",
                 {
                   className: "ms-1 d-inline-flex align-middle",
                   "aria-hidden": "true",
-                  title: u ? "Sorted descending" : "Sorted ascending",
+                  title: h ? "Sorted descending" : "Sorted ascending",
                   style: {
-                    transform: u ? "rotate(180deg)" : "none",
+                    transform: h ? "rotate(180deg)" : "none",
                     transition: "transform 120ms"
                   },
-                  children: /* @__PURE__ */ c(I, { icon: e.sort })
+                  children: /* @__PURE__ */ r(k, { icon: e.sort })
                 }
               )
             ]
           }
-        ) }, o);
+        ) }, c);
       })
     ] }) }),
-    /* @__PURE__ */ c("tbody", { children: (e.rows ?? []).length > 0 ? (e.rows ?? []).map((o, t) => /* @__PURE__ */ g("tr", { onClick: () => d(o == null ? void 0 : o.id), children: [
-      /* @__PURE__ */ c("td", { children: /* @__PURE__ */ c(I, { icon: e.icon }) }),
-      i.map((u) => /* @__PURE__ */ c("td", { className: "cursor", children: /* @__PURE__ */ c("span", { children: o == null ? void 0 : o[u] }) }, `${(o == null ? void 0 : o.id) ?? t}-${u}`))
-    ] }, (o == null ? void 0 : o.id) ?? t)) : /* @__PURE__ */ c("tr", { children: /* @__PURE__ */ c("td", { colSpan: Math.max(1, i.length) + 1, className: "text-center text-secondary", children: "No rows" }) }) })
+    /* @__PURE__ */ r("tbody", { children: (e.rows ?? []).length > 0 ? (e.rows ?? []).map((c, n) => /* @__PURE__ */ N("tr", { onClick: () => s(c == null ? void 0 : c.id), children: [
+      /* @__PURE__ */ r("td", { children: /* @__PURE__ */ r(k, { icon: e.icon }) }),
+      l.map((h) => /* @__PURE__ */ r("td", { className: "cursor", children: /* @__PURE__ */ r("span", { children: c == null ? void 0 : c[h] }) }, `${(c == null ? void 0 : c.id) ?? n}-${h}`))
+    ] }, (c == null ? void 0 : c.id) ?? n)) : /* @__PURE__ */ r("tr", { children: /* @__PURE__ */ r("td", { colSpan: Math.max(1, l.length) + 1, className: "text-center text-secondary", children: "No rows" }) }) })
   ] });
 }
 /**
@@ -1090,152 +1088,152 @@ function jn({ table: e, output: n }) {
  *
  * @license MIT
  */
-function oe() {
-  return oe = Object.assign ? Object.assign.bind() : function(e) {
-    for (var n = 1; n < arguments.length; n++) {
-      var a = arguments[n];
-      for (var s in a)
-        Object.prototype.hasOwnProperty.call(a, s) && (e[s] = a[s]);
+function ue() {
+  return ue = Object.assign ? Object.assign.bind() : function(e) {
+    for (var t = 1; t < arguments.length; t++) {
+      var a = arguments[t];
+      for (var i in a)
+        Object.prototype.hasOwnProperty.call(a, i) && (e[i] = a[i]);
     }
     return e;
-  }, oe.apply(this, arguments);
+  }, ue.apply(this, arguments);
 }
-var Re;
+var Ie;
 (function(e) {
   e.Pop = "POP", e.Push = "PUSH", e.Replace = "REPLACE";
-})(Re || (Re = {}));
-function L(e, n) {
+})(Ie || (Ie = {}));
+function b(e, t) {
   if (e === !1 || e === null || typeof e > "u")
-    throw new Error(n);
+    throw new Error(t);
 }
-function P(e, n) {
+function K(e, t) {
   if (!e) {
-    typeof console < "u" && console.warn(n);
+    typeof console < "u" && console.warn(t);
     try {
-      throw new Error(n);
+      throw new Error(t);
     } catch {
     }
   }
 }
-function ie(e) {
+function he(e) {
   let {
-    pathname: n = "/",
+    pathname: t = "/",
     search: a = "",
-    hash: s = ""
+    hash: i = ""
   } = e;
-  return a && a !== "?" && (n += a.charAt(0) === "?" ? a : "?" + a), s && s !== "#" && (n += s.charAt(0) === "#" ? s : "#" + s), n;
+  return a && a !== "?" && (t += a.charAt(0) === "?" ? a : "?" + a), i && i !== "#" && (t += i.charAt(0) === "#" ? i : "#" + i), t;
 }
-function Te(e) {
-  let n = {};
+function Ye(e) {
+  let t = {};
   if (e) {
     let a = e.indexOf("#");
-    a >= 0 && (n.hash = e.substr(a), e = e.substr(0, a));
-    let s = e.indexOf("?");
-    s >= 0 && (n.search = e.substr(s), e = e.substr(0, s)), e && (n.pathname = e);
+    a >= 0 && (t.hash = e.substr(a), e = e.substr(0, a));
+    let i = e.indexOf("?");
+    i >= 0 && (t.search = e.substr(i), e = e.substr(0, i)), e && (t.pathname = e);
   }
-  return n;
+  return t;
 }
-var Se;
+var Ue;
 (function(e) {
   e.data = "data", e.deferred = "deferred", e.redirect = "redirect", e.error = "error";
-})(Se || (Se = {}));
-function $e(e, n) {
+})(Ue || (Ue = {}));
+function Te(e, t) {
   typeof e == "string" && (e = {
     path: e,
     caseSensitive: !1,
     end: !0
   });
-  let [a, s] = Rt(e.path, e.caseSensitive, e.end), r = n.match(a);
-  if (!r) return null;
-  let i = r[0], l = i.replace(/(.)\/+$/, "$1"), d = r.slice(1);
+  let [a, i] = Vt(e.path, e.caseSensitive, e.end), o = t.match(a);
+  if (!o) return null;
+  let l = o[0], u = l.replace(/(.)\/+$/, "$1"), s = o.slice(1);
   return {
-    params: s.reduce((t, u, h) => {
+    params: i.reduce((n, h, d) => {
       let {
-        paramName: f,
-        isOptional: w
-      } = u;
-      if (f === "*") {
-        let p = d[h] || "";
-        l = i.slice(0, i.length - p.length).replace(/(.)\/+$/, "$1");
+        paramName: m,
+        isOptional: g
+      } = h;
+      if (m === "*") {
+        let v = s[d] || "";
+        u = l.slice(0, l.length - v.length).replace(/(.)\/+$/, "$1");
       }
-      const v = d[h];
-      return w && !v ? t[f] = void 0 : t[f] = (v || "").replace(/%2F/g, "/"), t;
+      const f = s[d];
+      return g && !f ? n[m] = void 0 : n[m] = (f || "").replace(/%2F/g, "/"), n;
     }, {}),
-    pathname: i,
-    pathnameBase: l,
+    pathname: l,
+    pathnameBase: u,
     pattern: e
   };
 }
-function Rt(e, n, a) {
-  n === void 0 && (n = !1), a === void 0 && (a = !0), P(e === "*" || !e.endsWith("*") || e.endsWith("/*"), 'Route path "' + e + '" will be treated as if it were ' + ('"' + e.replace(/\*$/, "/*") + '" because the `*` character must ') + "always follow a `/` in the pattern. To get rid of this warning, " + ('please change the route path to "' + e.replace(/\*$/, "/*") + '".'));
-  let s = [], r = "^" + e.replace(/\/*\*?$/, "").replace(/^\/*/, "/").replace(/[\\.*+^${}|()[\]]/g, "\\$&").replace(/\/:([\w-]+)(\?)?/g, (l, d, o) => (s.push({
-    paramName: d,
-    isOptional: o != null
-  }), o ? "/?([^\\/]+)?" : "/([^\\/]+)"));
-  return e.endsWith("*") ? (s.push({
+function Vt(e, t, a) {
+  t === void 0 && (t = !1), a === void 0 && (a = !0), K(e === "*" || !e.endsWith("*") || e.endsWith("/*"), 'Route path "' + e + '" will be treated as if it were ' + ('"' + e.replace(/\*$/, "/*") + '" because the `*` character must ') + "always follow a `/` in the pattern. To get rid of this warning, " + ('please change the route path to "' + e.replace(/\*$/, "/*") + '".'));
+  let i = [], o = "^" + e.replace(/\/*\*?$/, "").replace(/^\/*/, "/").replace(/[\\.*+^${}|()[\]]/g, "\\$&").replace(/\/:([\w-]+)(\?)?/g, (u, s, c) => (i.push({
+    paramName: s,
+    isOptional: c != null
+  }), c ? "/?([^\\/]+)?" : "/([^\\/]+)"));
+  return e.endsWith("*") ? (i.push({
     paramName: "*"
-  }), r += e === "*" || e === "/*" ? "(.*)$" : "(?:\\/(.+)|\\/*)$") : a ? r += "\\/*$" : e !== "" && e !== "/" && (r += "(?:(?=\\/|$))"), [new RegExp(r, n ? void 0 : "i"), s];
+  }), o += e === "*" || e === "/*" ? "(.*)$" : "(?:\\/(.+)|\\/*)$") : a ? o += "\\/*$" : e !== "" && e !== "/" && (o += "(?:(?=\\/|$))"), [new RegExp(o, t ? void 0 : "i"), i];
 }
-function j(e, n) {
-  if (n === "/") return e;
-  if (!e.toLowerCase().startsWith(n.toLowerCase()))
+function U(e, t) {
+  if (t === "/") return e;
+  if (!e.toLowerCase().startsWith(t.toLowerCase()))
     return null;
-  let a = n.endsWith("/") ? n.length - 1 : n.length, s = e.charAt(a);
-  return s && s !== "/" ? null : e.slice(a) || "/";
+  let a = t.endsWith("/") ? t.length - 1 : t.length, i = e.charAt(a);
+  return i && i !== "/" ? null : e.slice(a) || "/";
 }
-function St(e, n) {
-  n === void 0 && (n = "/");
+function Wt(e, t) {
+  t === void 0 && (t = "/");
   let {
     pathname: a,
-    search: s = "",
-    hash: r = ""
-  } = typeof e == "string" ? Te(e) : e;
+    search: i = "",
+    hash: o = ""
+  } = typeof e == "string" ? Ye(e) : e;
   return {
-    pathname: a ? a.startsWith("/") ? a : $t(a, n) : n,
-    search: jt(s),
-    hash: Ut(r)
+    pathname: a ? a.startsWith("/") ? a : zt(a, t) : t,
+    search: Ht(i),
+    hash: Gt(o)
   };
 }
-function $t(e, n) {
-  let a = n.replace(/\/+$/, "").split("/");
-  return e.split("/").forEach((r) => {
-    r === ".." ? a.length > 1 && a.pop() : r !== "." && a.push(r);
+function zt(e, t) {
+  let a = t.replace(/\/+$/, "").split("/");
+  return e.split("/").forEach((o) => {
+    o === ".." ? a.length > 1 && a.pop() : o !== "." && a.push(o);
   }), a.length > 1 ? a.join("/") : "/";
 }
-function ne(e, n, a, s) {
-  return "Cannot include a '" + e + "' character in a manually specified " + ("`to." + n + "` field [" + JSON.stringify(s) + "].  Please separate it out to the ") + ("`to." + a + "` field. Alternatively you may provide the full path as ") + 'a string in <Link to="..."> and the router will parse it for you.';
+function le(e, t, a, i) {
+  return "Cannot include a '" + e + "' character in a manually specified " + ("`to." + t + "` field [" + JSON.stringify(i) + "].  Please separate it out to the ") + ("`to." + a + "` field. Alternatively you may provide the full path as ") + 'a string in <Link to="..."> and the router will parse it for you.';
 }
-function bt(e) {
-  return e.filter((n, a) => a === 0 || n.route.path && n.route.path.length > 0);
+function Jt(e) {
+  return e.filter((t, a) => a === 0 || t.route.path && t.route.path.length > 0);
 }
-function Pe(e, n) {
-  let a = bt(e);
-  return n ? a.map((s, r) => r === a.length - 1 ? s.pathname : s.pathnameBase) : a.map((s) => s.pathnameBase);
+function Xe(e, t) {
+  let a = Jt(e);
+  return t ? a.map((i, o) => o === a.length - 1 ? i.pathname : i.pathnameBase) : a.map((i) => i.pathnameBase);
 }
-function Be(e, n, a, s) {
-  s === void 0 && (s = !1);
-  let r;
-  typeof e == "string" ? r = Te(e) : (r = oe({}, e), L(!r.pathname || !r.pathname.includes("?"), ne("?", "pathname", "search", r)), L(!r.pathname || !r.pathname.includes("#"), ne("#", "pathname", "hash", r)), L(!r.search || !r.search.includes("#"), ne("#", "search", "hash", r)));
-  let i = e === "" || r.pathname === "", l = i ? "/" : r.pathname, d;
-  if (l == null)
-    d = a;
+function Ze(e, t, a, i) {
+  i === void 0 && (i = !1);
+  let o;
+  typeof e == "string" ? o = Ye(e) : (o = ue({}, e), b(!o.pathname || !o.pathname.includes("?"), le("?", "pathname", "search", o)), b(!o.pathname || !o.pathname.includes("#"), le("#", "pathname", "hash", o)), b(!o.search || !o.search.includes("#"), le("#", "search", "hash", o)));
+  let l = e === "" || o.pathname === "", u = l ? "/" : o.pathname, s;
+  if (u == null)
+    s = a;
   else {
-    let h = n.length - 1;
-    if (!s && l.startsWith("..")) {
-      let f = l.split("/");
-      for (; f[0] === ".."; )
-        f.shift(), h -= 1;
-      r.pathname = f.join("/");
+    let d = t.length - 1;
+    if (!i && u.startsWith("..")) {
+      let m = u.split("/");
+      for (; m[0] === ".."; )
+        m.shift(), d -= 1;
+      o.pathname = m.join("/");
     }
-    d = h >= 0 ? n[h] : "/";
+    s = d >= 0 ? t[d] : "/";
   }
-  let o = St(r, d), t = l && l !== "/" && l.endsWith("/"), u = (i || l === ".") && a.endsWith("/");
-  return !o.pathname.endsWith("/") && (t || u) && (o.pathname += "/"), o;
+  let c = Wt(o, s), n = u && u !== "/" && u.endsWith("/"), h = (l || u === ".") && a.endsWith("/");
+  return !c.pathname.endsWith("/") && (n || h) && (c.pathname += "/"), c;
 }
-const ue = (e) => e.join("/").replace(/\/\/+/g, "/"), jt = (e) => !e || e === "?" ? "" : e.startsWith("?") ? e : "?" + e, Ut = (e) => !e || e === "#" ? "" : e.startsWith("#") ? e : "#" + e, Ke = ["post", "put", "patch", "delete"];
-new Set(Ke);
-const Ft = ["get", ...Ke];
-new Set(Ft);
+const ve = (e) => e.join("/").replace(/\/\/+/g, "/"), Ht = (e) => !e || e === "?" ? "" : e.startsWith("?") ? e : "?" + e, Gt = (e) => !e || e === "#" ? "" : e.startsWith("#") ? e : "#" + e, Qe = ["post", "put", "patch", "delete"];
+new Set(Qe);
+const Yt = ["get", ...Qe];
+new Set(Yt);
 /**
  * React Router v6.30.1
  *
@@ -1246,155 +1244,155 @@ new Set(Ft);
  *
  * @license MIT
  */
-function ce() {
-  return ce = Object.assign ? Object.assign.bind() : function(e) {
-    for (var n = 1; n < arguments.length; n++) {
-      var a = arguments[n];
-      for (var s in a)
-        Object.prototype.hasOwnProperty.call(a, s) && (e[s] = a[s]);
+function me() {
+  return me = Object.assign ? Object.assign.bind() : function(e) {
+    for (var t = 1; t < arguments.length; t++) {
+      var a = arguments[t];
+      for (var i in a)
+        Object.prototype.hasOwnProperty.call(a, i) && (e[i] = a[i]);
     }
     return e;
-  }, ce.apply(this, arguments);
+  }, me.apply(this, arguments);
 }
-const G = /* @__PURE__ */ y.createContext(null);
-process.env.NODE_ENV !== "production" && (G.displayName = "DataRouter");
-const qe = /* @__PURE__ */ y.createContext(null);
-process.env.NODE_ENV !== "production" && (qe.displayName = "DataRouterState");
-const Tt = /* @__PURE__ */ y.createContext(null);
-process.env.NODE_ENV !== "production" && (Tt.displayName = "Await");
-const D = /* @__PURE__ */ y.createContext(null);
+const ne = /* @__PURE__ */ p.createContext(null);
+process.env.NODE_ENV !== "production" && (ne.displayName = "DataRouter");
+const et = /* @__PURE__ */ p.createContext(null);
+process.env.NODE_ENV !== "production" && (et.displayName = "DataRouterState");
+const Xt = /* @__PURE__ */ p.createContext(null);
+process.env.NODE_ENV !== "production" && (Xt.displayName = "Await");
+const D = /* @__PURE__ */ p.createContext(null);
 process.env.NODE_ENV !== "production" && (D.displayName = "Navigation");
-const he = /* @__PURE__ */ y.createContext(null);
-process.env.NODE_ENV !== "production" && (he.displayName = "Location");
-const F = /* @__PURE__ */ y.createContext({
+const pe = /* @__PURE__ */ p.createContext(null);
+process.env.NODE_ENV !== "production" && (pe.displayName = "Location");
+const P = /* @__PURE__ */ p.createContext({
   outlet: null,
   matches: [],
   isDataRoute: !1
 });
-process.env.NODE_ENV !== "production" && (F.displayName = "Route");
-const Pt = /* @__PURE__ */ y.createContext(null);
-process.env.NODE_ENV !== "production" && (Pt.displayName = "RouteError");
-function Bt(e, n) {
+process.env.NODE_ENV !== "production" && (P.displayName = "Route");
+const Zt = /* @__PURE__ */ p.createContext(null);
+process.env.NODE_ENV !== "production" && (Zt.displayName = "RouteError");
+function Qt(e, t) {
   let {
     relative: a
-  } = n === void 0 ? {} : n;
-  fe() || (process.env.NODE_ENV !== "production" ? L(
+  } = t === void 0 ? {} : t;
+  Ne() || (process.env.NODE_ENV !== "production" ? b(
     !1,
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     "useHref() may be used only in the context of a <Router> component."
-  ) : L(!1));
+  ) : b(!1));
   let {
-    basename: s,
-    navigator: r
-  } = y.useContext(D), {
-    hash: i,
-    pathname: l,
-    search: d
-  } = K(e, {
+    basename: i,
+    navigator: o
+  } = p.useContext(D), {
+    hash: l,
+    pathname: u,
+    search: s
+  } = W(e, {
     relative: a
-  }), o = l;
-  return s !== "/" && (o = l === "/" ? s : ue([s, l])), r.createHref({
-    pathname: o,
-    search: d,
-    hash: i
+  }), c = u;
+  return i !== "/" && (c = u === "/" ? i : ve([i, u])), o.createHref({
+    pathname: c,
+    search: s,
+    hash: l
   });
 }
-function fe() {
-  return y.useContext(he) != null;
+function Ne() {
+  return p.useContext(pe) != null;
 }
-function B() {
-  return fe() || (process.env.NODE_ENV !== "production" ? L(
+function V() {
+  return Ne() || (process.env.NODE_ENV !== "production" ? b(
     !1,
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     "useLocation() may be used only in the context of a <Router> component."
-  ) : L(!1)), y.useContext(he).location;
+  ) : b(!1)), p.useContext(pe).location;
 }
-const Ve = "You should call navigate() in a React.useEffect(), not when your component is first rendered.";
-function We(e) {
-  y.useContext(D).static || y.useLayoutEffect(e);
+const tt = "You should call navigate() in a React.useEffect(), not when your component is first rendered.";
+function nt(e) {
+  p.useContext(D).static || p.useLayoutEffect(e);
 }
-function Kt() {
+function en() {
   let {
     isDataRoute: e
-  } = y.useContext(F);
-  return e ? Jt() : qt();
+  } = p.useContext(P);
+  return e ? sn() : tn();
 }
-function qt() {
-  fe() || (process.env.NODE_ENV !== "production" ? L(
+function tn() {
+  Ne() || (process.env.NODE_ENV !== "production" ? b(
     !1,
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     "useNavigate() may be used only in the context of a <Router> component."
-  ) : L(!1));
-  let e = y.useContext(G), {
-    basename: n,
+  ) : b(!1));
+  let e = p.useContext(ne), {
+    basename: t,
     future: a,
-    navigator: s
-  } = y.useContext(D), {
-    matches: r
-  } = y.useContext(F), {
-    pathname: i
-  } = B(), l = JSON.stringify(Pe(r, a.v7_relativeSplatPath)), d = y.useRef(!1);
-  return We(() => {
-    d.current = !0;
-  }), y.useCallback(function(t, u) {
-    if (u === void 0 && (u = {}), process.env.NODE_ENV !== "production" && P(d.current, Ve), !d.current) return;
-    if (typeof t == "number") {
-      s.go(t);
+    navigator: i
+  } = p.useContext(D), {
+    matches: o
+  } = p.useContext(P), {
+    pathname: l
+  } = V(), u = JSON.stringify(Xe(o, a.v7_relativeSplatPath)), s = p.useRef(!1);
+  return nt(() => {
+    s.current = !0;
+  }), p.useCallback(function(n, h) {
+    if (h === void 0 && (h = {}), process.env.NODE_ENV !== "production" && K(s.current, tt), !s.current) return;
+    if (typeof n == "number") {
+      i.go(n);
       return;
     }
-    let h = Be(t, JSON.parse(l), i, u.relative === "path");
-    e == null && n !== "/" && (h.pathname = h.pathname === "/" ? n : ue([n, h.pathname])), (u.replace ? s.replace : s.push)(h, u.state, u);
-  }, [n, s, l, i, e]);
+    let d = Ze(n, JSON.parse(u), l, h.relative === "path");
+    e == null && t !== "/" && (d.pathname = d.pathname === "/" ? t : ve([t, d.pathname])), (h.replace ? i.replace : i.push)(d, h.state, h);
+  }, [t, i, u, l, e]);
 }
-function K(e, n) {
+function W(e, t) {
   let {
     relative: a
-  } = n === void 0 ? {} : n, {
-    future: s
-  } = y.useContext(D), {
-    matches: r
-  } = y.useContext(F), {
-    pathname: i
-  } = B(), l = JSON.stringify(Pe(r, s.v7_relativeSplatPath));
-  return y.useMemo(() => Be(e, JSON.parse(l), i, a === "path"), [e, l, i, a]);
+  } = t === void 0 ? {} : t, {
+    future: i
+  } = p.useContext(D), {
+    matches: o
+  } = p.useContext(P), {
+    pathname: l
+  } = V(), u = JSON.stringify(Xe(o, i.v7_relativeSplatPath));
+  return p.useMemo(() => Ze(e, JSON.parse(u), l, a === "path"), [e, u, l, a]);
 }
-var ze = /* @__PURE__ */ function(e) {
+var at = /* @__PURE__ */ function(e) {
   return e.UseBlocker = "useBlocker", e.UseRevalidator = "useRevalidator", e.UseNavigateStable = "useNavigate", e;
-}(ze || {}), me = /* @__PURE__ */ function(e) {
+}(at || {}), ge = /* @__PURE__ */ function(e) {
   return e.UseBlocker = "useBlocker", e.UseLoaderData = "useLoaderData", e.UseActionData = "useActionData", e.UseRouteError = "useRouteError", e.UseNavigation = "useNavigation", e.UseRouteLoaderData = "useRouteLoaderData", e.UseMatches = "useMatches", e.UseRevalidator = "useRevalidator", e.UseNavigateStable = "useNavigate", e.UseRouteId = "useRouteId", e;
-}(me || {});
-function Je(e) {
+}(ge || {});
+function it(e) {
   return e + " must be used within a data router.  See https://reactrouter.com/v6/routers/picking-a-router.";
 }
-function Vt(e) {
-  let n = y.useContext(G);
-  return n || (process.env.NODE_ENV !== "production" ? L(!1, Je(e)) : L(!1)), n;
+function nn(e) {
+  let t = p.useContext(ne);
+  return t || (process.env.NODE_ENV !== "production" ? b(!1, it(e)) : b(!1)), t;
 }
-function Wt(e) {
-  let n = y.useContext(F);
-  return n || (process.env.NODE_ENV !== "production" ? L(!1, Je(e)) : L(!1)), n;
+function an(e) {
+  let t = p.useContext(P);
+  return t || (process.env.NODE_ENV !== "production" ? b(!1, it(e)) : b(!1)), t;
 }
-function He(e) {
-  let n = Wt(e), a = n.matches[n.matches.length - 1];
-  return a.route.id || (process.env.NODE_ENV !== "production" ? L(!1, e + ' can only be used on routes that contain a unique "id"') : L(!1)), a.route.id;
+function ot(e) {
+  let t = an(e), a = t.matches[t.matches.length - 1];
+  return a.route.id || (process.env.NODE_ENV !== "production" ? b(!1, e + ' can only be used on routes that contain a unique "id"') : b(!1)), a.route.id;
 }
-function zt() {
-  return He(me.UseRouteId);
+function on() {
+  return ot(ge.UseRouteId);
 }
-function Jt() {
+function sn() {
   let {
     router: e
-  } = Vt(ze.UseNavigateStable), n = He(me.UseNavigateStable), a = y.useRef(!1);
-  return We(() => {
+  } = nn(at.UseNavigateStable), t = ot(ge.UseNavigateStable), a = p.useRef(!1);
+  return nt(() => {
     a.current = !0;
-  }), y.useCallback(function(r, i) {
-    i === void 0 && (i = {}), process.env.NODE_ENV !== "production" && P(a.current, Ve), a.current && (typeof r == "number" ? e.navigate(r) : e.navigate(r, ce({
-      fromRouteId: n
-    }, i)));
-  }, [e, n]);
+  }), p.useCallback(function(o, l) {
+    l === void 0 && (l = {}), process.env.NODE_ENV !== "production" && K(a.current, tt), a.current && (typeof o == "number" ? e.navigate(o) : e.navigate(o, me({
+      fromRouteId: t
+    }, l)));
+  }, [e, t]);
 }
 new Promise(() => {
 });
@@ -1408,437 +1406,436 @@ new Promise(() => {
  *
  * @license MIT
  */
-function U() {
-  return U = Object.assign ? Object.assign.bind() : function(e) {
-    for (var n = 1; n < arguments.length; n++) {
-      var a = arguments[n];
-      for (var s in a)
-        Object.prototype.hasOwnProperty.call(a, s) && (e[s] = a[s]);
+function T() {
+  return T = Object.assign ? Object.assign.bind() : function(e) {
+    for (var t = 1; t < arguments.length; t++) {
+      var a = arguments[t];
+      for (var i in a)
+        Object.prototype.hasOwnProperty.call(a, i) && (e[i] = a[i]);
     }
     return e;
-  }, U.apply(this, arguments);
+  }, T.apply(this, arguments);
 }
-function ve(e, n) {
+function we(e, t) {
   if (e == null) return {};
-  var a = {}, s = Object.keys(e), r, i;
-  for (i = 0; i < s.length; i++)
-    r = s[i], !(n.indexOf(r) >= 0) && (a[r] = e[r]);
+  var a = {}, i = Object.keys(e), o, l;
+  for (l = 0; l < i.length; l++)
+    o = i[l], !(t.indexOf(o) >= 0) && (a[o] = e[o]);
   return a;
 }
-const W = "get", z = "application/x-www-form-urlencoded";
-function Y(e) {
+const G = "get", Y = "application/x-www-form-urlencoded";
+function ae(e) {
   return e != null && typeof e.tagName == "string";
 }
-function Ht(e) {
-  return Y(e) && e.tagName.toLowerCase() === "button";
+function rn(e) {
+  return ae(e) && e.tagName.toLowerCase() === "button";
 }
-function Gt(e) {
-  return Y(e) && e.tagName.toLowerCase() === "form";
+function cn(e) {
+  return ae(e) && e.tagName.toLowerCase() === "form";
 }
-function Yt(e) {
-  return Y(e) && e.tagName.toLowerCase() === "input";
+function ln(e) {
+  return ae(e) && e.tagName.toLowerCase() === "input";
 }
-function Xt(e) {
+function dn(e) {
   return !!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey);
 }
-function Zt(e, n) {
+function un(e, t) {
   return e.button === 0 && // Ignore everything but left clicks
-  (!n || n === "_self") && // Let browser handle "target=_blank" etc.
-  !Xt(e);
+  (!t || t === "_self") && // Let browser handle "target=_blank" etc.
+  !dn(e);
 }
-let V = null;
-function Qt() {
-  if (V === null)
+let J = null;
+function hn() {
+  if (J === null)
     try {
       new FormData(
         document.createElement("form"),
         // @ts-expect-error if FormData supports the submitter parameter, this will throw
         0
-      ), V = !1;
+      ), J = !1;
     } catch {
-      V = !0;
+      J = !0;
     }
-  return V;
+  return J;
 }
-const en = /* @__PURE__ */ new Set(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"]);
-function ae(e) {
-  return e != null && !en.has(e) ? (process.env.NODE_ENV !== "production" && P(!1, '"' + e + '" is not a valid `encType` for `<Form>`/`<fetcher.Form>` ' + ('and will default to "' + z + '"')), null) : e;
+const mn = /* @__PURE__ */ new Set(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"]);
+function de(e) {
+  return e != null && !mn.has(e) ? (process.env.NODE_ENV !== "production" && K(!1, '"' + e + '" is not a valid `encType` for `<Form>`/`<fetcher.Form>` ' + ('and will default to "' + Y + '"')), null) : e;
 }
-function tn(e, n) {
-  let a, s, r, i, l;
-  if (Gt(e)) {
-    let d = e.getAttribute("action");
-    s = d ? j(d, n) : null, a = e.getAttribute("method") || W, r = ae(e.getAttribute("enctype")) || z, i = new FormData(e);
-  } else if (Ht(e) || Yt(e) && (e.type === "submit" || e.type === "image")) {
-    let d = e.form;
-    if (d == null)
+function fn(e, t) {
+  let a, i, o, l, u;
+  if (cn(e)) {
+    let s = e.getAttribute("action");
+    i = s ? U(s, t) : null, a = e.getAttribute("method") || G, o = de(e.getAttribute("enctype")) || Y, l = new FormData(e);
+  } else if (rn(e) || ln(e) && (e.type === "submit" || e.type === "image")) {
+    let s = e.form;
+    if (s == null)
       throw new Error('Cannot submit a <button> or <input type="submit"> without a <form>');
-    let o = e.getAttribute("formaction") || d.getAttribute("action");
-    if (s = o ? j(o, n) : null, a = e.getAttribute("formmethod") || d.getAttribute("method") || W, r = ae(e.getAttribute("formenctype")) || ae(d.getAttribute("enctype")) || z, i = new FormData(d, e), !Qt()) {
+    let c = e.getAttribute("formaction") || s.getAttribute("action");
+    if (i = c ? U(c, t) : null, a = e.getAttribute("formmethod") || s.getAttribute("method") || G, o = de(e.getAttribute("formenctype")) || de(s.getAttribute("enctype")) || Y, l = new FormData(s, e), !hn()) {
       let {
-        name: t,
-        type: u,
-        value: h
+        name: n,
+        type: h,
+        value: d
       } = e;
-      if (u === "image") {
-        let f = t ? t + "." : "";
-        i.append(f + "x", "0"), i.append(f + "y", "0");
-      } else t && i.append(t, h);
+      if (h === "image") {
+        let m = n ? n + "." : "";
+        l.append(m + "x", "0"), l.append(m + "y", "0");
+      } else n && l.append(n, d);
     }
   } else {
-    if (Y(e))
+    if (ae(e))
       throw new Error('Cannot submit element that is not <form>, <button>, or <input type="submit|image">');
-    a = W, s = null, r = z, l = e;
+    a = G, i = null, o = Y, u = e;
   }
-  return i && r === "text/plain" && (l = i, i = void 0), {
-    action: s,
+  return l && o === "text/plain" && (u = l, l = void 0), {
+    action: i,
     method: a.toLowerCase(),
-    encType: r,
-    formData: i,
-    body: l
+    encType: o,
+    formData: l,
+    body: u
   };
 }
-const nn = ["onClick", "relative", "reloadDocument", "replace", "state", "target", "to", "preventScrollReset", "viewTransition"], an = ["aria-current", "caseSensitive", "className", "end", "style", "to", "viewTransition", "children"], rn = ["fetcherKey", "navigate", "reloadDocument", "replace", "state", "method", "action", "onSubmit", "relative", "preventScrollReset", "viewTransition"], sn = "6";
+const yn = ["onClick", "relative", "reloadDocument", "replace", "state", "target", "to", "preventScrollReset", "viewTransition"], vn = ["aria-current", "caseSensitive", "className", "end", "style", "to", "viewTransition", "children"], pn = ["fetcherKey", "navigate", "reloadDocument", "replace", "state", "method", "action", "onSubmit", "relative", "preventScrollReset", "viewTransition"], Nn = "6";
 try {
-  window.__reactRouterVersion = sn;
+  window.__reactRouterVersion = Nn;
 } catch {
 }
-const Ge = /* @__PURE__ */ y.createContext({
+const st = /* @__PURE__ */ p.createContext({
   isTransitioning: !1
 });
-process.env.NODE_ENV !== "production" && (Ge.displayName = "ViewTransition");
-const on = /* @__PURE__ */ y.createContext(/* @__PURE__ */ new Map());
-process.env.NODE_ENV !== "production" && (on.displayName = "Fetchers");
+process.env.NODE_ENV !== "production" && (st.displayName = "ViewTransition");
+const gn = /* @__PURE__ */ p.createContext(/* @__PURE__ */ new Map());
+process.env.NODE_ENV !== "production" && (gn.displayName = "Fetchers");
 process.env.NODE_ENV;
-const cn = typeof window < "u" && typeof window.document < "u" && typeof window.document.createElement < "u", ln = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i, X = /* @__PURE__ */ y.forwardRef(function(n, a) {
+const wn = typeof window < "u" && typeof window.document < "u" && typeof window.document.createElement < "u", Cn = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i, B = /* @__PURE__ */ p.forwardRef(function(t, a) {
   let {
-    onClick: s,
-    relative: r,
-    reloadDocument: i,
-    replace: l,
-    state: d,
-    target: o,
-    to: t,
-    preventScrollReset: u,
-    viewTransition: h
-  } = n, f = ve(n, nn), {
-    basename: w
-  } = y.useContext(D), v, p = !1;
-  if (typeof t == "string" && ln.test(t) && (v = t, cn))
+    onClick: i,
+    relative: o,
+    reloadDocument: l,
+    replace: u,
+    state: s,
+    target: c,
+    to: n,
+    preventScrollReset: h,
+    viewTransition: d
+  } = t, m = we(t, yn), {
+    basename: g
+  } = p.useContext(D), f, v = !1;
+  if (typeof n == "string" && Cn.test(n) && (f = n, wn))
     try {
-      let A = new URL(window.location.href), E = t.startsWith("//") ? new URL(A.protocol + t) : new URL(t), q = j(E.pathname, w);
-      E.origin === A.origin && q != null ? t = q + E.search + E.hash : p = !0;
+      let L = new URL(window.location.href), E = n.startsWith("//") ? new URL(L.protocol + n) : new URL(n), z = U(E.pathname, g);
+      E.origin === L.origin && z != null ? n = z + E.search + E.hash : v = !0;
     } catch {
-      process.env.NODE_ENV !== "production" && P(!1, '<Link to="' + t + '"> contains an invalid URL which will probably break when clicked - please update to a valid URL path.');
+      process.env.NODE_ENV !== "production" && K(!1, '<Link to="' + n + '"> contains an invalid URL which will probably break when clicked - please update to a valid URL path.');
     }
-  let m = Bt(t, {
-    relative: r
-  }), O = fn(t, {
-    replace: l,
-    state: d,
-    target: o,
-    preventScrollReset: u,
-    relative: r,
-    viewTransition: h
+  let y = Qt(n, {
+    relative: o
+  }), A = Ln(n, {
+    replace: u,
+    state: s,
+    target: c,
+    preventScrollReset: h,
+    relative: o,
+    viewTransition: d
   });
-  function C(A) {
-    s && s(A), A.defaultPrevented || O(A);
+  function x(L) {
+    i && i(L), L.defaultPrevented || A(L);
   }
   return (
     // eslint-disable-next-line jsx-a11y/anchor-has-content
-    /* @__PURE__ */ y.createElement("a", U({}, f, {
-      href: v || m,
-      onClick: p || i ? s : C,
+    /* @__PURE__ */ p.createElement("a", T({}, m, {
+      href: f || y,
+      onClick: v || l ? i : x,
       ref: a,
-      target: o
+      target: c
     }))
   );
 });
-process.env.NODE_ENV !== "production" && (X.displayName = "Link");
-const dn = /* @__PURE__ */ y.forwardRef(function(n, a) {
+process.env.NODE_ENV !== "production" && (B.displayName = "Link");
+const xn = /* @__PURE__ */ p.forwardRef(function(t, a) {
   let {
-    "aria-current": s = "page",
-    caseSensitive: r = !1,
-    className: i = "",
-    end: l = !1,
-    style: d,
-    to: o,
-    viewTransition: t,
-    children: u
-  } = n, h = ve(n, an), f = K(o, {
-    relative: h.relative
-  }), w = B(), v = y.useContext(qe), {
-    navigator: p,
-    basename: m
-  } = y.useContext(D), O = v != null && // Conditional usage is OK here because the usage of a data router is static
+    "aria-current": i = "page",
+    caseSensitive: o = !1,
+    className: l = "",
+    end: u = !1,
+    style: s,
+    to: c,
+    viewTransition: n,
+    children: h
+  } = t, d = we(t, vn), m = W(c, {
+    relative: d.relative
+  }), g = V(), f = p.useContext(et), {
+    navigator: v,
+    basename: y
+  } = p.useContext(D), A = f != null && // Conditional usage is OK here because the usage of a data router is static
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  Nn(f) && t === !0, C = p.encodeLocation ? p.encodeLocation(f).pathname : f.pathname, A = w.pathname, E = v && v.navigation && v.navigation.location ? v.navigation.location.pathname : null;
-  r || (A = A.toLowerCase(), E = E ? E.toLowerCase() : null, C = C.toLowerCase()), E && m && (E = j(E, m) || E);
-  const q = C !== "/" && C.endsWith("/") ? C.length - 1 : C.length;
-  let Z = A === C || !l && A.startsWith(C) && A.charAt(q) === "/", ye = E != null && (E === C || !l && E.startsWith(C) && E.charAt(C.length) === "/"), Q = {
-    isActive: Z,
-    isPending: ye,
-    isTransitioning: O
-  }, Xe = Z ? s : void 0, ee;
-  typeof i == "function" ? ee = i(Q) : ee = [i, Z ? "active" : null, ye ? "pending" : null, O ? "transitioning" : null].filter(Boolean).join(" ");
-  let Ze = typeof d == "function" ? d(Q) : d;
-  return /* @__PURE__ */ y.createElement(X, U({}, h, {
-    "aria-current": Xe,
-    className: ee,
+  Mn(m) && n === !0, x = v.encodeLocation ? v.encodeLocation(m).pathname : m.pathname, L = g.pathname, E = f && f.navigation && f.navigation.location ? f.navigation.location.pathname : null;
+  o || (L = L.toLowerCase(), E = E ? E.toLowerCase() : null, x = x.toLowerCase()), E && y && (E = U(E, y) || E);
+  const z = x !== "/" && x.endsWith("/") ? x.length - 1 : x.length;
+  let oe = L === x || !u && L.startsWith(x) && L.charAt(z) === "/", Ce = E != null && (E === x || !u && E.startsWith(x) && E.charAt(x.length) === "/"), se = {
+    isActive: oe,
+    isPending: Ce,
+    isTransitioning: A
+  }, dt = oe ? i : void 0, re;
+  typeof l == "function" ? re = l(se) : re = [l, oe ? "active" : null, Ce ? "pending" : null, A ? "transitioning" : null].filter(Boolean).join(" ");
+  let ut = typeof s == "function" ? s(se) : s;
+  return /* @__PURE__ */ p.createElement(B, T({}, d, {
+    "aria-current": dt,
+    className: re,
     ref: a,
-    style: Ze,
-    to: o,
-    viewTransition: t
-  }), typeof u == "function" ? u(Q) : u);
+    style: ut,
+    to: c,
+    viewTransition: n
+  }), typeof h == "function" ? h(se) : h);
 });
-process.env.NODE_ENV !== "production" && (dn.displayName = "NavLink");
-const un = /* @__PURE__ */ y.forwardRef((e, n) => {
+process.env.NODE_ENV !== "production" && (xn.displayName = "NavLink");
+const bn = /* @__PURE__ */ p.forwardRef((e, t) => {
   let {
     fetcherKey: a,
-    navigate: s,
-    reloadDocument: r,
-    replace: i,
-    state: l,
-    method: d = W,
-    action: o,
-    onSubmit: t,
-    relative: u,
-    preventScrollReset: h,
-    viewTransition: f
-  } = e, w = ve(e, rn), v = pn(), p = gn(o, {
-    relative: u
-  }), m = d.toLowerCase() === "get" ? "get" : "post", O = (C) => {
-    if (t && t(C), C.defaultPrevented) return;
-    C.preventDefault();
-    let A = C.nativeEvent.submitter, E = (A == null ? void 0 : A.getAttribute("formmethod")) || d;
-    v(A || C.currentTarget, {
+    navigate: i,
+    reloadDocument: o,
+    replace: l,
+    state: u,
+    method: s = G,
+    action: c,
+    onSubmit: n,
+    relative: h,
+    preventScrollReset: d,
+    viewTransition: m
+  } = e, g = we(e, pn), f = Sn(), v = jn(c, {
+    relative: h
+  }), y = s.toLowerCase() === "get" ? "get" : "post", A = (x) => {
+    if (n && n(x), x.defaultPrevented) return;
+    x.preventDefault();
+    let L = x.nativeEvent.submitter, E = (L == null ? void 0 : L.getAttribute("formmethod")) || s;
+    f(L || x.currentTarget, {
       fetcherKey: a,
       method: E,
-      navigate: s,
-      replace: i,
-      state: l,
-      relative: u,
-      preventScrollReset: h,
-      viewTransition: f
+      navigate: i,
+      replace: l,
+      state: u,
+      relative: h,
+      preventScrollReset: d,
+      viewTransition: m
     });
   };
-  return /* @__PURE__ */ y.createElement("form", U({
-    ref: n,
-    method: m,
-    action: p,
-    onSubmit: r ? t : O
-  }, w));
+  return /* @__PURE__ */ p.createElement("form", T({
+    ref: t,
+    method: y,
+    action: v,
+    onSubmit: o ? n : A
+  }, g));
 });
-process.env.NODE_ENV !== "production" && (un.displayName = "Form");
+process.env.NODE_ENV !== "production" && (bn.displayName = "Form");
 process.env.NODE_ENV;
-var H;
+var Q;
 (function(e) {
   e.UseScrollRestoration = "useScrollRestoration", e.UseSubmit = "useSubmit", e.UseSubmitFetcher = "useSubmitFetcher", e.UseFetcher = "useFetcher", e.useViewTransitionState = "useViewTransitionState";
-})(H || (H = {}));
-var be;
+})(Q || (Q = {}));
+var Pe;
 (function(e) {
   e.UseFetcher = "useFetcher", e.UseFetchers = "useFetchers", e.UseScrollRestoration = "useScrollRestoration";
-})(be || (be = {}));
-function hn(e) {
+})(Pe || (Pe = {}));
+function En(e) {
   return e + " must be used within a data router.  See https://reactrouter.com/v6/routers/picking-a-router.";
 }
-function Ye(e) {
-  let n = y.useContext(G);
-  return n || (process.env.NODE_ENV !== "production" ? L(!1, hn(e)) : L(!1)), n;
+function rt(e) {
+  let t = p.useContext(ne);
+  return t || (process.env.NODE_ENV !== "production" ? b(!1, En(e)) : b(!1)), t;
 }
-function fn(e, n) {
+function Ln(e, t) {
   let {
     target: a,
-    replace: s,
-    state: r,
-    preventScrollReset: i,
-    relative: l,
-    viewTransition: d
-  } = n === void 0 ? {} : n, o = Kt(), t = B(), u = K(e, {
-    relative: l
+    replace: i,
+    state: o,
+    preventScrollReset: l,
+    relative: u,
+    viewTransition: s
+  } = t === void 0 ? {} : t, c = en(), n = V(), h = W(e, {
+    relative: u
   });
-  return y.useCallback((h) => {
-    if (Zt(h, a)) {
-      h.preventDefault();
-      let f = s !== void 0 ? s : ie(t) === ie(u);
-      o(e, {
-        replace: f,
-        state: r,
-        preventScrollReset: i,
-        relative: l,
-        viewTransition: d
+  return p.useCallback((d) => {
+    if (un(d, a)) {
+      d.preventDefault();
+      let m = i !== void 0 ? i : he(n) === he(h);
+      c(e, {
+        replace: m,
+        state: o,
+        preventScrollReset: l,
+        relative: u,
+        viewTransition: s
       });
     }
-  }, [t, o, u, s, r, a, e, i, l, d]);
+  }, [n, c, h, i, o, a, e, l, u, s]);
 }
-function mn() {
+function An() {
   if (typeof document > "u")
     throw new Error("You are calling submit during the server render. Try calling submit within a `useEffect` or callback instead.");
 }
-let vn = 0, yn = () => "__" + String(++vn) + "__";
-function pn() {
+let On = 0, kn = () => "__" + String(++On) + "__";
+function Sn() {
   let {
     router: e
-  } = Ye(H.UseSubmit), {
-    basename: n
-  } = y.useContext(D), a = zt();
-  return y.useCallback(function(s, r) {
-    r === void 0 && (r = {}), mn();
+  } = rt(Q.UseSubmit), {
+    basename: t
+  } = p.useContext(D), a = on();
+  return p.useCallback(function(i, o) {
+    o === void 0 && (o = {}), An();
     let {
-      action: i,
-      method: l,
-      encType: d,
-      formData: o,
-      body: t
-    } = tn(s, n);
-    if (r.navigate === !1) {
-      let u = r.fetcherKey || yn();
-      e.fetch(u, a, r.action || i, {
-        preventScrollReset: r.preventScrollReset,
-        formData: o,
-        body: t,
-        formMethod: r.method || l,
-        formEncType: r.encType || d,
-        flushSync: r.flushSync
+      action: l,
+      method: u,
+      encType: s,
+      formData: c,
+      body: n
+    } = fn(i, t);
+    if (o.navigate === !1) {
+      let h = o.fetcherKey || kn();
+      e.fetch(h, a, o.action || l, {
+        preventScrollReset: o.preventScrollReset,
+        formData: c,
+        body: n,
+        formMethod: o.method || u,
+        formEncType: o.encType || s,
+        flushSync: o.flushSync
       });
     } else
-      e.navigate(r.action || i, {
-        preventScrollReset: r.preventScrollReset,
-        formData: o,
-        body: t,
-        formMethod: r.method || l,
-        formEncType: r.encType || d,
-        replace: r.replace,
-        state: r.state,
+      e.navigate(o.action || l, {
+        preventScrollReset: o.preventScrollReset,
+        formData: c,
+        body: n,
+        formMethod: o.method || u,
+        formEncType: o.encType || s,
+        replace: o.replace,
+        state: o.state,
         fromRouteId: a,
-        flushSync: r.flushSync,
-        viewTransition: r.viewTransition
+        flushSync: o.flushSync,
+        viewTransition: o.viewTransition
       });
-  }, [e, n, a]);
+  }, [e, t, a]);
 }
-function gn(e, n) {
+function jn(e, t) {
   let {
     relative: a
-  } = n === void 0 ? {} : n, {
-    basename: s
-  } = y.useContext(D), r = y.useContext(F);
-  r || (process.env.NODE_ENV !== "production" ? L(!1, "useFormAction must be used inside a RouteContext") : L(!1));
-  let [i] = r.matches.slice(-1), l = U({}, K(e || ".", {
+  } = t === void 0 ? {} : t, {
+    basename: i
+  } = p.useContext(D), o = p.useContext(P);
+  o || (process.env.NODE_ENV !== "production" ? b(!1, "useFormAction must be used inside a RouteContext") : b(!1));
+  let [l] = o.matches.slice(-1), u = T({}, W(e || ".", {
     relative: a
-  })), d = B();
+  })), s = V();
   if (e == null) {
-    l.search = d.search;
-    let o = new URLSearchParams(l.search), t = o.getAll("index");
-    if (t.some((h) => h === "")) {
-      o.delete("index"), t.filter((f) => f).forEach((f) => o.append("index", f));
-      let h = o.toString();
-      l.search = h ? "?" + h : "";
+    u.search = s.search;
+    let c = new URLSearchParams(u.search), n = c.getAll("index");
+    if (n.some((d) => d === "")) {
+      c.delete("index"), n.filter((m) => m).forEach((m) => c.append("index", m));
+      let d = c.toString();
+      u.search = d ? "?" + d : "";
     }
   }
-  return (!e || e === ".") && i.route.index && (l.search = l.search ? l.search.replace(/^\?/, "?index&") : "?index"), s !== "/" && (l.pathname = l.pathname === "/" ? s : ue([s, l.pathname])), ie(l);
+  return (!e || e === ".") && l.route.index && (u.search = u.search ? u.search.replace(/^\?/, "?index&") : "?index"), i !== "/" && (u.pathname = u.pathname === "/" ? i : ve([i, u.pathname])), he(u);
 }
-function Nn(e, n) {
-  n === void 0 && (n = {});
-  let a = y.useContext(Ge);
-  a == null && (process.env.NODE_ENV !== "production" ? L(!1, "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  Did you accidentally import `RouterProvider` from `react-router`?") : L(!1));
+function Mn(e, t) {
+  t === void 0 && (t = {});
+  let a = p.useContext(st);
+  a == null && (process.env.NODE_ENV !== "production" ? b(!1, "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  Did you accidentally import `RouterProvider` from `react-router`?") : b(!1));
   let {
-    basename: s
-  } = Ye(H.useViewTransitionState), r = K(e, {
-    relative: n.relative
+    basename: i
+  } = rt(Q.useViewTransitionState), o = W(e, {
+    relative: t.relative
   });
   if (!a.isTransitioning)
     return !1;
-  let i = j(a.currentLocation.pathname, s) || a.currentLocation.pathname, l = j(a.nextLocation.pathname, s) || a.nextLocation.pathname;
-  return $e(r.pathname, l) != null || $e(r.pathname, i) != null;
+  let l = U(a.currentLocation.pathname, i) || a.currentLocation.pathname, u = U(a.nextLocation.pathname, i) || a.nextLocation.pathname;
+  return Te(o.pathname, u) != null || Te(o.pathname, l) != null;
 }
-function wn(e) {
+function _n(e) {
   return typeof e != "string" ? "" : e.charAt(0).toUpperCase() + e.slice(1);
 }
-let je = 0;
-function xn() {
-  return je += 1, `tablelink${je}`;
+let qe = 0;
+function Dn() {
+  return qe += 1, `tablelink${qe}`;
 }
-class Cn {
-  constructor(n = {}) {
-    if (!n.link) throw new Error("TableLinkObject requires `link` (base route).");
-    this.id = n.id ?? xn(), this.className = n.className ?? "table", this.name = n.name ?? "table", this.rows = Array.isArray(n.rows) ? n.rows.slice() : [], this.link = n.link;
-    const a = new N({ iconClass: "fa-solid fa-user" }), s = new N({ iconClass: "fa-solid fa-arrow-down" });
-    this.icon = n.icon instanceof N ? n.icon : new N(n.icon || a), this.sort = n.sort instanceof N ? n.sort : new N(n.sort || s);
+class Rn {
+  constructor(t = {}) {
+    if (!t.link) throw new Error("TableLinkObject requires `link` (base route).");
+    this.id = t.id ?? Dn(), this.className = t.className ?? "table", this.name = t.name ?? "table", this.rows = Array.isArray(t.rows) ? t.rows.slice() : [], this.link = t.link;
+    const a = new w({ iconClass: "fa-solid fa-user" }), i = new w({ iconClass: "fa-solid fa-arrow-down" });
+    this.icon = t.icon instanceof w ? t.icon : new w(t.icon || a), this.sort = t.sort instanceof w ? t.sort : new w(t.sort || i);
   }
 }
-function Ln(e) {
-  return !e || e.length === 0 ? [] : Object.keys(e[0]).filter((n) => n !== "id");
+function $n(e) {
+  return !e || e.length === 0 ? [] : Object.keys(e[0]).filter((t) => t !== "id");
 }
-function Un({ table: e, output: n }) {
-  if (!e || !(e instanceof Cn))
-    throw new Error("AlloyTableLink requires `table` (TableLinkObject instance).");
-  const a = k(e.id), [s, r] = x({ col: "", dir: "asc" }), i = S(() => Ln(e.rows), [e.rows]), l = (d) => {
-    if (!d) return;
-    const o = s.col === d && s.dir === "asc" ? "desc" : "asc";
-    r({ col: d, dir: o }), n == null || n({ type: "column", name: d, dir: o });
+function Zn({ tableLink: e, output: t }) {
+  if (!e || !(e instanceof Rn))
+    throw new Error("AlloyTableLink requires `tableLink` (TableLinkObject instance).");
+  const a = O(e.id), [i, o] = C({ col: "", dir: "asc" }), l = S(() => $n(e.rows), [e.rows]), u = (s) => {
+    if (!s) return;
+    const c = i.col === s && i.dir === "asc" ? "desc" : "asc";
+    o({ col: s, dir: c }), t == null || t({ type: "column", name: s, dir: c });
   };
-  return /* @__PURE__ */ g("table", { id: a.current, className: e.className, children: [
-    /* @__PURE__ */ c("caption", { className: "caption-top text-center", children: e.name }),
-    /* @__PURE__ */ c("thead", { children: /* @__PURE__ */ g("tr", { children: [
-      /* @__PURE__ */ c("th", { scope: "col", children: "Type" }),
-      i.map((d) => {
-        const o = s.col === d, t = o && s.dir === "desc";
-        return /* @__PURE__ */ c("th", { scope: "col", children: /* @__PURE__ */ g(
+  return /* @__PURE__ */ N("table", { id: a.current, className: e.className, children: [
+    /* @__PURE__ */ r("caption", { className: "caption-top text-center", children: e.name }),
+    /* @__PURE__ */ r("thead", { children: /* @__PURE__ */ N("tr", { children: [
+      /* @__PURE__ */ r("th", { scope: "col", children: "Type" }),
+      l.map((s) => {
+        const c = i.col === s, n = c && i.dir === "desc";
+        return /* @__PURE__ */ r("th", { scope: "col", children: /* @__PURE__ */ N(
           "span",
           {
-            className: "cursor",
-            onClick: () => l(d),
+            onClick: () => u(s),
             style: { userSelect: "none" },
             children: [
-              wn(d),
-              o && /* @__PURE__ */ c(
+              _n(s),
+              c && /* @__PURE__ */ r(
                 "span",
                 {
                   className: "ms-1 d-inline-flex align-middle",
                   "aria-hidden": "true",
-                  title: t ? "Sorted descending" : "Sorted ascending",
+                  title: n ? "Sorted descending" : "Sorted ascending",
                   style: {
-                    transform: t ? "rotate(180deg)" : "none",
+                    transform: n ? "rotate(180deg)" : "none",
                     transition: "transform 120ms"
                   },
-                  children: /* @__PURE__ */ c(I, { icon: e.sort })
+                  children: /* @__PURE__ */ r(k, { icon: e.sort })
                 }
               )
             ]
           }
-        ) }, d);
+        ) }, s);
       })
     ] }) }),
-    /* @__PURE__ */ c("tbody", { children: (e.rows ?? []).length > 0 ? (e.rows ?? []).map((d, o) => {
-      const t = (d == null ? void 0 : d.id) ?? o, h = `${e.link.endsWith("/") ? e.link.slice(0, -1) : e.link}/${t}`;
-      return /* @__PURE__ */ g("tr", { children: [
-        /* @__PURE__ */ c("td", { children: /* @__PURE__ */ c(I, { icon: e.icon }) }),
-        i.map((f) => /* @__PURE__ */ c("td", { children: /* @__PURE__ */ c(
-          X,
+    /* @__PURE__ */ r("tbody", { children: (e.rows ?? []).length > 0 ? (e.rows ?? []).map((s, c) => {
+      const n = (s == null ? void 0 : s.id) ?? c, d = `${e.link.endsWith("/") ? e.link.slice(0, -1) : e.link}/${n}`;
+      return /* @__PURE__ */ N("tr", { children: [
+        /* @__PURE__ */ r("td", { children: /* @__PURE__ */ r(k, { icon: e.icon }) }),
+        l.map((m) => /* @__PURE__ */ r("td", { children: /* @__PURE__ */ r(
+          B,
           {
-            to: h,
-            onClick: () => n == null ? void 0 : n({ type: "navigate", to: h, id: t }),
+            to: d,
+            onClick: () => t == null ? void 0 : t({ type: "navigate", to: d, id: n }),
             className: "text-decoration-none",
-            children: /* @__PURE__ */ c("span", { children: d == null ? void 0 : d[f] })
+            children: /* @__PURE__ */ r("span", { children: s == null ? void 0 : s[m] })
           }
-        ) }, `${t}-${f}`))
-      ] }, t);
-    }) : /* @__PURE__ */ c("tr", { children: /* @__PURE__ */ c("td", { colSpan: Math.max(1, i.length) + 1, className: "text-center text-secondary", children: "No rows" }) }) })
+        ) }, `${n}-${m}`))
+      ] }, n);
+    }) : /* @__PURE__ */ r("tr", { children: /* @__PURE__ */ r("td", { colSpan: Math.max(1, l.length) + 1, className: "text-center text-secondary", children: "No rows" }) }) })
   ] });
 }
-let Ue = 0;
-function En() {
-  return Ue += 1, `tableaction${Ue}`;
+let Ke = 0;
+function Bn() {
+  return Ke += 1, `tableaction${Ke}`;
 }
-function An(e) {
+function Fn(e) {
   return typeof e != "string" ? "" : e.charAt(0).toUpperCase() + e.slice(1);
 }
-function On(e) {
+function In(e) {
   if (!Array.isArray(e) || e.length === 0) return [];
-  const n = e[0] ?? {};
-  return Object.keys(n).filter((a) => a !== "id");
+  const t = e[0] ?? {};
+  return Object.keys(t).filter((a) => a !== "id");
 }
-class kn {
+class Un {
   /**
    * @param {{
    *   id?: string,
@@ -1851,111 +1848,736 @@ class kn {
    *   link?: string                     // OPTIONAL, base route for row links; e.g. "/users"
    * }} p
    */
-  constructor(n = {}) {
-    if (!n.actions) throw new Error("TableActionObject requires `actions`.");
-    this.id = n.id ?? En(), this.className = n.className ?? "table", this.name = n.name ?? "table", this.rows = Array.isArray(n.rows) ? n.rows.slice() : [], this.link = typeof n.link == "string" ? n.link : "";
-    const a = new N({ iconClass: "fa-solid fa-user" }), s = new N({ iconClass: "fa-solid fa-arrow-down" });
-    this.icon = n.icon instanceof N ? n.icon : new N(n.icon || a), this.sort = n.sort instanceof N ? n.sort : new N(n.sort || s), this.actions = n.actions instanceof se ? n.actions : new se(n.actions || {});
+  constructor(t = {}) {
+    if (!t.actions) throw new Error("TableActionObject requires `actions`.");
+    this.id = t.id ?? Bn(), this.className = t.className ?? "table", this.name = t.name ?? "table", this.rows = Array.isArray(t.rows) ? t.rows.slice() : [], this.link = typeof t.link == "string" ? t.link : "";
+    const a = new w({ iconClass: "fa-solid fa-user" }), i = new w({ iconClass: "fa-solid fa-arrow-down" });
+    this.icon = t.icon instanceof w ? t.icon : new w(t.icon || a), this.sort = t.sort instanceof w ? t.sort : new w(t.sort || i), this.actions = t.actions instanceof _ ? t.actions : new _(t.actions || {});
   }
 }
-function Fn({ table: e, output: n }) {
-  if (!e || !(e instanceof kn))
-    throw new Error("AlloyTableAction requires `table` (TableActionObject instance).");
-  const a = k(e.id), s = S(() => On(e.rows), [e.rows]), [r, i] = x({ col: "", dir: "asc" });
-  function l(o) {
-    const t = r.col === o && r.dir === "asc" ? "desc" : "asc";
-    i({ col: o, dir: t }), n == null || n({ type: "column", name: o, dir: t });
+function Qn({ tableAction: e, output: t }) {
+  if (!e || !(e instanceof Un))
+    throw new Error("AlloyTableAction requires `tableAction` (TableActionObject instance).");
+  const a = O(e.id), i = S(() => In(e.rows), [e.rows]), [o, l] = C({ col: "", dir: "asc" });
+  function u(c) {
+    const n = o.col === c && o.dir === "asc" ? "desc" : "asc";
+    l({ col: c, dir: n }), t == null || t({ type: "column", name: c, dir: n });
   }
-  function d(o) {
-    return (t, u) => {
-      var h;
-      n == null || n({
+  function s(c) {
+    return (n, h) => {
+      var d;
+      t == null || t({
         type: "action",
         action: {
-          id: t == null ? void 0 : t.id,
-          name: t == null ? void 0 : t.name,
-          className: t == null ? void 0 : t.className,
-          active: t == null ? void 0 : t.active,
-          disabled: !!(t != null && t.disabled),
-          title: t == null ? void 0 : t.title,
-          ariaLabel: t == null ? void 0 : t.ariaLabel,
-          tabIndex: t == null ? void 0 : t.tabIndex,
-          iconClass: (h = t == null ? void 0 : t.icon) == null ? void 0 : h.iconClass
+          id: n == null ? void 0 : n.id,
+          name: n == null ? void 0 : n.name,
+          className: n == null ? void 0 : n.className,
+          active: n == null ? void 0 : n.active,
+          disabled: !!(n != null && n.disabled),
+          title: n == null ? void 0 : n.title,
+          ariaLabel: n == null ? void 0 : n.ariaLabel,
+          tabIndex: n == null ? void 0 : n.tabIndex,
+          iconClass: (d = n == null ? void 0 : n.icon) == null ? void 0 : d.iconClass
         },
-        row: o
+        row: c
       });
     };
   }
-  return /* @__PURE__ */ g("table", { id: a.current, className: e.className, children: [
-    /* @__PURE__ */ c("caption", { className: "caption-top text-center", children: e.name }),
-    /* @__PURE__ */ c("thead", { children: /* @__PURE__ */ g("tr", { children: [
-      /* @__PURE__ */ c("th", { scope: "col", children: "Type" }),
-      s.map((o) => {
-        const t = r.col === o, u = t && r.dir === "desc" ? "rotate-180" : "";
-        return /* @__PURE__ */ c("th", { scope: "col", children: /* @__PURE__ */ g(
-          "button",
+  return /* @__PURE__ */ N("table", { id: a.current, className: e.className, children: [
+    /* @__PURE__ */ r("caption", { className: "caption-top text-center", children: e.name }),
+    /* @__PURE__ */ r("thead", { children: /* @__PURE__ */ N("tr", { children: [
+      /* @__PURE__ */ r("th", { scope: "col", children: "Type" }),
+      i.map((c) => {
+        const n = o.col === c, h = n && o.dir === "desc";
+        return /* @__PURE__ */ r("th", { scope: "col", children: /* @__PURE__ */ N(
+          "span",
           {
-            type: "button",
-            className: "btn btn-link p-0 text-decoration-none",
-            onClick: () => l(o),
+            onClick: () => u(c),
+            style: { userSelect: "none" },
             children: [
-              An(o),
-              t && /* @__PURE__ */ c("span", { className: `ms-1 align-middle ${u}`, "aria-hidden": "true", children: /* @__PURE__ */ c(I, { icon: e.sort }) })
+              Fn(c),
+              n && /* @__PURE__ */ r(
+                "span",
+                {
+                  className: "ms-1 d-inline-flex align-middle",
+                  "aria-hidden": "true",
+                  title: h ? "Sorted descending" : "Sorted ascending",
+                  style: {
+                    transform: h ? "rotate(180deg)" : "none",
+                    transition: "transform 120ms"
+                  },
+                  children: /* @__PURE__ */ r(k, { icon: e.sort })
+                }
+              )
             ]
           }
-        ) }, `h-${o}`);
+        ) }, `h-${c}`);
       }),
-      /* @__PURE__ */ c("th", { scope: "col", className: "text-end", children: "Actions" })
+      /* @__PURE__ */ r("th", { scope: "col", className: "text-end", children: "Actions" })
     ] }) }),
-    /* @__PURE__ */ c("tbody", { children: e.rows.map((o, t) => {
-      const u = (o == null ? void 0 : o.id) ?? t, h = e.actions;
-      return /* @__PURE__ */ g("tr", { children: [
-        /* @__PURE__ */ c("td", { children: /* @__PURE__ */ c(I, { icon: e.icon }) }),
-        s.map((f) => {
-          const w = e.link ? `${e.link}/${u}` : "";
-          return /* @__PURE__ */ c("td", { children: e.link ? /* @__PURE__ */ c(
-            X,
+    /* @__PURE__ */ r("tbody", { children: e.rows.map((c, n) => {
+      const h = (c == null ? void 0 : c.id) ?? n, d = e.actions;
+      return /* @__PURE__ */ N("tr", { children: [
+        /* @__PURE__ */ r("td", { children: /* @__PURE__ */ r(k, { icon: e.icon }) }),
+        i.map((m) => {
+          const g = e.link ? `${e.link}/${h}` : "";
+          return /* @__PURE__ */ r("td", { children: e.link ? /* @__PURE__ */ r(
+            B,
             {
-              to: w,
-              onClick: () => n == null ? void 0 : n({ type: "navigate", to: w, id: u, row: o }),
+              to: g,
+              onClick: () => t == null ? void 0 : t({ type: "navigate", to: g, id: h, row: c }),
               className: "text-decoration-none",
-              children: /* @__PURE__ */ c("span", { children: o == null ? void 0 : o[f] })
+              children: /* @__PURE__ */ r("span", { children: c == null ? void 0 : c[m] })
             }
-          ) : /* @__PURE__ */ c("span", { children: o == null ? void 0 : o[f] }) }, `${u}-${f}`);
+          ) : /* @__PURE__ */ r("span", { children: c == null ? void 0 : c[m] }) }, `${h}-${m}`);
         }),
-        /* @__PURE__ */ c("td", { className: "text-end", children: /* @__PURE__ */ c(Et, { buttonBar: h, output: d(o) }) })
-      ] }, u);
+        /* @__PURE__ */ r("td", { className: "text-end", children: /* @__PURE__ */ r(te, { buttonBar: d, output: s(c) }) })
+      ] }, h);
     }) })
   ] });
 }
+let Ve = 0, We = 0;
+function Tn() {
+  return Ve += 1, `card${Ve}`;
+}
+function Pn() {
+  return We += 1, `carditem${We}`;
+}
+class H {
+  /**
+   * @param {{ id?:string, name?:string, className?:string, show?:boolean }=} res
+   */
+  constructor(t = {}) {
+    this.id = t.id ?? Pn(), this.className = t.className ?? "", this.name = t.name ?? "Card Item", this.show = typeof t.show == "boolean" ? t.show : !0;
+  }
+}
+class ie {
+  /**
+   * @param {{ id?:string, className?:string, body?:CardItem|object, fields?:Array<CardItem|object>, link?:string }=} res
+   */
+  constructor(t = {}) {
+    this.id = t.id ?? Tn(), this.className = t.className ?? "card border m-2 shadow", this.link = typeof t.link == "string" ? t.link : "", this.body = t.body instanceof H ? t.body : new H(t.body || {});
+    const a = Array.isArray(t.fields) ? t.fields : [];
+    this.fields = a.map((i) => i instanceof H ? i : new H(i));
+  }
+}
+function ea({ card: e }) {
+  if (!e || !(e instanceof ie))
+    throw new Error("AlloyCard requires `card` (CardObject instance).");
+  const t = /* @__PURE__ */ r(
+    "div",
+    {
+      id: e.body.id,
+      className: e.body.className,
+      "aria-label": e.body.name,
+      children: e.fields.map(
+        (a) => a != null && a.show ? /* @__PURE__ */ r("div", { id: a.id, className: a.className, children: a.name }, a.id) : null
+      )
+    }
+  );
+  return e.link ? /* @__PURE__ */ r(B, { id: e.id, to: e.link, className: e.className + " text-decoration-none", children: t }) : /* @__PURE__ */ r("div", { id: e.id, className: e.className, children: t });
+}
+class ct extends ie {
+  /**
+   * @param {{
+   *   id?: string,
+   *   className?: string,
+   *   link?: string,
+   *   body?: CardItem|object,
+   *   fields?: Array<CardItem|object>,
+   *   icon?: IconObject|object,
+   *   iconClass?: string,
+   *   textClass?: string
+   * }=} res
+   */
+  constructor(t = {}) {
+    super(t), this.icon = t.icon instanceof w ? t.icon : new w(t.icon || {}), this.iconClass = t.iconClass ?? "col-4 icon-lg rounded-circle bg-warning text-white mb-0", this.textClass = t.textClass ?? "col-8";
+  }
+}
+function ta({ cardIcon: e }) {
+  if (!e || !(e instanceof ct))
+    throw new Error("AlloyCardIcon requires `cardIcon` (CardIconObject instance).");
+  const t = /* @__PURE__ */ r(
+    "div",
+    {
+      id: e.body.id,
+      className: e.body.className,
+      "aria-label": e.body.name,
+      children: /* @__PURE__ */ N("div", { className: "row m-0", children: [
+        /* @__PURE__ */ r("div", { className: e.iconClass, children: /* @__PURE__ */ r(k, { icon: e.icon }) }),
+        /* @__PURE__ */ r("div", { className: e.textClass, children: /* @__PURE__ */ r("div", { className: "row p-1", children: e.fields.map(
+          (a) => a != null && a.show ? /* @__PURE__ */ r(
+            "div",
+            {
+              id: a.id,
+              className: a.className,
+              children: a.name
+            },
+            a.id
+          ) : null
+        ) }) })
+      ] })
+    }
+  );
+  return e.link ? /* @__PURE__ */ r(
+    B,
+    {
+      id: e.id,
+      to: e.link,
+      className: e.className + " text-decoration-none",
+      children: t
+    }
+  ) : /* @__PURE__ */ r("div", { id: e.id, className: e.className, children: t });
+}
+class ze {
+  /**
+   * @param {{
+   *   imageUrl?: string,
+   *   alt?: string,
+   *   width?: string,
+   *   height?: string
+   * }=} res
+   */
+  constructor(t = {}) {
+    t && Object.keys(t).length > 0 ? (this.imageUrl = t.imageUrl ?? "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png", this.alt = t.alt ?? "Alloymobile", this.width = t.width ?? "auto", this.height = t.height ?? "auto") : (this.imageUrl = "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png", this.alt = "Alloymobile", this.width = "72", this.height = "auto");
+  }
+}
+class lt extends ie {
+  /**
+   * @param {{
+   *   id?: string,
+   *   className?: string,
+   *   link?: string,
+   *   body?: CardItem|object,
+   *   fields?: Array<CardItem|object>,
+   *   logo?: LogoObject|object,
+   *   logoClass?: string,
+   *   textClass?: string
+   * }=} res
+   */
+  constructor(t = {}) {
+    super(t), this.logo = t.logo instanceof ze ? t.logo : new ze(t.logo || {}), this.logoClass = t.logoClass ?? "col-4 d-flex align-items-center justify-content-center bg-light rounded mb-0", this.textClass = t.textClass ?? "col-8";
+  }
+}
+function na({ cardImage: e }) {
+  if (!e || !(e instanceof lt))
+    throw new Error("AlloyCardImage requires `cardImage` (CardImageObject instance).");
+  const t = /* @__PURE__ */ r(
+    "div",
+    {
+      id: e.body.id,
+      className: e.body.className,
+      "aria-label": e.body.name,
+      children: /* @__PURE__ */ N("div", { className: "row m-0", children: [
+        /* @__PURE__ */ r("div", { className: e.logoClass, children: /* @__PURE__ */ r(
+          "img",
+          {
+            src: e.logo.imageUrl,
+            alt: e.logo.alt,
+            style: {
+              width: e.logo.width,
+              height: e.logo.height,
+              maxWidth: "100%",
+              // keep image from overflowing
+              objectFit: "contain"
+            }
+          }
+        ) }),
+        /* @__PURE__ */ r("div", { className: e.textClass, children: /* @__PURE__ */ r("div", { className: "row p-1", children: e.fields.map(
+          (a) => a != null && a.show ? /* @__PURE__ */ r(
+            "div",
+            {
+              id: a.id,
+              className: a.className,
+              children: a.name
+            },
+            a.id
+          ) : null
+        ) }) })
+      ] })
+    }
+  );
+  return e.link ? /* @__PURE__ */ r(
+    B,
+    {
+      id: e.id,
+      to: e.link,
+      className: e.className + " text-decoration-none",
+      children: t
+    }
+  ) : /* @__PURE__ */ r("div", { id: e.id, className: e.className, children: t });
+}
+class qn extends ie {
+  /**
+   * @param {{
+   *   id?: string,
+   *   className?: string,
+   *   link?: string,            // (in CardAction template we don't wrap whole card in a Link, but we still inherit)
+   *   body?: CardItem|object,
+   *   fields?: Array<CardItem|object>,
+   *   type?: string,            // "AlloyButtonBar" | "AlloyLinkBar"
+   *   action?: object           // raw config for the bar
+   * }=} res
+   */
+  constructor(t = {}) {
+    switch (super(t), this.type = t.type ?? "AlloyButtonBar", this.type) {
+      case "AlloyLinkBar": {
+        this.action = t.action instanceof M ? t.action : new M(t.action || {});
+        break;
+      }
+      case "AlloyButtonBar":
+      default: {
+        this.action = t.action instanceof _ ? t.action : new _(t.action || {});
+        break;
+      }
+    }
+  }
+}
+function aa({ cardAction: e, output: t }) {
+  var l, u;
+  if (!e || !(e instanceof qn))
+    throw new Error("AlloyCardAction requires `cardAction` (CardActionObject instance).");
+  function a() {
+    return (s, c) => {
+      var n, h;
+      t == null || t({
+        type: "action",
+        action: {
+          id: s == null ? void 0 : s.id,
+          name: s == null ? void 0 : s.name,
+          className: s == null ? void 0 : s.className,
+          active: s == null ? void 0 : s.active,
+          disabled: !!(s != null && s.disabled),
+          title: s == null ? void 0 : s.title,
+          ariaLabel: s == null ? void 0 : s.ariaLabel,
+          tabIndex: s == null ? void 0 : s.tabIndex,
+          iconClass: (n = s == null ? void 0 : s.icon) == null ? void 0 : n.iconClass,
+          href: s == null ? void 0 : s.href
+        },
+        card: {
+          id: e.id,
+          bodyId: (h = e.body) == null ? void 0 : h.id
+        }
+      });
+    };
+  }
+  const i = /* @__PURE__ */ r(
+    "div",
+    {
+      id: e.body.id,
+      className: e.body.className,
+      "aria-label": e.body.name,
+      children: e.fields.map(
+        (s) => s != null && s.show ? /* @__PURE__ */ r(
+          "div",
+          {
+            id: s.id,
+            className: s.className,
+            children: s.name
+          },
+          s.id
+        ) : null
+      )
+    }
+  ), o = /* @__PURE__ */ r(
+    "div",
+    {
+      id: (l = e.action) == null ? void 0 : l.id,
+      className: (u = e.action) == null ? void 0 : u.className,
+      role: "group",
+      children: e.type === "AlloyLinkBar" ? /* @__PURE__ */ r(ee, { linkBar: e.action, output: a() }) : (
+        // default: AlloyButtonBar
+        /* @__PURE__ */ r(
+          te,
+          {
+            buttonBar: e.action,
+            output: a()
+          }
+        )
+      )
+    }
+  );
+  return /* @__PURE__ */ N("div", { id: e.id, className: e.className, children: [
+    i,
+    o
+  ] });
+}
+class Kn extends ct {
+  /**
+   * @param {{
+   *   id?: string,
+   *   className?: string,
+   *   link?: string,
+   *   body?: CardItem|object,
+   *   fields?: Array<CardItem|object>,
+   *   icon?: IconObject|object,
+   *   iconClass?: string,
+   *   textClass?: string,
+   *   type?: string,        // "AlloyButtonBar" | "AlloyLinkBar"
+   *   action?: object       // config for the action bar
+   * }=} res
+   */
+  constructor(t = {}) {
+    switch (super(t), this.type = t.type ?? "AlloyButtonBar", this.type) {
+      case "AlloyLinkBar": {
+        this.action = t.action instanceof M ? t.action : new M(t.action || {});
+        break;
+      }
+      case "AlloyButtonBar":
+      default: {
+        this.action = t.action instanceof _ ? t.action : new _(t.action || {});
+        break;
+      }
+    }
+  }
+}
+function ia({ cardIconAction: e, output: t }) {
+  var l, u;
+  if (!e || !(e instanceof Kn))
+    throw new Error(
+      "AlloyCardIconAction requires `cardIconAction` (CardIconActionObject instance)."
+    );
+  function a() {
+    return (s, c) => {
+      var n, h;
+      t == null || t({
+        type: "action",
+        action: {
+          id: s == null ? void 0 : s.id,
+          name: s == null ? void 0 : s.name,
+          title: s == null ? void 0 : s.title,
+          href: s == null ? void 0 : s.href,
+          className: s == null ? void 0 : s.className,
+          iconClass: (n = s == null ? void 0 : s.icon) == null ? void 0 : n.iconClass,
+          active: s == null ? void 0 : s.active,
+          disabled: !!(s != null && s.disabled),
+          ariaLabel: s == null ? void 0 : s.ariaLabel,
+          tabIndex: s == null ? void 0 : s.tabIndex
+        },
+        card: {
+          id: e.id,
+          bodyId: (h = e.body) == null ? void 0 : h.id
+        }
+      });
+    };
+  }
+  const i = /* @__PURE__ */ r(
+    "div",
+    {
+      id: e.body.id,
+      className: e.body.className,
+      "aria-label": e.body.name,
+      children: /* @__PURE__ */ N("div", { className: "row m-0", children: [
+        /* @__PURE__ */ r("div", { className: e.iconClass, children: /* @__PURE__ */ r(k, { icon: e.icon }) }),
+        /* @__PURE__ */ r("div", { className: e.textClass, children: /* @__PURE__ */ r("div", { className: "row p-1", children: e.fields.map(
+          (s) => s != null && s.show ? /* @__PURE__ */ r(
+            "div",
+            {
+              id: s.id,
+              className: s.className,
+              children: s.name
+            },
+            s.id
+          ) : null
+        ) }) })
+      ] })
+    }
+  ), o = /* @__PURE__ */ r(
+    "div",
+    {
+      id: (l = e.action) == null ? void 0 : l.id,
+      className: (u = e.action) == null ? void 0 : u.className,
+      role: "group",
+      children: e.type === "AlloyLinkBar" ? /* @__PURE__ */ r(
+        ee,
+        {
+          linkBar: e.action,
+          output: a()
+        }
+      ) : (
+        // default: AlloyButtonBar
+        /* @__PURE__ */ r(
+          te,
+          {
+            buttonBar: e.action,
+            output: a()
+          }
+        )
+      )
+    }
+  );
+  return /* @__PURE__ */ N("div", { id: e.id, className: e.className, children: [
+    i,
+    o
+  ] });
+}
+class Vn extends lt {
+  /**
+   * @param {{
+   *   id?: string,
+   *   className?: string,
+   *   link?: string,
+   *   body?: CardItem|object,
+   *   fields?: Array<CardItem|object>,
+   *   logo?: object,
+   *   logoClass?: string,
+   *   textClass?: string,
+   *   type?: string,        // "AlloyButtonBar" | "AlloyLinkBar"
+   *   action?: object       // config for the bar
+   * }=} res
+   */
+  constructor(t = {}) {
+    switch (super(t), this.type = t.type ?? "AlloyButtonBar", this.type) {
+      case "AlloyLinkBar": {
+        this.action = t.action instanceof M ? t.action : new M(t.action || {});
+        break;
+      }
+      case "AlloyButtonBar":
+      default: {
+        this.action = t.action instanceof _ ? t.action : new _(t.action || {});
+        break;
+      }
+    }
+  }
+}
+function oa({ cardImageAction: e, output: t }) {
+  var l, u, s, c, n, h;
+  if (!e || !(e instanceof Vn))
+    throw new Error(
+      "AlloyCardImageAction requires `cardImageAction` (CardImageActionObject instance)."
+    );
+  function a() {
+    return (d, m) => {
+      var g, f;
+      t == null || t({
+        type: "action",
+        action: {
+          id: d == null ? void 0 : d.id,
+          name: d == null ? void 0 : d.name,
+          // button text OR link text
+          title: d == null ? void 0 : d.title,
+          // may be used for tooltip
+          href: d == null ? void 0 : d.href,
+          // link target if it's a link
+          className: d == null ? void 0 : d.className,
+          iconClass: (g = d == null ? void 0 : d.icon) == null ? void 0 : g.iconClass,
+          active: d == null ? void 0 : d.active,
+          disabled: !!(d != null && d.disabled),
+          ariaLabel: d == null ? void 0 : d.ariaLabel,
+          tabIndex: d == null ? void 0 : d.tabIndex
+        },
+        card: {
+          id: e.id,
+          bodyId: (f = e.body) == null ? void 0 : f.id
+        }
+      });
+    };
+  }
+  const i = /* @__PURE__ */ r(
+    "div",
+    {
+      id: e.body.id,
+      className: e.body.className,
+      "aria-label": e.body.name,
+      children: /* @__PURE__ */ N("div", { className: "row m-0", children: [
+        /* @__PURE__ */ r("div", { className: e.logoClass, children: /* @__PURE__ */ r(
+          "img",
+          {
+            src: (l = e.logo) == null ? void 0 : l.imageUrl,
+            alt: (u = e.logo) == null ? void 0 : u.alt,
+            style: {
+              width: (s = e.logo) == null ? void 0 : s.width,
+              height: (c = e.logo) == null ? void 0 : c.height,
+              maxWidth: "100%",
+              objectFit: "contain"
+            }
+          }
+        ) }),
+        /* @__PURE__ */ r("div", { className: e.textClass, children: /* @__PURE__ */ r("div", { className: "row p-1", children: e.fields.map(
+          (d) => d != null && d.show ? /* @__PURE__ */ r(
+            "div",
+            {
+              id: d.id,
+              className: d.className,
+              children: d.name
+            },
+            d.id
+          ) : null
+        ) }) })
+      ] })
+    }
+  ), o = /* @__PURE__ */ r(
+    "div",
+    {
+      id: (n = e.action) == null ? void 0 : n.id,
+      className: (h = e.action) == null ? void 0 : h.className,
+      role: "group",
+      children: e.type === "AlloyLinkBar" ? /* @__PURE__ */ r(
+        ee,
+        {
+          linkBar: e.action,
+          output: a()
+        }
+      ) : (
+        // default to AlloyButtonBar
+        /* @__PURE__ */ r(
+          te,
+          {
+            buttonBar: e.action,
+            output: a()
+          }
+        )
+      )
+    }
+  );
+  return /* @__PURE__ */ N("div", { id: e.id, className: e.className, children: [
+    i,
+    o
+  ] });
+}
+let Je = 0;
+function Wn() {
+  return Je += 1, `alloyform${Je}`;
+}
+class He {
+  /**
+   * @param {{
+   *   id?: string,
+   *   title?: string,
+   *   className?: string,
+   *   message?: string,
+   *   action?: string,
+   *   type?: string,
+   *   submit?: ButtonSubmitObject|object,
+   *   fields?: Array<InputObject|object>,
+   *   data?: Record<string, any>,
+   * }} [res]
+   */
+  constructor(t = {}) {
+    this.id = t.id ?? Wn(), this.title = t.title ?? "AlloyMobile", this.className = t.className ?? "col m-2", this.message = t.message ?? "", this.action = t.action ?? "", this.type = t.type ?? "AlloyInputTextIcon", this.submit = t.submit instanceof Z ? t.submit : new Z(
+      t.submit || {
+        name: "Submit",
+        icon: { iconClass: "fa-solid fa-circle-notch fa-spin" },
+        className: "btn btn-primary w-100 mt-3",
+        disabled: !1,
+        loading: !1,
+        ariaLabel: "Submit",
+        title: "Submit"
+      }
+    );
+    const a = Array.isArray(t.fields) ? t.fields : [];
+    this.fields = a.map(
+      (i) => i instanceof je ? i : new je(i)
+    ), this.data = t.data ?? {};
+  }
+}
+function sa({ form: e, output: t }) {
+  let a;
+  if (e instanceof He ? a = e : a = new He(e || {}), !a || !Array.isArray(a.fields) || !(a.submit instanceof Z))
+    throw new Error(
+      "AlloyForm could not hydrate a valid FormObject (missing fields[] or submit)."
+    );
+  const [i, o] = C(() => {
+    const h = {};
+    return a.fields.forEach((d) => {
+      const m = d.value;
+      let g = !0;
+      d.required && (d.type === "checkbox" ? g = (Array.isArray(m) ? m : []).length > 0 : g = !(m === "" || m === !1 || m === void 0 || m === null)), h[d.name] = {
+        value: m,
+        valid: g,
+        error: !g && !!d.required,
+        errors: !g && d.required ? ["This field is required."] : []
+      };
+    }), h;
+  }), l = O(null), u = S(() => {
+    const h = {};
+    return Object.keys(i).forEach((d) => {
+      h[d] = i[d].value;
+    }), h;
+  }, [i]), s = S(() => Object.values(i).some((h) => h.error || !h.valid), [i]);
+  function c(h) {
+    if (!h || !h.name) return;
+    const { name: d, value: m, valid: g, error: f, errors: v } = h;
+    o((y) => ({
+      ...y,
+      [d]: {
+        value: m,
+        valid: g,
+        error: f,
+        errors: Array.isArray(v) ? v : []
+      }
+    }));
+  }
+  function n(h, d) {
+    const m = {
+      ...u,
+      action: a.action
+    };
+    a.data = m, a.message = "", t == null || t(m);
+  }
+  return a.submit.disabled = s || a.submit.disabled === !0, /* @__PURE__ */ r("div", { className: "row", children: /* @__PURE__ */ r("div", { className: a.className, children: /* @__PURE__ */ N("div", { className: "text-center", children: [
+    /* @__PURE__ */ r("h3", { children: a.title }),
+    a.message !== "" && /* @__PURE__ */ r("div", { className: "alert alert-text-danger m-0 p-0", children: a.message }),
+    a.fields.map((h) => /* @__PURE__ */ r(
+      jt,
+      {
+        input: h,
+        output: c
+      },
+      h.id
+    )),
+    /* @__PURE__ */ r(
+      kt,
+      {
+        ref: l,
+        buttonSubmit: a.submit,
+        output: n
+      }
+    )
+  ] }) }) });
+}
 export {
-  dt as AlloyButton,
-  Et as AlloyButtonBar,
-  ft as AlloyButtonIcon,
-  _n as AlloyButtonSubmit,
-  I as AlloyIcon,
-  Sn as AlloyInput,
-  nt as AlloyLink,
-  Nt as AlloyLinkBar,
-  st as AlloyLinkIcon,
-  Fe as AlloyLinkLogo,
-  bn as AlloyNavBar,
-  jn as AlloyTable,
-  Fn as AlloyTableAction,
-  Un as AlloyTableLink,
-  se as ButtonBarObject,
-  b as ButtonIconObject,
-  $ as ButtonObject,
-  vt as ButtonSubmitObject,
-  N as IconObject,
-  Rn as InputObject,
-  re as LinkBarObject,
-  R as LinkIconObject,
-  M as LinkLogoObject,
-  _ as LinkObject,
-  kt as NavBarObject,
-  kn as TableActionObject,
-  Cn as TableLinkObject,
-  Dt as TableObject
+  bt as AlloyButton,
+  te as AlloyButtonBar,
+  At as AlloyButtonIcon,
+  kt as AlloyButtonSubmit,
+  ea as AlloyCard,
+  aa as AlloyCardAction,
+  ta as AlloyCardIcon,
+  ia as AlloyCardIconAction,
+  na as AlloyCardImage,
+  oa as AlloyCardImageAction,
+  sa as AlloyForm,
+  k as AlloyIcon,
+  jt as AlloyInput,
+  yt as AlloyLink,
+  ee as AlloyLinkBar,
+  Nt as AlloyLinkIcon,
+  Ge as AlloyLinkLogo,
+  Yn as AlloyNavBar,
+  Xn as AlloyTable,
+  Qn as AlloyTableAction,
+  Zn as AlloyTableLink,
+  _ as ButtonBarObject,
+  I as ButtonIconObject,
+  F as ButtonObject,
+  Z as ButtonSubmitObject,
+  qn as CardActionObject,
+  Kn as CardIconActionObject,
+  ct as CardIconObject,
+  Vn as CardImageActionObject,
+  lt as CardImageObject,
+  ie as CardObject,
+  He as FormObject,
+  w as IconObject,
+  je as InputObject,
+  M as LinkBarObject,
+  $ as LinkIconObject,
+  j as LinkLogoObject,
+  R as LinkObject,
+  Ut as NavBarObject,
+  Un as TableActionObject,
+  Rn as TableLinkObject,
+  qt as TableObject
 };
 //# sourceMappingURL=alloy-react.es.js.map

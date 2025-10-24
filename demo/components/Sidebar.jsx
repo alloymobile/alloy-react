@@ -24,6 +24,13 @@ export default function Sidebar({ active }) {
           { label: "AlloyTable", to: "/tissue/table", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyTableLink", to: "/tissue/table-link", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyTableAction", to: "/tissue/table-action", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyCard", to: "/tissue/card", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyCardIcon", to: "/tissue/card-icon", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyCardImage", to: "/tissue/card-image", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyCardAction", to: "/tissue/card-action", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyCardIconAction", to: "/tissue/card-icon-action", icon: "fa-solid fa-bars-progress" },                     
+          { label: "AlloyCardImageAction", to: "/tissue/card-image-action", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyForm", to: "/tissue/form", icon: "fa-solid fa-bars-progress" },               
         ]
       : [];
 
