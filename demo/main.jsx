@@ -28,11 +28,10 @@ import TableLinkPage from "./pages/Tissue/TableLink.jsx";
 import TableActionPage from "./pages/Tissue/TableAction.jsx";
 import CardPage from "./pages/Tissue/Card.jsx";
 import CardIconPage from "./pages/Tissue/CardIcon.jsx";
-import CardImagePage from "./pages/Tissue/Cardimage.jsx";
+import CardImagePage from "./pages/Tissue/CardImage.jsx"
 import CardActionPage from "./pages/Tissue/CardAction.jsx";
 import CardIconActionPage from "./pages/Tissue/CardIconAction.jsx";
 import CardImageActionPage from "./pages/Tissue/CardImageAction.jsx";
-import { AlloyForm } from "../src/index.jsx";
 import FormPage from "./pages/Tissue/Form.jsx";
 
 createRoot(document.getElementById("root")).render(
