@@ -1,7 +1,8 @@
-
+// pages/Cell/ButtonSubmit.jsx
 import React, { useMemo, useRef, useState } from "react";
-import { AlloyButtonSubmit, ButtonSubmitObject, IconObject } from "../../../src";
+import { AlloyButtonSubmit, ButtonSubmitObject } from "../../../src";
 
+// Default model shown in the editor
 const DEFAULT_INPUT_OBJ = {
   id: "btnSubmit01",
   name: "Save",
@@ -10,24 +11,38 @@ const DEFAULT_INPUT_OBJ = {
   loading: false,
   ariaLabel: "Submit form",
   tabIndex: 0,
-  icon: { iconClass: "fa-solid fa-spinner fa-spin" },
+  icon: { iconClass: "fa-solid fa-spinner fa-spin" }
 };
+
 const DEFAULT_INPUT = JSON.stringify(DEFAULT_INPUT_OBJ, null, 2);
 
 export default function ButtonSubmitPage() {
+  // Left editor JSON string
   const [inputJson, setInputJson] = useState(DEFAULT_INPUT);
+
+  // UI state for parse/model errors
   const [parseError, setParseError] = useState("");
-  const [outputJson, setOutputJson] = useState(""); // Output only appears on triggers
-  const [resetSignal, setResetSignal] = useState(0); // tell child to clear internals
+
+  // Right panel output (event log)
+  const [outputJson, setOutputJson] = useState(
+    "" // starts empty; will fill after triggers
+  );
+
+  // Ref to call .click() programmatically on the button
   const btnRef = useRef(null);
 
+  // Build a ButtonSubmitObject from the current JSON (or safe fallback if invalid)
   const model = useMemo(() => {
     try {
+      const raw = JSON.parse(inputJson || "{}");
       setParseError("");
-      const raw = JSON.parse(inputJson);
-      if (raw.icon && !(raw.icon instanceof IconObject)) {
-        raw.icon = new IconObject(raw.icon);
-      }
+
+      // Construct model. ButtonSubmitObject will:
+      // - validate required fields (name, icon)
+      // - wrap icon into IconObject if needed
+      // - generate id if missing
+      // - default ariaLabel/title
+      // - respect disabled/loading from raw
       return new ButtonSubmitObject(raw);
     } catch (e) {
       setParseError(String(e.message || e));
@@ -35,13 +50,40 @@ export default function ButtonSubmitPage() {
         name: "Invalid",
         className: "btn btn-secondary",
         disabled: true,
-        icon: new IconObject({ iconClass: "fa-solid fa-triangle-exclamation" }),
+        loading: false,
+        icon: { iconClass: "fa-solid fa-triangle-exclamation" }
       });
     }
   }, [inputJson]);
 
-  // Output only on triggers
+  /**
+   * handleOutput is called by AlloyButtonSubmit whenever it "arms":
+   *   - on mousedown
+   *   - on click
+   *   - on keydown Enter/Space
+   *
+   * At that moment, AlloyButtonSubmit sets its internal loading=true/disabled=true
+   * and mutates the model instance it was passed. We reflect that into the parent's
+   * JSON (inputJson) so THE PARENT becomes source of truth for loading/disabled.
+   *
+   * After that, Reset works correctly, because Reset sets loading:false/disabled:false
+   * in the JSON, which creates a fresh model with loading:false, and the button
+   * will immediately unlock and hide the spinner.
+   */
   function handleOutput(self, e) {
+    // Sync the model's live state (loading/disabled) into the editable JSON
+    // so the JSON text accurately represents "in flight".
+    try {
+      const current = JSON.parse(inputJson || "{}");
+      current.loading = self.loading;
+      current.disabled = self.disabled;
+      setInputJson(JSON.stringify(current, null, 2));
+    } catch {
+      // If inputJson was invalid JSON at that moment, ignore.
+      // parseError UI already tells the user it's invalid.
+    }
+
+    // Also update the Output panel so devs can see what fired
     const payload = {
       event: e?.type ?? "unknown",
       buttonSubmit: {
@@ -53,102 +95,186 @@ export default function ButtonSubmitPage() {
         title: self.title,
         ariaLabel: self.ariaLabel,
         tabIndex: self.tabIndex,
-        icon: { ...self.icon },
-      },
+        icon: {
+          id: self.icon.id,
+          iconClass: self.icon.iconClass
+        }
+      }
     };
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
-  // ——— Header actions ———
-  const doReset = () => {
-    setInputJson(DEFAULT_INPUT); // resets loading=false, disabled=false in model
-    setOutputJson("");           // clear output (no output on reset)
-    setResetSignal((s) => s + 1); // instruct child to clear internal state
-  };
+  /**
+   * Reset:
+   * - Restore the JSON editor to DEFAULT_INPUT (loading:false, disabled:false)
+   * - Clear the output panel
+   * - Clear parseError
+   *
+   * Because we actually set a new inputJson string here, React will
+   * build a fresh model with loading=false and pass it to AlloyButtonSubmit.
+   * AlloyButtonSubmit sees props.loading === false and immediately:
+   *   - hides spinner,
+   *   - unlocks itself,
+   *   - clears its internal "fired" state.
+   */
+  function doReset() {
+    setInputJson(DEFAULT_INPUT);
+    setOutputJson("");
+    setParseError("");
+  }
 
-  const triggerClick = () => {
-    btnRef.current?.click(); // will arm (internal loading) and output
-  };
+  /**
+   * Programmatically fire the button's click handler.
+   * This is how a parent could imperatively submit a form.
+   * The button will arm (loading=true, disabled=true) and
+   * handleOutput(...) will run.
+   */
+  function triggerClick() {
+    btnRef.current?.click();
+  }
 
-  const triggerLoading = () => {
+  /**
+   * Force the "request in-flight" state from the parent side.
+   *
+   * This simulates:
+   *   - you start an async action elsewhere in code
+   *   - you mark loading:true / disabled:true in your state
+   *   - you pass those props down so the button shows spinner immediately
+   *
+   * We do that by editing the JSON directly, since in this demo
+   * JSON == parent state.
+   *
+   * We also immediately reflect that state in the Output panel so devs
+   * can see what the model looks like.
+   */
+  function triggerLoading() {
     try {
-      const obj = JSON.parse(inputJson);
-      obj.loading = true;       // external prop → child mirrors to internal loading (icon visible)
-      obj.disabled = true;      // optional mirror (component also disables while loading)
+      const obj = JSON.parse(inputJson || "{}");
+      obj.loading = true;
+      obj.disabled = true;
+
+      // Update the JSON editor so parent state now represents "in-flight"
       const next = JSON.stringify(obj, null, 2);
       setInputJson(next);
 
-      // Reflect in Output immediately for this action
-      const temp = new ButtonSubmitObject({
-        ...obj,
-        icon: obj.icon instanceof IconObject ? obj.icon : new IconObject(obj.icon),
-      });
+      // Show that state in the output box too
+      const tempModel = new ButtonSubmitObject(obj);
       const payload = {
         event: "trigger-loading",
         buttonSubmit: {
-          id: temp.id,
-          name: temp.name,
-          className: temp.className,
-          disabled: temp.disabled,
-          loading: temp.loading,
-          title: temp.title,
-          ariaLabel: temp.ariaLabel,
-          tabIndex: temp.tabIndex,
-          icon: { ...temp.icon },
-        },
+          id: tempModel.id,
+          name: tempModel.name,
+          className: tempModel.className,
+          disabled: tempModel.disabled,
+          loading: tempModel.loading,
+          title: tempModel.title,
+          ariaLabel: tempModel.ariaLabel,
+          tabIndex: tempModel.tabIndex,
+          icon: {
+            id: tempModel.icon.id,
+            iconClass: tempModel.icon.iconClass
+          }
+        }
       };
       setOutputJson(JSON.stringify(payload, null, 2));
     } catch {
-      // ignore parse error; textarea already shows it
+      // ignore parse fail; parseError already indicates invalid JSON
     }
-  };
+  }
+
+  /**
+   * Pretty-print the JSON editor content
+   */
+  function handleFormat() {
+    try {
+      const parsed = JSON.parse(inputJson);
+      setInputJson(JSON.stringify(parsed, null, 2));
+    } catch {
+      // ignore: invalid JSON is already surfaced in parseError
+    }
+  }
 
   return (
     <div className="container py-3">
       <h3 className="mb-3 text-center">AlloyButtonSubmit</h3>
 
-      {/* Tag sample */}
+      {/* Row 1 — Usage snippet */}
       <div className="row mb-3">
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
-            <code>{`<AlloyButtonSubmit buttonSubmit={new ButtonSubmitObject(buttonSubmitObject)} output={handleOutput} resetSignal={resetSignal} />`}</code>
+            <code>
+              {`<AlloyButtonSubmit buttonSubmit={new ButtonSubmitObject(buttonSubmitObject)} output={handleOutput} />`}
+            </code>
           </pre>
         </div>
       </div>
 
-      {/* Demo inside a form (prevent navigation in demo) */}
+      {/* Row 2 — Live demo, inside a form so type="submit" is meaningful */}
       <div className="row mb-4">
         <div className="col-12 text-center">
-          <form onSubmit={(e) => { e.preventDefault(); /* demo only */ }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault(); // demo only - no navigation
+            }}
+          >
             <AlloyButtonSubmit
               ref={btnRef}
               buttonSubmit={model}
               output={handleOutput}
-              resetSignal={resetSignal}
             />
           </form>
+
           <div className="small text-secondary mt-2">
-            Triggers: <code>mousedown</code>, <code>keydown</code> (Enter/Space), <code>click</code>.  
-            First trigger → <code>loading=true</code> (icon visible, disabled).  
-            When <code>loading</code> returns to <code>false</code>, icon hides and the button re-enables.
+            Events that arm the button:{" "}
+            <code>mousedown</code>,{" "}
+            <code>keydown</code> (<code>Enter</code>/<code>Space</code>),{" "}
+            <code>click</code>.
+            <br />
+            On first arm:
+            {" "}
+            <code>loading:true</code> and{" "}
+            <code>disabled:true</code>, spinner shows, <code>output</code> fires.
+            <br />
+            The parent (in real life) would later set{" "}
+            <code>loading:false</code> and <code>disabled:false</code> when the
+            server responds.
+            <br />
+            In this demo, editing those fields in the JSON — or hitting Reset —
+            does the same thing.
           </div>
         </div>
       </div>
 
-      {/* Editable input / live output */}
+      {/* Row 3 — JSON editor (left) / Output log (right) */}
       <div className="row g-3 align-items-stretch">
+        {/* LEFT PANEL */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="fw-semibold">Input JSON (editable)</span>
-            <div className="d-flex gap-2">
+
+            <div className="d-flex flex-wrap gap-2">
               <button
                 type="button"
                 className="btn btn-sm btn-outline-secondary"
                 onClick={doReset}
-                title="Restore defaults, clear output, and reset the button's internal state"
+                title="Restore defaults, clear output, unlock the button"
               >
                 Reset
               </button>
+
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleFormat}
+                title="Prettify JSON"
+              >
+                <i
+                  className="fa-solid fa-wand-magic-sparkles me-2"
+                  aria-hidden="true"
+                />
+                Format
+              </button>
+
               <button
                 type="button"
                 className="btn btn-sm btn-outline-primary"
@@ -157,11 +283,12 @@ export default function ButtonSubmitPage() {
               >
                 Trigger Click
               </button>
+
               <button
                 type="button"
                 className="btn btn-sm btn-outline-warning"
                 onClick={triggerLoading}
-                title="Force loading=true & disabled=true in the input model"
+                title="Pretend an async request is running (loading=true, disabled=true)"
               >
                 Trigger Loading
               </button>
@@ -169,22 +296,43 @@ export default function ButtonSubmitPage() {
           </div>
 
           <textarea
-            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
+            className={`form-control font-monospace ${
+              parseError ? "is-invalid" : ""
+            }`}
             rows={18}
             value={inputJson}
             onChange={(e) => setInputJson(e.target.value)}
             spellCheck={false}
+            placeholder={DEFAULT_INPUT}
           />
-          {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
+          {parseError && (
+            <div className="invalid-feedback d-block mt-1">
+              {parseError}
+            </div>
+          )}
+
           <div className="form-text">
-            <strong>Required:</strong> <code>name</code>, <code>icon</code>. Element is always <code>type="submit"</code>.  
-            Output only updates on <strong>Trigger Click</strong> or <strong>Trigger Loading</strong> (not on Reset).
+            <strong>Required:</strong>{" "}
+            <code>name</code>, <code>icon</code>. The element is always{" "}
+            <code>type="submit"</code>.
+            <br />
+            To unlock the button and hide the spinner, make sure the JSON has{" "}
+            <code>"loading": false</code> and{" "}
+            <code>"disabled": false</code>, or press Reset.
+            <br />
+            Notice how clicking (or Trigger Click) will automatically update the
+            JSON to <code>"loading": true</code> /{" "}
+            <code>"disabled": true</code> — exactly like a real async submit.
           </div>
         </div>
 
+        {/* RIGHT PANEL */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">Output (from <code>output</code> callback)</span>
+            <span className="fw-semibold">
+              Output (from <code>output</code> callback)
+            </span>
+
             <button
               type="button"
               className="btn btn-sm btn-outline-danger"
@@ -193,16 +341,18 @@ export default function ButtonSubmitPage() {
               Clear
             </button>
           </div>
+
           <textarea
             className="form-control font-monospace"
             rows={18}
             value={outputJson}
             onChange={(e) => setOutputJson(e.target.value)}
             spellCheck={false}
-            placeholder="// Output will appear here after Trigger Click or Trigger Loading"
+            placeholder="// Output will appear here after Trigger Click / Trigger Loading"
           />
           <div className="form-text">
-            <em>Reset</em> clears this box and restores the rendered button to default (enabled, icon hidden).
+            The payload shows the live model state at the moment of arm
+            (loading, disabled, etc).
           </div>
         </div>
       </div>

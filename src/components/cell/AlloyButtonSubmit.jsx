@@ -1,4 +1,3 @@
-// AlloyButtonSubmit.jsx
 import React, {
   useRef,
   useState,
@@ -7,79 +6,91 @@ import React, {
   useImperativeHandle,
 } from "react";
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
-
-/* id generator */
-let __btnSubmitCounter = 0;
-function nextSubmitId() {
-  __btnSubmitCounter += 1;
-  return `alloyBtnsubmit${__btnSubmitCounter}`;
-}
+import { generateId } from "../../utils/idHelper.js";
 
 /**
- * REQUIRED:
- *  - name: string
- *  - icon: IconObject | { iconClass: string, ... }
- *
- * OPTIONAL:
- *  - id?: string
- *  - className?: string
- *  - disabled?: boolean
- *  - loading?: boolean
- *  - title?: string
- *  - ariaLabel?: string
- *  - tabIndex?: number
- *  - onClick? / onMouseDown? / onKeyDown?   (each receives (event, self))
+ * @typedef {Object} ButtonSubmitConfig
+ * @property {string} name
+ * @property {IconObject|{iconClass:string}} icon
+ * @property {string} [id]
+ * @property {string} [className]
+ * @property {boolean} [disabled]
+ * @property {boolean} [loading]
+ * @property {string} [title]
+ * @property {string} [ariaLabel]
+ * @property {number} [tabIndex]
+ * @property {(e:any,self:ButtonSubmitObject)=>void} [onClick]
+ * @property {(e:any,self:ButtonSubmitObject)=>void} [onMouseDown]
+ * @property {(e:any,self:ButtonSubmitObject)=>void} [onKeyDown]
  */
 export class ButtonSubmitObject {
-  constructor(p) {
-    if (!p || !p.name) throw new Error("ButtonSubmitObject requires `name`.");
-    if (!p.icon) throw new Error("ButtonSubmitObject requires `icon`.");
+  /**
+   * @param {ButtonSubmitConfig} buttonSubmit
+   */
+  constructor(buttonSubmit = {}) {
+    if (!buttonSubmit.name) {
+      throw new Error("ButtonSubmitObject requires `name`.");
+    }
+    if (!buttonSubmit.icon) {
+      throw new Error("ButtonSubmitObject requires `icon`.");
+    }
 
-    this.id = p.id ?? nextSubmitId();
-    this.name = p.name;
-    this.icon = p.icon instanceof IconObject ? p.icon : new IconObject(p.icon);
+    const normalizedIcon =
+      buttonSubmit.icon instanceof IconObject
+        ? buttonSubmit.icon
+        : new IconObject(buttonSubmit.icon);
 
-    this.className = p.className ?? "";
-    this.disabled = !!p.disabled;
-    this.loading = !!p.loading;
-    this.title = p.title;
-    this.ariaLabel = p.ariaLabel;
-    this.tabIndex = p.tabIndex;
+    this.id = buttonSubmit.id ?? generateId("btn-submit");
+    this.name = buttonSubmit.name;
+    this.icon = normalizedIcon;
 
-    // optional (only these three are honored)
-    this.onClick = p.onClick;
-    this.onMouseDown = p.onMouseDown;
-    this.onKeyDown = p.onKeyDown;
+    this.className = buttonSubmit.className ?? "";
+    this.disabled = !!buttonSubmit.disabled;
+    this.loading = !!buttonSubmit.loading;
+
+    this.title = buttonSubmit.title ?? buttonSubmit.name;
+    this.ariaLabel = buttonSubmit.ariaLabel ?? buttonSubmit.name;
+    this.tabIndex = buttonSubmit.tabIndex;
+
+    this.onClick = buttonSubmit.onClick;
+    this.onMouseDown = buttonSubmit.onMouseDown;
+    this.onKeyDown = buttonSubmit.onKeyDown;
   }
 }
 
-/**
- * Props:
- *  - buttonSubmit: ButtonSubmitObject (required)
- *  - output?: (self: ButtonSubmitObject, e?: any) => void
- *
- * Behavior:
- *  - Triggered by mousedown / keydown(Enter|Space) / click
- *  - On trigger → loading=true, disabled=true, icon visible
- *  - While loading → disabled, icon visible
- *  - When loading=false → icon hidden, enabled again
- */
-export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit({ buttonSubmit, output }, ref) {
+export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
+  { buttonSubmit, output },
+  ref
+) {
   if (!buttonSubmit || !(buttonSubmit instanceof ButtonSubmitObject)) {
-    throw new Error("AlloyButtonSubmit requires `buttonSubmit` (ButtonSubmitObject instance).");
+    throw new Error(
+      "AlloyButtonSubmit requires `buttonSubmit` (ButtonSubmitObject instance)."
+    );
   }
 
   const elRef = useRef(null);
   const autoId = useRef(buttonSubmit.id);
 
+  // internal loading mirror, always synced from props
   const [loading, setLoading] = useState(!!buttonSubmit.loading);
 
+  // firedRef prevents double-trigger while "in flight"
+  const firedRef = useRef(false);
+
+  // Sync internal loading with parent model every render when prop changes.
+  // ALSO: if parent sends loading=false, clear firedRef so the button is reusable.
   useEffect(() => {
-    setLoading(!!buttonSubmit.loading);
+    const nextLoading = !!buttonSubmit.loading;
+    setLoading(nextLoading);
+    if (!nextLoading) {
+      firedRef.current = false;
+    }
   }, [buttonSubmit.loading]);
 
+  // compute disabled for the rendered <button>
   const isDisabled = buttonSubmit.disabled || loading;
 
+  // Expose ref API
   useImperativeHandle(
     ref,
     () => ({
@@ -91,23 +102,27 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit({ buttonS
     [buttonSubmit]
   );
 
-  const firedRef = useRef(false);
-  useEffect(() => {
-    if (!loading) firedRef.current = false;
-  }, [loading]);
-
+  // arm() tries to move us into "loading". It returns true if we armed.
+  // This DOES mutate the model instance so output() sees loading:true,
+  // but actual rendering will still ultimately follow parent props.
+  // Parent is expected to flip loading:false later.
   const arm = () => {
     if (firedRef.current || isDisabled) return false;
+
     firedRef.current = true;
 
-    // Update model + internal
+    // reflect "in-flight" on the current model snapshot
     buttonSubmit.loading = true;
     buttonSubmit.disabled = true;
+
+    // update our local mirror right away so UI shows spinner instantly,
+    // without waiting for parent to re-render with updated props.
     setLoading(true);
 
     return true;
   };
 
+  // emit helper: fire parent output and model handler
   const emit = (e, handler) => {
     output?.(buttonSubmit, e);
     handler?.(e, buttonSubmit);
@@ -128,6 +143,7 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit({ buttonS
     }
   };
 
+  // spinner shows while loading === true (either internal arm() OR parent prop)
   const showIcon = loading;
 
   return (
@@ -137,7 +153,7 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit({ buttonS
       type="submit"
       className={buttonSubmit.className}
       title={buttonSubmit.title}
-      aria-label={buttonSubmit.ariaLabel || buttonSubmit.name}
+      aria-label={buttonSubmit.ariaLabel}
       aria-busy={loading || undefined}
       aria-disabled={isDisabled || undefined}
       disabled={isDisabled}
@@ -151,6 +167,7 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit({ buttonS
           <AlloyIcon icon={buttonSubmit.icon} />
         </span>
       )}
+
       <span className={showIcon ? "px-2 align-middle" : "align-middle"}>
         {buttonSubmit.name}
       </span>
@@ -163,5 +180,3 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit({ buttonS
     </button>
   );
 });
-
-export default AlloyButtonSubmit;

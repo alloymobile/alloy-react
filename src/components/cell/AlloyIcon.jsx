@@ -1,28 +1,33 @@
 import React from "react";
-
-/** Incrementing ID: icon1, icon2, ... */
-let __iconCounter = 0;
-function nextIconId() {
-  __iconCounter += 1;
-  return `alloyIcon${__iconCounter}`;
-}
+import { generateId } from "../../utils/idHelper.js";
 
 /**
- * Icon object with two properties:
- * - id?: string  (auto-generated if omitted)
- * - iconClass: string  (Font Awesome classes, e.g., "fa-solid fa-user")
+ * @typedef {Object} IconConfig
+ * @property {string} iconClass             - Required. Font Awesome class string
+ *                                            e.g. "fa-solid fa-user fa-2x".
+ * @property {string} [id]                  - Optional. If not provided, a unique
+ *                                            id will be generated like
+ *                                            "icon-1730145329012-x8f3k".
  */
+
 export class IconObject {
   /**
-   * @param {{ id?: string, iconClass: string }} params
+   * Build a new IconObject.
+   *
+   * Consumers pass one config object (IconConfig). We normalize it
+   * and guarantee it has an id.
+   *
+   * @param {IconConfig} icon
    */
-  constructor({ id, iconClass }) {
-    if (!iconClass) throw new Error("Icon requires iconClass");
-    this.id = id ?? nextIconId();
-    this.iconClass = iconClass;
+  constructor(icon = {}) {
+    if (!icon.iconClass) {
+      throw new Error("IconObject requires `iconClass`.");
+    }
+
+    this.id = icon.id ?? generateId("icon");
+    this.iconClass = icon.iconClass;
   }
 }
-
 /**
  * AlloyIcon: accepts ONLY an `icon` prop (instance of Icon).
  * Renders an <i> with the provided id and classes.

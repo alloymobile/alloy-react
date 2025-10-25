@@ -6,15 +6,16 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import { generateId } from "../../utils/idHelper.js";
 
-/* -------------------- id generator -------------------- */
-let __btnCounter = 0;
-function nextButtonId() {
-  __btnCounter += 1;
-  return `alloyBtn${__btnCounter}`;
-}
-
-/* -------------------- hover/press/focus → class merge -------------------- */
+/* -------------------------------------------
+ * useActiveClass
+ *
+ * Same pattern as AlloyLink / AlloyLinkIcon / AlloyLinkLogo:
+ * track hover / press / focus and return:
+ *  - merged className (base + active if "on")
+ *  - event handlers to control that state
+ * ----------------------------------------- */
 function useActiveClass(className = "", active = "") {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
@@ -41,59 +42,100 @@ function useActiveClass(className = "", active = "") {
   };
 }
 
-/* -------------------- ButtonObject (only `name` required) -------------------- */
+/* -------------------------------------------
+ * ButtonObject
+ *
+ * This is the normalized model for AlloyButton.
+ * It guarantees:
+ *   - required `name`
+ *   - stable unique `id`
+ *   - safe defaults for all other fields
+ *   - event handlers carried along on the instance
+ *
+ * We ALSO expose optional per-event callbacks:
+ *   onClick, onKeyDown, onKeyUp, onFocus, onBlur,
+ *   onMouseEnter, onMouseLeave
+ *
+ * And AlloyButton will call them in addition to a
+ * parent-level `output` callback prop.
+ * ----------------------------------------- */
+
 /**
- * Fields:
- *  - id?: string
- *  - name: string (required)
- *  - className?: string
- *  - active?: string        // class applied on hover/press/focus
- *  - disabled?: boolean
- *  - title?: string         // tooltip
- *  - ariaLabel?: string     // screen-reader label; defaults to `name`
- *  - tabIndex?: number
- *  - onClick? / onKeyDown? / onKeyUp? / onFocus? / onBlur? / onMouseEnter? / onMouseLeave?
- *      (each receives (event, self: ButtonObject))
+ * @typedef {Object} ButtonConfig
+ * @property {string} name                  - Required. Visible label text.
+ * @property {string} [id]                  - Optional. DOM id. Auto-generated if missing.
+ * @property {string} [className]           - Optional. Base classes for <button>.
+ * @property {string} [active]              - Optional. Classes added on hover/press/focus.
+ * @property {boolean} [disabled]           - Optional. Defaults to false.
+ * @property {string} [title]               - Optional. Tooltip/title. Defaults to `name`.
+ * @property {string} [ariaLabel]           - Optional. Accessible name. Defaults to `name`.
+ * @property {number} [tabIndex]            - Optional. Tab index override.
+ *
+ * @property {(e:any, self:ButtonObject)=>void} [onClick]
+ * @property {(e:any, self:ButtonObject)=>void} [onKeyDown]
+ * @property {(e:any, self:ButtonObject)=>void} [onKeyUp]
+ * @property {(e:any, self:ButtonObject)=>void} [onFocus]
+ * @property {(e:any, self:ButtonObject)=>void} [onBlur]
+ * @property {(e:any, self:ButtonObject)=>void} [onMouseEnter]
+ * @property {(e:any, self:ButtonObject)=>void} [onMouseLeave]
  */
 export class ButtonObject {
-  constructor(p) {
-    if (!p || !p.name) throw new Error("ButtonObject requires `name`.");
-    this.id = p.id ?? nextButtonId();
-    this.name = p.name;
+  /**
+   * @param {ButtonConfig} button
+   */
+  constructor(button = {}) {
+    if (!button.name) {
+      throw new Error("ButtonObject requires `name`.");
+    }
 
-    this.className = p.className ?? "";
-    this.active = p.active ?? "";
-    this.disabled = !!p.disabled;
-    this.title = p.title;
-    this.ariaLabel = p.ariaLabel;
-    this.tabIndex = p.tabIndex;
+    this.id = button.id ?? generateId("btn");
+    this.name = button.name;
+
+    this.className = button.className ?? "";
+    this.active = button.active ?? "btn btn-primary";
+    this.disabled = !!button.disabled;
+    this.title = button.title ?? button.name;
+    this.ariaLabel = button.ariaLabel ?? button.name;
+    this.tabIndex = button.tabIndex;
 
     // optional per-event callbacks
-    this.onClick = p.onClick;
-    this.onKeyDown = p.onKeyDown;
-    this.onKeyUp = p.onKeyUp;
-    this.onFocus = p.onFocus;
-    this.onBlur = p.onBlur;
-    this.onMouseEnter = p.onMouseEnter;
-    this.onMouseLeave = p.onMouseLeave;
+    this.onClick = button.onClick;
+    this.onKeyDown = button.onKeyDown;
+    this.onKeyUp = button.onKeyUp;
+    this.onFocus = button.onFocus;
+    this.onBlur = button.onBlur;
+    this.onMouseEnter = button.onMouseEnter;
+    this.onMouseLeave = button.onMouseLeave;
   }
 }
 
-/* -------------------- AlloyButton (object-only input + separate output prop) -------------------- */
-/**
- * Props:
- *  - button: ButtonObject (required)
- *  - output?: (self: ButtonObject, e?: any) => void   // fires on ALL events
+/* -------------------------------------------
+ * AlloyButton
  *
- * Ref exposes:
+ * Props:
+ *   - button: ButtonObject   (required)
+ *   - output?: (self: ButtonObject, e?: any) => void
+ *        Global event tap. Called for all supported events.
+ *
+ * Ref:
  *   ref.current = {
  *     el,        // underlying <button> element
- *     model,     // the same ButtonObject instance you passed
+ *     model,     // the same ButtonObject you passed
  *     focus(),   // focus the button
- *     click(),   // click the button
+ *     click(),   // click() the button
  *   }
- */
-export const AlloyButton = forwardRef(function AlloyButton({ button, output }, ref) {
+ *
+ * Behavior:
+ *   - Uses hover/press/focus state to apply button.active classes.
+ *   - Wires events so they call:
+ *       1. output(self, event)         // if provided
+ *       2. per-event handler on model  // e.g. button.onClick(event, model)
+ *   - Keeps DOM id stable via useRef(button.id).
+ * ----------------------------------------- */
+export const AlloyButton = forwardRef(function AlloyButton(
+  { button, output },
+  ref
+) {
   if (!button || !(button instanceof ButtonObject)) {
     throw new Error("AlloyButton requires `button` (ButtonObject instance).");
   }
@@ -102,9 +144,12 @@ export const AlloyButton = forwardRef(function AlloyButton({ button, output }, r
   const autoId = useRef(button.id);
   const isDisabled = button.disabled;
 
-  const { className, events } = useActiveClass(button.className, button.active);
+  const { className, events } = useActiveClass(
+    button.className,
+    button.active
+  );
 
-  // Expose DOM + model + helpers via ref
+  // expose focus() / click() / element / model via ref
   useImperativeHandle(
     ref,
     () => ({
@@ -116,11 +161,17 @@ export const AlloyButton = forwardRef(function AlloyButton({ button, output }, r
     [button]
   );
 
-  // helper: fire output(self, event) first, then specific handler(self, event)
+  // Helper builder:
+  // emitThen(handler, alsoCallInternal?) returns an event listener.
+  //
+  // Order:
+  //   alsoCallInternal(e)   -> keeps internal hover/press/focus state in sync
+  //   output(button, e)     -> global listener from parent
+  //   handler(e, button)    -> specific handler from this ButtonObject
   const emitThen = (handler, alsoCallInternal) => (e) => {
-    alsoCallInternal?.(e);      // keep internal hover/focus state
-    output?.(button, e);        // Angular-style, for ALL events
-    handler?.(e, button);       // optional per-event model handler
+    alsoCallInternal?.(e);
+    output?.(button, e);
+    handler?.(e, button);
   };
 
   const mergedEvents = {
@@ -139,10 +190,10 @@ export const AlloyButton = forwardRef(function AlloyButton({ button, output }, r
     <button
       id={autoId.current}
       ref={elRef}
-      type="button"  
+      type="button"
       className={className}
       title={button.title}
-      aria-label={button.ariaLabel || button.name}
+      aria-label={button.ariaLabel}
       aria-disabled={isDisabled || undefined}
       disabled={isDisabled}
       tabIndex={button.tabIndex}
