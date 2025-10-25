@@ -42,7 +42,12 @@ export class InputObject {
     this.label = label;
     this.value = value;
     this.layout = layout;
-    this.icon = icon instanceof IconObject ? icon : (icon ? new IconObject(icon) : undefined);
+    this.icon =
+      icon instanceof IconObject
+        ? icon
+        : icon
+        ? new IconObject(icon)
+        : undefined;
     this.placeholder = placeholder;
     this.required = required;
     this.minLength = minLength;
@@ -65,6 +70,8 @@ export function AlloyInput({ input, output }) {
   const validate = (v) => {
     const errs = [];
     const trimmed = typeof v === "string" ? v.trim() : v;
+
+    // required
     if (input.required) {
       if (
         (Array.isArray(trimmed) && trimmed.length === 0) ||
@@ -73,14 +80,41 @@ export function AlloyInput({ input, output }) {
         errs.push("This field is required.");
       }
     }
-    if (input.minLength && typeof trimmed === "string" && trimmed.length < input.minLength)
+
+    // length rules
+    if (
+      input.minLength &&
+      typeof trimmed === "string" &&
+      trimmed.length < input.minLength
+    ) {
       errs.push(`Minimum length is ${input.minLength}`);
-    if (input.maxLength && typeof trimmed === "string" && trimmed.length > input.maxLength)
+    }
+    if (
+      input.maxLength &&
+      typeof trimmed === "string" &&
+      trimmed.length > input.maxLength
+    ) {
       errs.push(`Maximum length is ${input.maxLength}`);
-    if (input.pattern && typeof trimmed === "string" && !(new RegExp(input.pattern).test(trimmed)))
+    }
+
+    // pattern
+    if (
+      input.pattern &&
+      typeof trimmed === "string" &&
+      !new RegExp(input.pattern).test(trimmed)
+    ) {
       errs.push("Invalid format.");
-    if (input.passwordStrength && typeof trimmed === "string" && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(trimmed))
+    }
+
+    // password strength
+    if (
+      input.passwordStrength &&
+      typeof trimmed === "string" &&
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(trimmed)
+    ) {
       errs.push("Password is too weak.");
+    }
+
     return errs;
   };
 
@@ -99,17 +133,25 @@ export function AlloyInput({ input, output }) {
   const onBlur = () => setTouched(true);
 
   const showError = touched && validate(val).length > 0;
-  const errorBlock = showError && (
-    <div className="mt-2" aria-live="polite">
-      {validate(val).map((msg, i) => (
-        <div key={i} className="alert alert-danger py-2 mb-2" role="alert">
-          {msg}
-        </div>
-      ))}
-    </div>
-  );
+  const errorBlock =
+    showError &&
+    validate(val).length > 0 && (
+      <div className="mt-2" aria-live="polite">
+        {validate(val).map((msg, i) => (
+          <div
+            key={i}
+            className="alert alert-danger py-2 mb-2"
+            role="alert"
+          >
+            {msg}
+          </div>
+        ))}
+      </div>
+    );
 
+  // Common props shared by text-like inputs, textarea, select, etc.
   const common = {
+    id: input.id,
     name: input.name,
     placeholder: input.placeholder,
     onBlur,
@@ -118,7 +160,9 @@ export function AlloyInput({ input, output }) {
 
   const handleChange = (e) => {
     const v = e.target.value;
+
     if (input.type === "checkbox") {
+      // checkbox group → array of selected values
       const valueArr = Array.isArray(val) ? [...val] : [];
       const idx = valueArr.indexOf(v);
       if (idx > -1) {
@@ -128,6 +172,9 @@ export function AlloyInput({ input, output }) {
       }
       setVal(valueArr);
       emit(valueArr);
+    } else if (input.type === "radio") {
+      setVal(v);
+      emit(v);
     } else {
       setVal(v);
       emit(v);
@@ -135,39 +182,64 @@ export function AlloyInput({ input, output }) {
   };
 
   const renderInput = () => {
+    // textarea
     if (input.type === "textarea") {
-      return <textarea {...common} value={val} className={`form-control${showError ? " is-invalid" : ""}`} />;
+      return (
+        <textarea
+          {...common}
+          value={val}
+          onChange={handleChange} // <-- FIXED
+          className={`form-control${
+            showError ? " is-invalid" : ""
+          }`}
+        />
+      );
     }
 
+    // select dropdown
     if (input.type === "select") {
       return (
-        <select {...common} value={val} className={`form-select${showError ? " is-invalid" : ""}`} onChange={handleChange}>
+        <select
+          {...common}
+          value={val}
+          onChange={handleChange}
+          className={`form-select${
+            showError ? " is-invalid" : ""
+          }`}
+        >
           {input.options.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       );
     }
 
+    // radio group
     if (input.type === "radio") {
       return (
         <div>
-          <label className="form-label d-block mb-2">{input.label}</label>
+          <label className="form-label d-block mb-2">
+            {input.label}
+          </label>
           {input.options.map((o, i) => (
             <div className="form-check" key={i}>
               <input
                 type="radio"
                 id={`${input.id}_${i}`}
-                className={`form-check-input${showError ? " is-invalid" : ""}`}
+                className={`form-check-input${
+                  showError ? " is-invalid" : ""
+                }`}
                 name={input.name}
                 value={o.value}
                 checked={val === o.value}
-                onChange={(e) => {
-                  setVal(e.target.value);
-                  emit(e.target.value);
-                }}
+                onChange={handleChange}
               />
-              <label className="form-check-label" htmlFor={`${input.id}_${i}`}>
+              <label
+                className="form-check-label"
+                htmlFor={`${input.id}_${i}`}
+              >
                 {o.label}
               </label>
             </div>
@@ -176,22 +248,30 @@ export function AlloyInput({ input, output }) {
       );
     }
 
+    // checkbox group
     if (input.type === "checkbox") {
       return (
         <div>
-          <label className="form-label d-block mb-2">{input.label}</label>
+          <label className="form-label d-block mb-2">
+            {input.label}
+          </label>
           {input.options.map((o, i) => (
             <div className="form-check" key={i}>
               <input
                 type="checkbox"
                 id={`${input.id}_${i}`}
-                className={`form-check-input${showError ? " is-invalid" : ""}`}
+                className={`form-check-input${
+                  showError ? " is-invalid" : ""
+                }`}
                 name={input.name}
                 value={o.value}
                 checked={Array.isArray(val) && val.includes(o.value)}
                 onChange={handleChange}
               />
-              <label className="form-check-label" htmlFor={`${input.id}_${i}`}>
+              <label
+                className="form-check-label"
+                htmlFor={`${input.id}_${i}`}
+              >
                 {o.label}
               </label>
             </div>
@@ -200,16 +280,29 @@ export function AlloyInput({ input, output }) {
       );
     }
 
-    return <input {...common} type={input.type} value={val} onChange={handleChange} className={`form-control${showError ? " is-invalid" : ""}`} />;
+    // default text-ish input (text, email, password, number, date, etc.)
+    return (
+      <input
+        {...common}
+        type={input.type}
+        value={val}
+        onChange={handleChange}
+        className={`form-control${
+          showError ? " is-invalid" : ""
+        }`}
+      />
+    );
   };
 
+  // floating layout
   if (input.layout === "floating") {
     return (
       <div className="mb-3">
         <div className="form-floating">
           {renderInput()}
           <label htmlFor={input.id}>
-            {input.icon && <AlloyIcon icon={input.icon} />} {input.label}
+            {input.icon && <AlloyIcon icon={input.icon} />}&nbsp;
+            {input.label}
           </label>
         </div>
         {errorBlock}
@@ -217,6 +310,7 @@ export function AlloyInput({ input, output }) {
     );
   }
 
+  // icon layout
   if (input.layout === "icon") {
     return (
       <div className="mb-3">
@@ -234,10 +328,15 @@ export function AlloyInput({ input, output }) {
     );
   }
 
+  // default (layout === "text" etc.)
   return (
     <div className="mb-3">
-      {["text", "textarea", "number", "email", "password", "date"].includes(input.type) && (
-        <label htmlFor={input.id} className="form-label">{input.label}</label>
+      {["text", "textarea", "number", "email", "password", "date"].includes(
+        input.type
+      ) && (
+        <label htmlFor={input.id} className="form-label">
+          {input.label}
+        </label>
       )}
       {renderInput()}
       {errorBlock}
