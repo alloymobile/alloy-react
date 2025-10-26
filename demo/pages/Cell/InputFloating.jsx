@@ -2,8 +2,16 @@
 import React, { useMemo, useState } from "react";
 import { AlloyInput, InputObject } from "../../../src";
 
-// Floating layout examples: all of these use layout: "floating"
-// and provide an icon.
+/**
+ * DEFAULTS
+ *
+ * All of these use layout: "floating".
+ * layout: "floating" REQUIRES an `icon`.
+ *
+ * Every preset now includes `className: "form-control"`.
+ * You can override that in the editor to apply custom classes to the actual
+ * rendered control (<input>, <textarea>, etc.).
+ */
 const DEFAULTS = {
   name: {
     name: "name",
@@ -12,7 +20,8 @@ const DEFAULTS = {
     layout: "floating",
     placeholder: "Enter your name",
     required: true,
-    icon: { iconClass: "fa-solid fa-user" }
+    icon: { iconClass: "fa-solid fa-user" },
+    className: "form-control"
   },
   email: {
     name: "email",
@@ -22,7 +31,8 @@ const DEFAULTS = {
     placeholder: "Enter your email",
     required: true,
     icon: { iconClass: "fa-solid fa-envelope" },
-    pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+    className: "form-control"
   },
   password: {
     name: "password",
@@ -32,7 +42,8 @@ const DEFAULTS = {
     required: true,
     icon: { iconClass: "fa-solid fa-lock" },
     passwordStrength: true,
-    placeholder: "Enter a strong password"
+    placeholder: "Enter a strong password",
+    className: "form-control"
   },
   age: {
     name: "age",
@@ -42,7 +53,8 @@ const DEFAULTS = {
     placeholder: "Enter your age",
     required: true,
     min: 0,
-    icon: { iconClass: "fa-solid fa-hashtag" }
+    icon: { iconClass: "fa-solid fa-hashtag" },
+    className: "form-control"
   },
   dob: {
     name: "dob",
@@ -50,30 +62,25 @@ const DEFAULTS = {
     type: "date",
     layout: "floating",
     required: true,
-    icon: { iconClass: "fa-solid fa-calendar" }
+    icon: { iconClass: "fa-solid fa-calendar" },
+    className: "form-control"
   }
 };
 
 const TABS = Object.keys(DEFAULTS);
 
 export default function InputFloatingPage() {
-  // which floating field we're previewing
   const [tab, setTab] = useState("name");
-
-  // editable JSON for that field
   const [inputJson, setInputJson] = useState(
     JSON.stringify(DEFAULTS["name"], null, 2)
   );
-
-  // display from AlloyInput -> output()
   const [outputJson, setOutputJson] = useState(
     "// Interact with the field (type, blur, etc.)"
   );
-
-  // parse error for the JSON editor
   const [parseError, setParseError] = useState("");
 
-  // Build model from current JSON, fallback to that tab's default if broken
+  // Build model from current JSON, fallback to tab default if broken.
+  // AlloyInput syncs validation + className props on each render now.
   const model = useMemo(() => {
     try {
       const raw = JSON.parse(inputJson || "{}");
@@ -85,12 +92,10 @@ export default function InputFloatingPage() {
     }
   }, [inputJson, tab]);
 
-  // When user types/blur/selects/etc, AlloyInput calls this.
   function handleOutput(report) {
     setOutputJson(JSON.stringify(report, null, 2));
   }
 
-  // Switch to different floating input config
   function switchTab(nextTab) {
     const fresh = DEFAULTS[nextTab];
     setTab(nextTab);
@@ -99,13 +104,12 @@ export default function InputFloatingPage() {
     setParseError("");
   }
 
-  // Pretty print editor JSON
   function handleFormat() {
     try {
       const parsed = JSON.parse(inputJson);
       setInputJson(JSON.stringify(parsed, null, 2));
     } catch {
-      // ignore parse failure; parseError UI handles it
+      // ignore; parseError UI covers it
     }
   }
 
@@ -113,7 +117,7 @@ export default function InputFloatingPage() {
     <div className="container py-3">
       <h3 className="mb-4 text-center">AlloyInput (layout: "floating")</h3>
 
-      {/* Tabs to choose which floating field we're previewing */}
+      {/* Tabs */}
       <ul className="nav nav-underline nav-fill mb-3">
         {TABS.map((key) => (
           <li className="nav-item" key={key}>
@@ -127,7 +131,7 @@ export default function InputFloatingPage() {
         ))}
       </ul>
 
-      {/* How to use it */}
+      {/* Usage snippet */}
       <div className="row g-3 mb-3">
         <div className="col-12 text-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
@@ -138,25 +142,51 @@ export default function InputFloatingPage() {
         </div>
       </div>
 
-      {/* Live floating input preview */}
+      {/* Live preview */}
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
           <AlloyInput input={model} output={handleOutput} />
           <div className="small text-secondary mt-2 text-center">
-            Floating layout uses Bootstrap's <code>.form-floating</code> style.
-            The label floats above once there's content or focus.
-            <br />
-            An <code>icon</code> is required with <code>layout:"floating"</code>.
-            <br />
-            Validation (required, pattern, passwordStrength, etc.) shows after
-            blur.
+            <div className="mb-2">
+              <code>layout: "floating"</code> uses Bootstrap{" "}
+              <code>.form-floating</code>. The label floats above on focus or
+              once there's content.
+            </div>
+
+            <div className="mb-2">
+              <strong>Must include:</strong>{" "}
+              <code>layout: "floating"</code> and an{" "}
+              <code>icon</code> (for example{" "}
+              <code>{`{ iconClass: "fa-solid fa-user" }`}</code>).
+            </div>
+
+            <div className="mb-2">
+              <strong>Styling:</strong>{" "}
+              <code>className</code> is applied directly to the rendered control
+              (&lt;input/&gt;, &lt;textarea/&gt;, etc).
+              All presets default to{" "}
+              <code>"form-control"</code>.
+              You can live-edit it in the JSON to anything like{" "}
+              <code>
+                "form-control form-control-lg bg-dark text-white border-warning"
+              </code>{" "}
+              and the preview will reflect that.
+            </div>
+
+            <div className="mb-0">
+              Validation (<code>required</code>, <code>pattern</code>,{" "}
+              <code>passwordStrength</code>, <code>min</code>, etc.) now
+              re-syncs every render. If you delete <code>required</code> from
+              the JSON and blur again, the "required" error should go away.
+              Errors are spoken with <code>aria-live="polite"</code>.
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Editor / Output panels */}
+      {/* Editor / Output */}
       <div className="row g-3 align-items-stretch">
-        {/* LEFT PANEL: editable JSON */}
+        {/* LEFT: JSON editor */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="fw-semibold mb-0">Input JSON (editable)</label>
@@ -192,29 +222,32 @@ export default function InputFloatingPage() {
           )}
 
           <div className="form-text">
-            <strong>Required:</strong>{" "}
-            <code>name</code>, <code>layout:"floating"</code>, and{" "}
-            <code>icon</code> (ex:{" "}
-            <code>{`{ iconClass: "fa-solid fa-user" }`}</code>).
-            <br />
-            Other common fields:
-            <ul className="mb-1">
+            <ul className="mb-1 ps-3">
               <li>
-                <code>required: true</code>
+                <code>name</code> is required.
               </li>
               <li>
-                <code>passwordStrength: true</code> (must be 8+ chars with
-                upper/lower/digit)
+                <code>layout: "floating"</code> is required and must include{" "}
+                <code>icon</code>.
               </li>
               <li>
-                <code>pattern</code> for email/phone/etc.
+                <code>className</code> customizes the control’s classes. We
+                default to <code>"form-control"</code> for you.
+              </li>
+              <li>
+                Add validation knobs like{" "}
+                <code>required</code>, <code>pattern</code>,{" "}
+                <code>passwordStrength</code>, <code>min</code>, etc.
+              </li>
+              <li>
+                Those validation props are reactive in the preview — edit the
+                JSON, blur the field, and watch the error rules change.
               </li>
             </ul>
-            Errors are announced with <code>aria-live="polite"</code>.
           </div>
         </div>
 
-        {/* RIGHT PANEL: output from handleOutput */}
+        {/* RIGHT: output from handleOutput */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="fw-semibold mb-0">
@@ -242,8 +275,17 @@ export default function InputFloatingPage() {
 
           <div className="form-text">
             Output shows:
-            <code>value</code>, <code>valid</code>, <code>error</code>, and{" "}
-            <code>errors</code> array, based on current validation.
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>value</code>
+              </li>
+              <li>
+                <code>valid</code> / <code>error</code>
+              </li>
+              <li>
+                <code>errors</code> (array of human-readable messages)
+              </li>
+            </ul>
           </div>
         </div>
       </div>

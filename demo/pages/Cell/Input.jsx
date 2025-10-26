@@ -2,6 +2,16 @@
 import React, { useMemo, useState } from "react";
 import { AlloyInput, InputObject } from "../../../src";
 
+/**
+ * DEFAULT_INPUTS
+ * Each preset is valid to pass directly to `new InputObject(...)`.
+ * Notice `className`:
+ *   - text-ish, textarea, password, etc. use "form-control"
+ *   - select uses "form-select"
+ *   - radio / checkbox use "form-check-input"
+ *
+ * You can override className in your JSON to theme per-field.
+ */
 const DEFAULT_INPUTS = {
   text: {
     name: "fullName",
@@ -9,8 +19,10 @@ const DEFAULT_INPUTS = {
     type: "text",
     layout: "text",
     placeholder: "Enter your name",
-    required: true
+    required: true,
+    className: "form-control"
   },
+
   email: {
     name: "email",
     label: "Email",
@@ -18,8 +30,10 @@ const DEFAULT_INPUTS = {
     layout: "text",
     placeholder: "Enter your email",
     required: true,
-    pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+    className: "form-control"
   },
+
   password: {
     name: "password",
     label: "Password",
@@ -27,16 +41,20 @@ const DEFAULT_INPUTS = {
     layout: "text",
     placeholder: "Enter your password",
     required: true,
-    passwordStrength: true
+    passwordStrength: true,
+    className: "form-control"
   },
+
   number: {
     name: "age",
     label: "Age",
     type: "number",
     layout: "text",
     placeholder: "Age in years",
-    min: 18
+    min: 18,
+    className: "form-control"
   },
+
   textarea: {
     name: "bio",
     label: "Bio",
@@ -44,46 +62,55 @@ const DEFAULT_INPUTS = {
     layout: "text",
     placeholder: "Tell us about yourself...",
     required: true,
-    minLength: 10
+    minLength: 10,
+    className: "form-control"
   },
+
   checkbox: {
     name: "interests",
     label: "Interests",
     type: "checkbox",
     layout: "text",
     required: true,
+    className: "form-check-input",
     options: [
       { value: "news", label: "News" },
       { value: "updates", label: "Product Updates" },
       { value: "offers", label: "Special Offers" }
     ]
   },
+
   select: {
     name: "role",
     label: "Role",
     type: "select",
     layout: "text",
+    required: true,
+    className: "form-select",
     options: [
       { value: "", label: "Select role" },
       { value: "admin", label: "Admin" },
       { value: "user", label: "User" },
       { value: "guest", label: "Guest" }
-    ],
-    required: true
+    ]
   },
+
   date: {
     name: "dob",
     label: "Date of Birth",
     type: "date",
     layout: "text",
-    required: true
+    required: true,
+    className: "form-control"
   },
+
   radio: {
     name: "gender",
     label: "Gender",
     type: "radio",
     layout: "text",
     required: true,
+    className: "form-check-input",
     options: [
       { value: "male", label: "Male" },
       { value: "female", label: "Female" },
@@ -95,17 +122,31 @@ const DEFAULT_INPUTS = {
 const TABS = Object.keys(DEFAULT_INPUTS);
 
 export default function InputPage() {
+  // which preset we're looking at
   const [tab, setTab] = useState("text");
+
+  // left textarea (editable JSON for the current tab)
   const [inputJson, setInputJson] = useState(
     JSON.stringify(DEFAULT_INPUTS["text"], null, 2)
   );
+
+  // right textarea (live output from AlloyInput's output callback)
   const [outputJson, setOutputJson] = useState(
     "// Interact with the field (type, blur, select, etc.)"
   );
+
+  // parseError if user types invalid JSON
   const [parseError, setParseError] = useState("");
 
-  // Build an InputObject from the editable JSON.
-  // If parse fails, fall back to the default for the selected tab.
+  /**
+   * Build an InputObject from whatever's in the editor.
+   * If parsing fails, fallback to that tab's default preset
+   * so the preview never explodes.
+   *
+   * NOTE: AlloyInput itself now uses useEffect to react to any changes
+   * in required, minLength, etc., so removing/adding validation rules
+   * in the JSON will update live without remounting.
+   */
   const inputModel = useMemo(() => {
     try {
       const raw = JSON.parse(inputJson || "{}");
@@ -117,12 +158,12 @@ export default function InputPage() {
     }
   }, [inputJson, tab]);
 
-  // Called by AlloyInput on change / blur.
+  // AlloyInput calls this on every change/blur
   function handleOutput(report) {
     setOutputJson(JSON.stringify(report, null, 2));
   }
 
-  // Switch between input variants (text, email, checkbox, etc.)
+  // switch tabs (ex: "text" -> "email")
   function switchTab(nextTab) {
     const freshConfig = DEFAULT_INPUTS[nextTab];
     setTab(nextTab);
@@ -131,13 +172,13 @@ export default function InputPage() {
     setParseError("");
   }
 
-  // Prettify current JSON
+  // helper: pretty-print the JSON in the left editor
   function handleFormat() {
     try {
       const parsed = JSON.parse(inputJson);
       setInputJson(JSON.stringify(parsed, null, 2));
     } catch {
-      // ignore if invalid; parseError is already showing
+      // ignore; parseError is already shown if invalid
     }
   }
 
@@ -145,7 +186,7 @@ export default function InputPage() {
     <div className="container py-3">
       <h3 className="mb-4 text-center">AlloyInput</h3>
 
-      {/* Tabs for field types */}
+      {/* Tabs for each field type */}
       <ul className="nav nav-underline nav-fill mb-3">
         {TABS.map((key) => (
           <li className="nav-item" key={key}>
@@ -175,16 +216,21 @@ export default function InputPage() {
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
           <AlloyInput input={inputModel} output={handleOutput} />
           <div className="small text-secondary mt-2 text-center">
-            Required, minLength, pattern, passwordStrength, etc. validate on
-            blur. Errors are spoken with{" "}
-            <code>aria-live="polite"</code>.
+            <div>
+              Try editing the JSON on the left: remove <code>required</code>, change{" "}
+              <code>minLength</code>, tweak <code>pattern</code>, etc. The field
+              re-validates live (no remount needed).
+            </div>
+            <div>
+              Errors announce with <code>aria-live="polite"</code> after blur.
+            </div>
           </div>
         </div>
       </div>
 
       {/* JSON editor (left) and callback output (right) */}
       <div className="row g-3 align-items-stretch">
-        {/* LEFT: Input JSON */}
+        {/* LEFT: Input JSON editor */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="fw-semibold mb-0">Input JSON (editable)</label>
@@ -217,24 +263,36 @@ export default function InputPage() {
           )}
 
           <div className="form-text">
-            Only <code>name</code> is required.
-            <br />
-            For checkbox / radio, use{" "}
-            <code>
-              options: [ {"{"}value:"news", label:"News"{"}"} , ... ]
-            </code>
-            .
-            <br />
-            To enforce strong password rules, set{" "}
-            <code>passwordStrength: true</code>.
-            <br />
-            Layout variants <code>"icon"</code> or <code>"floating"</code>{" "}
-            require an <code>icon</code> like{" "}
-            <code>{`{ iconClass: "fa-solid fa-user" }`}</code>.
+            <ul className="mb-0 ps-3">
+              <li>
+                Only <code>name</code> is required.
+              </li>
+              <li>
+                <code>className</code> styles the control. Examples:
+                <code>"form-control"</code>, <code>"form-select"</code>,{" "}
+                <code>"form-check-input"</code>, or your own classes
+                like <code>"form-control form-control-lg bg-dark text-white"</code>.
+              </li>
+              <li>
+                For checkbox / radio, pass{" "}
+                <code>
+                  options: [ &#123;value:"news", label:"News"&#125;, ... ]
+                </code>
+              </li>
+              <li>
+                To enforce strong password rules, set{" "}
+                <code>passwordStrength: true</code>.
+              </li>
+              <li>
+                Layout <code>"icon"</code> or <code>"floating"</code> also
+                requires an <code>icon</code>, for example{" "}
+                <code>{`{ iconClass: "fa-solid fa-user" }`}</code>.
+              </li>
+            </ul>
           </div>
         </div>
 
-        {/* RIGHT: Output from handleOutput */}
+        {/* RIGHT: Output payload from AlloyInput */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="fw-semibold mb-0">
@@ -263,9 +321,19 @@ export default function InputPage() {
           />
 
           <div className="form-text">
-            Contains <code>value</code> and validation status:
-            <code>valid</code>, <code>error</code>, and{" "}
-            <code>errors</code> array.
+            Contains:
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>value</code> (current field value)
+              </li>
+              <li>
+                <code>valid</code> / <code>error</code>
+              </li>
+              <li>
+                <code>errors</code> array (messages like
+                "This field is required.")
+              </li>
+            </ul>
           </div>
         </div>
       </div>

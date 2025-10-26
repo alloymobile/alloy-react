@@ -1,5 +1,5 @@
 // AlloyInput.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
 import { generateId } from "../../utils/idHelper.js";
 
@@ -30,9 +30,7 @@ import { generateId } from "../../utils/idHelper.js";
  * @property {string} [label]                - Human label for the field or group
  * @property {string|string[]} [value]       - Initial value.
  *                                            For checkbox group: an array of checked values.
- *                                            Default:
- *                                              "" for most,
- *                                              [] for checkbox group.
+ *                                            Defaults to "" (or [] for checkbox).
  *
  * @property {string} [layout]               - Visual layout style:
  *                                              "text" (default),
@@ -41,39 +39,34 @@ import { generateId } from "../../utils/idHelper.js";
  *                                            If "icon" or "floating", an icon is required.
  *
  * @property {IconObject|{iconClass:string}} [icon]
- *                                          - For "icon" or "floating" layout.
- *                                            Either pass an IconObject instance or a
- *                                            plain config like { iconClass: "fa-solid fa-user" }.
+ *                                            For "icon" or "floating" layout.
  *
- * @property {string} [placeholder]          - Placeholder text (text-ish inputs / textarea / select)
+ * @property {string} [placeholder]          - Placeholder text
+ *
  * @property {boolean} [required]            - Mark as required. Default false.
- *
- * @property {number} [minLength]            - Minimum string length
- * @property {number} [maxLength]            - Maximum string length
- * @property {number|string} [min]           - Minimum numeric/date (not enforced here yet)
- * @property {number|string} [max]           - Maximum numeric/date (not enforced here yet)
+ * @property {number}  [minLength]           - Minimum string length
+ * @property {number}  [maxLength]           - Maximum string length
+ * @property {number|string} [min]           - Minimum numeric/date
+ * @property {number|string} [max]           - Maximum numeric/date
  * @property {string} [pattern]              - Regex pattern string (ex: "^[0-9]+$")
  *
- * @property {boolean} [passwordStrength]    - If true, enforce simple strong password rule:
- *                                            at least 8 chars, upper+lower+digit.
+ * @property {boolean} [passwordStrength]    - simple strong password rule:
+ *                                            >=8 chars, upper+lower+digit.
  *
- * @property {string} [matchWith]            - (Reserved for future cross-field validation)
+ * @property {string} [matchWith]            - (reserved for future cross-field validation)
+ *
+ * @property {string} [className]            - CSS classes to apply to the actual
+ *                                            input/select/textarea control(s).
+ *                                            Default:
+ *                                              - "form-control" for most text-ish things
+ *                                              - "form-select" for selects
+ *                                              - "form-check-input" for radios/checkboxes
+ *                                            We'll still append " is-invalid" if needed.
  *
  * @property {InputOption[]} [options]       - For select, radio, checkbox group.
- * @property {Array<Function>} [validators]  - (Reserved for custom validators)
+ * @property {Array<Function>} [validators]  - (reserved for custom validators)
  *
  * @property {any} [rest]                    - Any other props the user wants to stash.
- */
-
-/**
- * InputObject
- *
- * Creates a stable model describing one input field or group.
- * This mirrors the pattern of ButtonObject, LinkObject, etc:
- * - single config object in constructor
- * - normalize defaults
- * - generate id
- * - coerce icon into IconObject if provided
  */
 export class InputObject {
   /**
@@ -97,6 +90,7 @@ export class InputObject {
       pattern,
       matchWith,
       passwordStrength,
+      className, // NEW
       options = [],
       validators = [],
       ...rest
@@ -133,7 +127,7 @@ export class InputObject {
         ? new IconObject(icon)
         : undefined;
 
-    this.id = id ?? generateId("input"); // consistent auto-id scheme
+    this.id = id ?? generateId("input");
     this.name = name;
     this.type = type;
     this.label = label;
@@ -141,6 +135,8 @@ export class InputObject {
     this.layout = layout;
     this.icon = normalizedIcon;
     this.placeholder = placeholder;
+
+    // validation-ish config
     this.required = !!required;
     this.minLength = minLength;
     this.maxLength = maxLength;
@@ -149,10 +145,27 @@ export class InputObject {
     this.pattern = pattern;
     this.matchWith = matchWith;
     this.passwordStrength = passwordStrength;
+
+    // classes for the control itself
+    // we do NOT include "is-invalid" here; the renderer appends that at runtime
+    if (typeof className === "string" && className.trim() !== "") {
+      this.className = className.trim();
+    } else {
+      // pick sensible bootstrap default per type
+      if (type === "select") {
+        this.className = "form-select";
+      } else if (type === "radio" || type === "checkbox") {
+        this.className = "form-check-input";
+      } else {
+        // text, textarea, password, number, date, etc.
+        this.className = "form-control";
+      }
+    }
+
     this.options = options;
     this.validators = validators;
 
-    // anything else user passed in config, we keep
+    // stash any additional props
     Object.assign(this, rest);
   }
 }
@@ -186,15 +199,38 @@ export class InputObject {
  *        layout=icon,
  *        layout=floating
  *
+ * Reactivity:
+ *   - If parent changes validation rules (required, minLength, etc.) OR
+ *     default value, we resync local state via useEffect instead of forcing
+ *     a remount.
+ *
  * Accessibility:
  *   - Adds aria-invalid on inputs with error after blur
  *   - Adds aria-live="polite" to the error block
  */
 export function AlloyInput({ input, output }) {
-  // local value
   const [val, setVal] = useState(input.value);
-  // whether the user interacted/blurred (to control when to show errors)
   const [touched, setTouched] = useState(false);
+
+  // whenever validation-relevant props or default value change,
+  // reset local state and clear touched/errors
+  useEffect(() => {
+    setVal(input.value);
+    setTouched(false);
+  }, [
+    input.value,
+    input.required,
+    input.minLength,
+    input.maxLength,
+    input.min,
+    input.max,
+    input.pattern,
+    input.passwordStrength,
+    input.matchWith,
+    input.type,
+    input.layout,
+    input.options
+  ]);
 
   // ----- Validation -----
   const validate = (candidate) => {
@@ -245,7 +281,7 @@ export function AlloyInput({ input, output }) {
 
     // password strength
     if (input.passwordStrength && typeof trimmed === "string") {
-      // basic policy: >=8 chars, 1 lower, 1 upper, 1 digit
+      // >=8 chars, 1 lower, 1 upper, 1 digit
       const strongEnough = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(
         trimmed
       );
@@ -255,18 +291,16 @@ export function AlloyInput({ input, output }) {
     }
 
     // NOTE:
-    // - matchWith isn't enforced here (would require parent cross-field data)
-    // - validators[] is not invoked here yet, but we kept it in the model so
-    //   you can expand later
+    // - matchWith isn't enforced here (needs cross-field context)
+    // - validators[] is not invoked here yet (extensibility hook)
 
     return errs;
   };
 
-  // Whether we're currently invalid AND we've blurred
   const currentErrors = validate(val);
   const showError = touched && currentErrors.length > 0;
 
-  // inline error block
+  // inline error block under the control
   const errorBlock =
     showError &&
     currentErrors.length > 0 && (
@@ -283,16 +317,7 @@ export function AlloyInput({ input, output }) {
       </div>
     );
 
-  // common props for all "single-control" elements
-  const commonControlProps = {
-    id: input.id,
-    name: input.name,
-    placeholder: input.placeholder,
-    onBlur: () => setTouched(true),
-    "aria-invalid": showError || undefined
-  };
-
-  // push update to parent whenever value changes
+  // Tell parent about changes
   const emit = (nextVal) => {
     const errs = validate(nextVal);
     output?.({
@@ -305,12 +330,12 @@ export function AlloyInput({ input, output }) {
     });
   };
 
-  // ---- onChange handler shared by many inputs ----
+  // shared onChange for most controls
   const handleChange = (e) => {
     const v = e.target.value;
 
     if (input.type === "checkbox") {
-      // checkbox group → maintain array of checked values
+      // checkbox group → toggle array membership
       const prev = Array.isArray(val) ? [...val] : [];
       const idx = prev.indexOf(v);
       if (idx > -1) {
@@ -330,7 +355,20 @@ export function AlloyInput({ input, output }) {
     }
   };
 
-  // ---- individual renderers ----
+  // common props for single "control" element
+  const commonControlProps = {
+    id: input.id,
+    name: input.name,
+    placeholder: input.placeholder,
+    onBlur: () => setTouched(true),
+    "aria-invalid": showError || undefined
+  };
+
+  // utility: builds className with " is-invalid" when needed
+  const withInvalid = (base) =>
+    base + (showError ? " is-invalid" : "");
+
+  /* ---------------- RENDERERS ---------------- */
 
   // textarea
   const renderTextarea = () => (
@@ -338,7 +376,7 @@ export function AlloyInput({ input, output }) {
       {...commonControlProps}
       value={val}
       onChange={handleChange}
-      className={`form-control${showError ? " is-invalid" : ""}`}
+      className={withInvalid(input.className)}
     />
   );
 
@@ -348,7 +386,7 @@ export function AlloyInput({ input, output }) {
       {...commonControlProps}
       value={val}
       onChange={handleChange}
-      className={`form-select${showError ? " is-invalid" : ""}`}
+      className={withInvalid(input.className)}
     >
       {input.options.map((o) => (
         <option key={o.value} value={o.value}>
@@ -369,9 +407,7 @@ export function AlloyInput({ input, output }) {
           <input
             type="radio"
             id={`${input.id}_${i}`}
-            className={`form-check-input${
-              showError ? " is-invalid" : ""
-            }`}
+            className={withInvalid(input.className)}
             name={input.name}
             value={o.value}
             checked={val === o.value}
@@ -387,6 +423,7 @@ export function AlloyInput({ input, output }) {
           </label>
         </div>
       ))}
+      {errorBlock}
     </div>
   );
 
@@ -401,9 +438,7 @@ export function AlloyInput({ input, output }) {
           <input
             type="checkbox"
             id={`${input.id}_${i}`}
-            className={`form-check-input${
-              showError ? " is-invalid" : ""
-            }`}
+            className={withInvalid(input.className)}
             name={input.name}
             value={o.value}
             checked={Array.isArray(val) && val.includes(o.value)}
@@ -419,6 +454,7 @@ export function AlloyInput({ input, output }) {
           </label>
         </div>
       ))}
+      {errorBlock}
     </div>
   );
 
@@ -429,11 +465,11 @@ export function AlloyInput({ input, output }) {
       type={input.type}
       value={val}
       onChange={handleChange}
-      className={`form-control${showError ? " is-invalid" : ""}`}
+      className={withInvalid(input.className)}
     />
   );
 
-  // Decide which control to render based on input.type
+  // pick correct control renderer
   const renderControl = () => {
     switch (input.type) {
       case "textarea":
@@ -449,7 +485,7 @@ export function AlloyInput({ input, output }) {
     }
   };
 
-  // ---- Layout variants ----
+  /* ---------------- LAYOUT VARIANTS ---------------- */
 
   // layout: "floating"
   if (input.layout === "floating") {
@@ -463,7 +499,9 @@ export function AlloyInput({ input, output }) {
             {input.label}
           </label>
         </div>
-        {errorBlock}
+        {/* error should appear below for floating */}
+        {!(input.type === "radio" || input.type === "checkbox") &&
+          errorBlock}
       </div>
     );
   }
@@ -477,21 +515,39 @@ export function AlloyInput({ input, output }) {
             {input.label}
           </label>
         )}
+
         <div className="input-group">
           <span className="input-group-text">
             <AlloyIcon icon={input.icon} />
           </span>
-          {renderControl()}
+
+          {/* we only want to override the control's className inside
+             * input-group for non-group types; for radios/checkboxes,
+             * we already render groups differently.
+             */}
+          {["radio", "checkbox"].includes(input.type) ? (
+            renderControl()
+          ) : (
+            <input
+              {...commonControlProps}
+              type={input.type}
+              value={val}
+              onChange={handleChange}
+              className={withInvalid(input.className)}
+            />
+          )}
         </div>
-        {errorBlock}
+
+        {/* radio/checkbox already append errorBlock internally */}
+        {!(input.type === "radio" || input.type === "checkbox") &&
+          errorBlock}
       </div>
     );
   }
 
-  // layout: default "text", etc.
+  // layout: default "text"
   return (
     <div className="mb-3">
-      {/* We only render a top label for certain types, same as your original logic */}
       {["text", "textarea", "number", "email", "password", "date"].includes(
         input.type
       ) &&
@@ -502,7 +558,10 @@ export function AlloyInput({ input, output }) {
         )}
 
       {renderControl()}
-      {errorBlock}
+
+      {/* radio/checkbox already handled errorBlock */}
+      {!(input.type === "radio" || input.type === "checkbox") &&
+        errorBlock}
     </div>
   );
 }

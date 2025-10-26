@@ -2,7 +2,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
-import { TagObject } from "../../utils/idHelper.js";
 import { CardObject } from "./AlloyCard.jsx";
 
 /**

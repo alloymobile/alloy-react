@@ -1,69 +1,105 @@
-import React, { useMemo, useState, useRef, useCallback } from "react";
+import React, {
+  useMemo,
+  useState,
+  useRef,
+  useCallback
+} from "react";
 
 import AlloyInput, { InputObject } from "../cell/AlloyInput.jsx";
 import {
   AlloyButtonSubmit,
-  ButtonSubmitObject,
+  ButtonSubmitObject
 } from "../cell/AlloyButtonSubmit.jsx";
 
-/* ---------------------- id generator ---------------------- */
-let __formCounter = 0;
-function nextFormId() {
-  __formCounter += 1;
-  return `alloyform${__formCounter}`;
-}
+import { generateId } from "../../utils/idHelper.js";
 
-/* ---------------------- Model ---------------------- */
+/* ------------------------------------------------------------------
+ * FormObject
+ *
+ * A normalized "form model" that AlloyForm consumes.
+ *
+ * Fields:
+ *   - id          : unique form id. Auto via generateId("form") if missing.
+ *   - title       : heading shown above the form
+ *   - className   : wrapper column classes ("col m-2" by default)
+ *   - message     : alert text shown above fields ("" hides it)
+ *   - action      : opaque string you get back on submit
+ *   - type        : informational only (e.g. "AlloyInputTextIcon")
+ *
+ *   - submit      : ButtonSubmitObject config for the submit CTA
+ *   - fields[]    : array of InputObject configs
+ *
+ *   - data        : last submitted snapshot (AlloyForm will mutate it)
+ * ------------------------------------------------------------------ */
 export class FormObject {
   constructor(res = {}) {
-    this.id = res.id ?? nextFormId();
-    this.title = res.title ?? "AlloyMobile";
-    this.className = res.className ?? "col m-2";
-    this.message = res.message ?? "";
-    this.action = res.action ?? "";
-    this.type = res.type ?? "AlloyInputTextIcon"; // informational only
+    const {
+      id,
+      title = "AlloyMobile",
+      className = "col m-2",
+      message = "",
+      action = "",
+      type = "AlloyInputTextIcon",
+      submit,
+      fields,
+      data
+    } = res;
 
-    // hydrate submit
+    // Consistent ID creation across the app.
+    // If caller didn't supply an id, we generate one with the shared helper.
+    this.id = id ?? generateId("form");
+
+    this.title = title;
+    this.className = className;
+    this.message = message;
+    this.action = action;
+    this.type = type;
+
+    // hydrate submit into ButtonSubmitObject
     this.submit =
-      res.submit instanceof ButtonSubmitObject
-        ? res.submit
+      submit instanceof ButtonSubmitObject
+        ? submit
         : new ButtonSubmitObject(
-            res.submit || {
+            submit || {
+              // sane defaults
               name: "Submit",
               icon: { iconClass: "fa-solid fa-circle-notch fa-spin" },
               className: "btn btn-primary w-100 mt-3",
               disabled: false,
               loading: false,
               ariaLabel: "Submit",
-              title: "Submit",
+              title: "Submit"
             }
           );
 
-    // hydrate fields
-    const rawFields = Array.isArray(res.fields) ? res.fields : [];
+    // hydrate fields into InputObject[]
+    const rawFields = Array.isArray(fields) ? fields : [];
     this.fields = rawFields.map((fld) =>
       fld instanceof InputObject ? fld : new InputObject(fld)
     );
 
-    // last submitted data snapshot
-    this.data = res.data ?? {};
+    // remember last submit snapshot
+    this.data = data ?? {};
   }
 }
 
-/* ---------------------- helpers ---------------------- */
-
-/**
- * Run validation rules for a single field value,
- * using the field definition and (optionally) other field values
- * for things like matchWith.
+/* ------------------------------------------------------------------
+ * validateField(fieldDef, value, allValues)
  *
- * Returns { valid:boolean, error:boolean, errors:string[] }
- */
+ * Runs core validation for a single field:
+ *   - required
+ *   - minLength / maxLength
+ *   - pattern
+ *   - passwordStrength
+ *   - matchWith (compare to some other field by name)
+ *
+ * Returns { valid, error, errors[] }
+ * ------------------------------------------------------------------ */
 function validateField(fieldDef, value, allValues) {
   let isValid = true;
   const errs = [];
 
-  // 1. required
+  // required
   if (fieldDef.required) {
     if (fieldDef.type === "checkbox") {
       const arrVal = Array.isArray(value) ? value : [];
@@ -84,7 +120,7 @@ function validateField(fieldDef, value, allValues) {
     }
   }
 
-  // 2. minLength
+  // minLength
   if (
     isValid &&
     typeof fieldDef.minLength === "number" &&
@@ -95,7 +131,7 @@ function validateField(fieldDef, value, allValues) {
     errs.push(`Minimum length is ${fieldDef.minLength}`);
   }
 
-  // 3. maxLength
+  // maxLength
   if (
     isValid &&
     typeof fieldDef.maxLength === "number" &&
@@ -106,7 +142,7 @@ function validateField(fieldDef, value, allValues) {
     errs.push(`Maximum length is ${fieldDef.maxLength}`);
   }
 
-  // 4. pattern
+  // pattern
   if (
     isValid &&
     fieldDef.pattern &&
@@ -117,7 +153,7 @@ function validateField(fieldDef, value, allValues) {
     errs.push("Invalid format.");
   }
 
-  // 5. passwordStrength (only if explicitly required on this field)
+  // passwordStrength
   if (isValid && fieldDef.passwordStrength && typeof value === "string") {
     // must contain:
     // - lowercase
@@ -125,14 +161,13 @@ function validateField(fieldDef, value, allValues) {
     // - digit
     // - at least 8 chars
     const strongRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/;
-    const strong = strongRegex.test(value);
-    if (!strong) {
+    if (!strongRegex.test(value)) {
       isValid = false;
       errs.push("Password is too weak.");
     }
   }
 
-  // 6. matchWith (e.g. confirmPassword matches password)
+  // matchWith
   if (isValid && fieldDef.matchWith) {
     const otherName = fieldDef.matchWith;
     const otherVal = allValues[otherName];
@@ -145,30 +180,32 @@ function validateField(fieldDef, value, allValues) {
   return {
     valid: isValid,
     error: !isValid,
-    errors: errs,
+    errors: errs
   };
 }
 
-/* ---------------------- Component ---------------------- */
-/**
- * Props:
- *  - form: FormObject | plain JSON config
- *  - output?: (payload:any) => void
+/* ------------------------------------------------------------------
+ * AlloyForm
  *
- * UX contract:
- *  - Submit button is DISABLED while any field has an error or is invalid.
- *  - As soon as all fields are valid (no errors), submit ENABLES.
- *  - After submit:
- *      finalOut = { ...values, action: hydrated.action }
- *      hydrated.data = finalOut
- *      hydrated.message = ""
- *      output(finalOut)
- */
+ * Props:
+ *   - form: FormObject | plain JSON config
+ *   - output?: (finalOut:any) => void
+ *
+ * Behavior:
+ *   - Hydrates the model into a FormObject (so IDs/fields are normalized).
+ *   - Tracks value+validation for every field in internal state.
+ *   - Disables submit until all fields are valid.
+ *   - On submit, emits { ...values, action: form.action } via `output`.
+ *
+ * Accessibility:
+ *   - Each AlloyInput already handles aria-invalid and aria-live for errors.
+ * ------------------------------------------------------------------ */
 export function AlloyForm({ form, output }) {
   //
-  // 1. Hydrate form prop into a canonical FormObject.
+  // 1. Hydrate prop -> FormObject with consistent IDs.
   //
-  const hydrated = form instanceof FormObject ? form : new FormObject(form || {});
+  const hydrated =
+    form instanceof FormObject ? form : new FormObject(form || {});
 
   if (
     !hydrated ||
@@ -181,12 +218,13 @@ export function AlloyForm({ form, output }) {
   }
 
   //
-  // 2. Build initial state for each field.
-  // We keep "value", "valid", "error", "errors"
+  // 2. Initialize per-field state.
+  //    We'll keep { value, valid, error, errors } for each field by name.
   //
   const [fieldState, setFieldState] = useState(() => {
     const init = {};
-    // first gather a map of initial values so matchWith works on first pass
+
+    // gather initial values so matchWith works on first pass
     const initialValues = {};
     hydrated.fields.forEach((fld) => {
       initialValues[fld.name] = fld.value;
@@ -194,13 +232,16 @@ export function AlloyForm({ form, output }) {
 
     hydrated.fields.forEach((fld) => {
       const val = fld.value;
-      const { valid, error, errors } = validateField(fld, val, initialValues);
-
+      const { valid, error, errors } = validateField(
+        fld,
+        val,
+        initialValues
+      );
       init[fld.name] = {
         value: val,
         valid,
         error,
-        errors,
+        errors
       };
     });
 
@@ -210,12 +251,12 @@ export function AlloyForm({ form, output }) {
   const submitRef = useRef(null);
 
   //
-  // 3. Helper to recompute validity for ALL fields,
-  //    given an updated "nextFieldState" map of { [name]: {value,...} }.
+  // 3. recomputeAllValidity(draftFieldState)
+  //    Given a draft of { [fname]: {value,...} }, run validation on all fields,
+  //    including cross-field checks like matchWith.
   //
   const recomputeAllValidity = useCallback(
     (draftFieldState) => {
-      // Build a plain values map first so matchWith can compare cross-fields
       const valuesMap = {};
       Object.keys(draftFieldState).forEach((fname) => {
         valuesMap[fname] = draftFieldState[fname].value;
@@ -233,7 +274,7 @@ export function AlloyForm({ form, output }) {
           value: currentVal,
           valid,
           error,
-          errors,
+          errors
         };
       });
 
@@ -243,29 +284,26 @@ export function AlloyForm({ form, output }) {
   );
 
   //
-  // 4. When an individual AlloyInput changes,
-  //    we update that field's value, THEN recompute validity for *all* fields.
+  // 4. When a field updates (AlloyInput.output),
+  //    update that one field's value, then fully revalidate.
   //
   function handleFieldOutput(fieldPayload) {
     if (!fieldPayload || !fieldPayload.name) return;
     const { name, value } = fieldPayload;
 
     setFieldState((prev) => {
-      // first, update just this field's value in a draft
       const draft = { ...prev };
       draft[name] = {
         ...prev[name],
-        value,
+        value
       };
 
-      // now recompute validity for the entire form using the draft
-      const validated = recomputeAllValidity(draft);
-      return validated;
+      return recomputeAllValidity(draft);
     });
   }
 
   //
-  // 5. Build submit payload from current state
+  // 5. Build a flat { [fieldName]: value } map for submit.
   //
   const dataPayload = useMemo(() => {
     const out = {};
@@ -276,7 +314,7 @@ export function AlloyForm({ form, output }) {
   }, [fieldState]);
 
   //
-  // 6. Check if any field is invalid. This drives the submit disabled state.
+  // 6. Disable submit if ANY field invalid.
   //
   const isAnyInvalid = useMemo(() => {
     return Object.values(fieldState).some(
@@ -285,15 +323,15 @@ export function AlloyForm({ form, output }) {
   }, [fieldState]);
 
   //
-  // 7. Submit handler
+  // 7. Submit handler.
   //
   function handleSubmit(btnModel /* ButtonSubmitObject */, e) {
     const finalOut = {
       ...dataPayload,
-      action: hydrated.action,
+      action: hydrated.action
     };
 
-    // match Angular behavior
+    // snapshot on the hydrated form instance
     hydrated.data = finalOut;
     hydrated.message = "";
 
@@ -301,13 +339,13 @@ export function AlloyForm({ form, output }) {
   }
 
   //
-  // 8. Force the submit button's disabled prop based on validity.
-  //    We do NOT permanently "stick" it; it updates every render.
+  // 8. Keep submit button disabled/reactive.
   //
-  hydrated.submit.disabled = isAnyInvalid || !!hydrated.submit.loading;
+  hydrated.submit.disabled =
+    isAnyInvalid || !!hydrated.submit.loading;
 
   //
-  // 9. Render
+  // 9. Render the form block.
   //
   return (
     <div className="row">
@@ -323,7 +361,7 @@ export function AlloyForm({ form, output }) {
             </div>
           )}
 
-          {/* Field list */}
+          {/* Fields */}
           {hydrated.fields.map((fld) => (
             <AlloyInput
               key={fld.id}
@@ -332,7 +370,7 @@ export function AlloyForm({ form, output }) {
             />
           ))}
 
-          {/* Submit button (auto-disabled until form valid) */}
+          {/* Submit */}
           <AlloyButtonSubmit
             ref={submitRef}
             buttonSubmit={hydrated.submit}

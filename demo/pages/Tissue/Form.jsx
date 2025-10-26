@@ -4,12 +4,21 @@ import { AlloyForm, FormObject } from "../../../src";
 
 /* -------------------------------------------------------
  * DEFAULT FORMS (3 variants)
+ * NOTE:
+ * - We do NOT pass explicit `id`; FormObject will auto-id
+ *   via generateId("form") when hydrating.
+ *
+ * - Each field now includes `className`, which AlloyInput
+ *   will use as the base input classNames. If you omit it,
+ *   AlloyInput will fall back to Bootstrap defaults.
+ *
+ * - Submit button gets disabled automatically by AlloyForm
+ *   until all fields validate.
  * -----------------------------------------------------*/
 
 /* 1) Plain text inputs */
 const DEFAULT_FORM_TEXT = JSON.stringify(
   {
-    id: "loginFormText01",
     title: "Sign In (Text Inputs)",
     className: "col-12 col-md-6 col-lg-4 mx-auto",
     message: "",
@@ -24,7 +33,8 @@ const DEFAULT_FORM_TEXT = JSON.stringify(
         placeholder: "you@example.com",
         layout: "text",
         required: true,
-        value: ""
+        value: "",
+        className: "form-control"
       },
       {
         name: "password",
@@ -34,7 +44,8 @@ const DEFAULT_FORM_TEXT = JSON.stringify(
         layout: "text",
         required: true,
         passwordStrength: true,
-        value: ""
+        value: "",
+        className: "form-control"
       }
     ],
 
@@ -55,7 +66,6 @@ const DEFAULT_FORM_TEXT = JSON.stringify(
 /* 2) Icon inputs */
 const DEFAULT_FORM_ICON = JSON.stringify(
   {
-    id: "supportFormIcon01",
     title: "Contact Support (Icon Inputs)",
     className: "col-12 col-md-6 col-lg-4 mx-auto",
     message: "",
@@ -71,7 +81,8 @@ const DEFAULT_FORM_ICON = JSON.stringify(
         layout: "icon",
         icon: { iconClass: "fa-regular fa-user" },
         required: true,
-        value: ""
+        value: "",
+        className: "form-control form-control-lg"
       },
       {
         name: "email",
@@ -81,7 +92,8 @@ const DEFAULT_FORM_ICON = JSON.stringify(
         layout: "icon",
         icon: { iconClass: "fa-regular fa-envelope" },
         required: true,
-        value: ""
+        value: "",
+        className: "form-control"
       },
       {
         name: "message",
@@ -91,7 +103,8 @@ const DEFAULT_FORM_ICON = JSON.stringify(
         layout: "text",
         required: true,
         minLength: 10,
-        value: ""
+        value: "",
+        className: "form-control"
       }
     ],
 
@@ -112,7 +125,6 @@ const DEFAULT_FORM_ICON = JSON.stringify(
 /* 3) Floating label inputs */
 const DEFAULT_FORM_FLOAT = JSON.stringify(
   {
-    id: "signupFormFloat01",
     title: "Create Account (Floating Inputs)",
     className: "col-12 col-md-6 col-lg-4 mx-auto",
     message: "",
@@ -128,7 +140,8 @@ const DEFAULT_FORM_FLOAT = JSON.stringify(
         layout: "floating",
         icon: { iconClass: "fa-regular fa-envelope" },
         required: true,
-        value: ""
+        value: "",
+        className: "form-control"
       },
       {
         name: "password",
@@ -139,7 +152,8 @@ const DEFAULT_FORM_FLOAT = JSON.stringify(
         icon: { iconClass: "fa-solid fa-lock" },
         required: true,
         passwordStrength: true,
-        value: ""
+        value: "",
+        className: "form-control"
       },
       {
         name: "confirmPassword",
@@ -150,7 +164,8 @@ const DEFAULT_FORM_FLOAT = JSON.stringify(
         icon: { iconClass: "fa-solid fa-lock" },
         required: true,
         matchWith: "password",
-        value: ""
+        value: "",
+        className: "form-control"
       }
     ],
 
@@ -327,103 +342,116 @@ export default function FormPage() {
 
   return (
     <div className="container py-3">
-        {/* Header */}
-        <h3 className="mb-3 text-center">AlloyForm</h3>
+      {/* Header */}
+      <h3 className="mb-3 text-center">AlloyForm</h3>
 
-        {/* Tabs */}
-        <ul className="nav nav-tabs flex-wrap justify-content-center mb-3">
-          {TABS.map(({ key, label }) => (
-            <li className="nav-item" key={key}>
-              <button
-                type="button"
-                className={`nav-link ${active === key ? "active" : ""}`}
-                onClick={() => setActive(key)}
-              >
-                {label}
-              </button>
-            </li>
-          ))}
-        </ul>
+      {/* Tabs */}
+      <ul className="nav nav-tabs flex-wrap justify-content-center mb-3">
+        {TABS.map(({ key, label }) => (
+          <li className="nav-item" key={key}>
+            <button
+              type="button"
+              className={`nav-link ${active === key ? "active" : ""}`}
+              onClick={() => setActive(key)}
+            >
+              {label}
+            </button>
+          </li>
+        ))}
+      </ul>
 
-        {/* 1. Tag snippet (full width) */}
-        <div className="row mb-4">
-          <div className="col-12 d-flex align-items-center justify-content-center">
-            <pre className="bg-light text-dark border rounded-3 p-3 small mb-0 text-center w-100">
-              <code>{`<AlloyForm form={new FormObject(formObject)} output={handleOutput} />`}</code>
-            </pre>
+      {/* 1. Tag snippet */}
+      <div className="row mb-4">
+        <div className="col-12 d-flex align-items-center justify-content-center">
+          <pre className="bg-light text-dark border rounded-3 p-3 small mb-0 text-center w-100">
+            <code>{`<AlloyForm form={new FormObject(formObject)} output={handleOutput} />`}</code>
+          </pre>
+        </div>
+      </div>
+
+      {/* 2. Rendered form */}
+      <div className="row mb-5">
+        <div className="col-12 mx-auto mb-4">
+          <AlloyForm
+            form={tabBindings.model}
+            output={(payload) => handleOutput(active, payload)}
+          />
+        </div>
+      </div>
+
+      {/* 3. Editable JSON + Submit Output */}
+      <div className="row g-3 align-items-stretch justify-content-center mb-5">
+        {/* Left: editable JSON */}
+        <div className="col-12 col-lg-6">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="fw-semibold">
+              Input JSON (editable) — {tabBindings.label}
+            </span>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={tabBindings.resetJson}
+            >
+              Reset
+            </button>
+          </div>
+
+          <textarea
+            className={`form-control font-monospace ${
+              tabBindings.parseError ? "is-invalid" : ""
+            }`}
+            rows={18}
+            value={tabBindings.jsonVal}
+            onChange={(e) => tabBindings.setJsonVal(e.target.value)}
+            spellCheck={false}
+          />
+          {tabBindings.parseError && (
+            <div className="invalid-feedback d-block mt-1">
+              {tabBindings.parseError}
+            </div>
+          )}
+
+          <div className="form-text">
+            <ul className="mb-0 ps-3">
+              <li>
+                Each entry in <code>fields[]</code> becomes an{" "}
+                <code>&lt;AlloyInput/&gt;</code>. You can pass{" "}
+                <code>className</code> per field to control the input's
+                classes; if you omit it, Bootstrap defaults are used.
+              </li>
+              <li>
+                <code>layout</code> can be <code>"text"</code>,{" "}
+                <code>"icon"</code>, or <code>"floating"</code>. For{" "}
+                <code>"icon"</code> / <code>"floating"</code> you must pass{" "}
+                <code>icon</code>.
+              </li>
+              <li>
+                The submit button comes from <code>submit</code>. It will be
+                auto-disabled until all fields pass validation (required,
+                minLength, passwordStrength, matchWith, etc.).
+              </li>
+            </ul>
           </div>
         </div>
 
-        {/* 2. Rendered form + current submit output (full width, stacked vertically) */}
-        <div className="row mb-5">
-          <div className="col-12 mx-auto mb-4">
-            <AlloyForm
-              form={tabBindings.model}
-              output={(payload) => handleOutput(active, payload)}
-            />
+        {/* Right: latest submit output mirror */}
+        <div className="col-12 col-lg-6">
+          <div className="fw-semibold mb-2 text-center text-lg-start">
+            Submit Output (read-only mirror)
+          </div>
+          <textarea
+            className="form-control font-monospace bg-light border"
+            rows={18}
+            value={tabBindings.outVal}
+            readOnly
+            spellCheck={false}
+          />
+          <div className="form-text">
+            When you click the form's Submit button, we emit your
+            collected field values plus <code>action</code>.
           </div>
         </div>
-
-        {/* 3. Input JSON + live parse error (left) AND same Submit Output textarea (right) */}
-        <div className="row g-3 align-items-stretch justify-content-center mb-5">
-          {/* Left: editable JSON */}
-          <div className="col-12 col-lg-6">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="fw-semibold">
-                Input JSON (editable) — {tabBindings.label}
-              </span>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={tabBindings.resetJson}
-              >
-                Reset
-              </button>
-            </div>
-
-            <textarea
-              className={`form-control font-monospace ${
-                tabBindings.parseError ? "is-invalid" : ""
-              }`}
-              rows={18}
-              value={tabBindings.jsonVal}
-              onChange={(e) => tabBindings.setJsonVal(e.target.value)}
-              spellCheck={false}
-            />
-            {tabBindings.parseError && (
-              <div className="invalid-feedback d-block mt-1">
-                {tabBindings.parseError}
-              </div>
-            )}
-
-            <div className="form-text">
-              Each object in <code>fields</code> becomes an{" "}
-              <code>&lt;AlloyInput /&gt;</code>. Use{" "}
-              <code>layout</code>: <code>"text"</code>,{" "}
-              <code>"icon"</code>, or <code>"floating"</code>. The submit
-              button uses <code>submit</code> and locks until the form is
-              valid.
-            </div>
-          </div>
-
-          {/* Right: latest submit output mirror */}
-          <div className="col-12 col-lg-6">
-            <div className="fw-semibold mb-2 text-center text-lg-start">
-              Submit Output (read-only mirror)
-            </div>
-            <textarea
-              className="form-control font-monospace"
-              rows={18}
-              value={tabBindings.outVal}
-              onChange={(e) => tabBindings.setOutVal(e.target.value)}
-              spellCheck={false}
-            />
-            <div className="form-text">
-              Edit the JSON on the left, click Submit above to refresh
-              this payload.
-            </div>
-          </div>
-        </div>
+      </div>
     </div>
   );
 }
