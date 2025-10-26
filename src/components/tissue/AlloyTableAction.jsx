@@ -3,13 +3,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
 import AlloyButtonBar, { ButtonBarObject } from "./AlloyButtonBar.jsx";
-
-/* ---------------------- id generator ---------------------- */
-let __tblActionCounter = 0;
-function nextTableActionId() {
-  __tblActionCounter += 1;
-  return `tableaction${__tblActionCounter}`;
-}
+import { generateId } from "../../utils/idHelper.js";
 
 /* ---------------------- helpers ---------------------- */
 function capitalize(s) {
@@ -26,68 +20,116 @@ function getHeaderKeys(rows) {
 }
 
 /* ---------------------- Model ---------------------- */
+/**
+ * TableActionObject
+ *
+ * Shape:
+ *  - id?: string
+ *  - className?: string                (table classes)
+ *  - name?: string                     (caption)
+ *  - rows?: Array<object>              (each row should contain unique `id`)
+ *  - icon?: IconObject|object          (left "Type" column icon)
+ *  - sort?: IconObject|object          (column-sort indicator arrow icon)
+ *  - actions?: ButtonBarObject|object  (OPTIONAL; if present, rendered in last column)
+ *  - link?: string                     (OPTIONAL base route; if set, cells become <Link> to `${link}/${row.id}`)
+ */
 export class TableActionObject {
   /**
-   * @param {{
-   *   id?: string,
-   *   className?: string,
-   *   name?: string,
-   *   rows?: Array<Record<string, any>>,
-   *   icon?: IconObject|object,
-   *   sort?: IconObject|object,
-   *   actions: ButtonBarObject|object,  // REQUIRED
-   *   link?: string                     // OPTIONAL, base route for row links; e.g. "/users"
-   * }} p
+   * @param {Object} cfg
    */
-  constructor(p = {}) {
-    if (!p.actions) throw new Error("TableActionObject requires `actions`.");
+  constructor(cfg = {}) {
+    // required? no. actions is now optional.
+    // validate nothing except shape.
 
-    this.id = p.id ?? nextTableActionId();
-    this.className = p.className ?? "table";
-    this.name = p.name ?? "table";
-    this.rows = Array.isArray(p.rows) ? p.rows.slice() : [];
-    this.link = typeof p.link === "string" ? p.link : ""; // if provided, cells become Links
+    // unique id for this table instance
+    this.id = cfg.id ?? generateId("table-action");
 
+    // table basics
+    this.className = cfg.className ?? "table";
+    this.name = cfg.name ?? "table";
+
+    // rows
+    this.rows = Array.isArray(cfg.rows) ? cfg.rows.slice() : [];
+
+    // base route for navigation links
+    this.link = typeof cfg.link === "string" ? cfg.link : "";
+
+    // default icons for icon/sort
     const defaultIcon = new IconObject({ iconClass: "fa-solid fa-user" });
     const defaultSort = new IconObject({ iconClass: "fa-solid fa-arrow-down" });
 
-    // icon/sort can be raw or instances
-    this.icon = p.icon instanceof IconObject ? p.icon : new IconObject(p.icon || defaultIcon);
-    this.sort = p.sort instanceof IconObject ? p.sort : new IconObject(p.sort || defaultSort);
+    // normalize icon into IconObject
+    this.icon =
+      cfg.icon instanceof IconObject
+        ? cfg.icon
+        : new IconObject(cfg.icon || defaultIcon);
 
-    // Ensure actions is a ButtonBarObject; it hydrates its own internal buttons.
-    this.actions = p.actions instanceof ButtonBarObject ? p.actions : new ButtonBarObject(p.actions || {});
+    // normalize sort icon into IconObject
+    this.sort =
+      cfg.sort instanceof IconObject
+        ? cfg.sort
+        : new IconObject(cfg.sort || defaultSort);
+
+    // normalize actions -> ButtonBarObject (OPTIONAL)
+    // If user didn't pass actions, leave undefined.
+    this.actions = cfg.actions
+      ? cfg.actions instanceof ButtonBarObject
+        ? cfg.actions
+        : new ButtonBarObject(cfg.actions)
+      : undefined;
   }
 }
 
 /* ---------------------- Component ---------------------- */
 /**
+ * AlloyTableAction
+ *
  * Props:
  *  - tableAction: TableActionObject (required)
  *  - output?: (payload: any) => void
- *      Emits:
- *        • { type: "column", name, dir } on header click (you sort on server)
- *        • { type: "action", action, row } when an action button is clicked
- *        • { type: "navigate", to, id, row } when a row cell link is clicked
+ *
+ * Emits to `output`:
+ *  • { type: "column", name, dir }
+ *      when a header is clicked. You then fetch sorted data server-side.
+ *
+ *  • { type: "action", action, row }
+ *      when an action button is clicked (if actions bar exists).
+ *      `action` is a snapshot of the button model that was clicked.
+ *
+ *  • { type: "navigate", to, id, row }
+ *      when a data cell link is clicked (only if link is set).
  */
 export function AlloyTableAction({ tableAction, output }) {
   if (!tableAction || !(tableAction instanceof TableActionObject)) {
-    throw new Error("AlloyTableAction requires `tableAction` (TableActionObject instance).");
+    throw new Error(
+      "AlloyTableAction requires `tableAction` (TableActionObject instance)."
+    );
   }
 
   const tblIdRef = useRef(tableAction.id);
-  const headerKeys = useMemo(() => getHeaderKeys(tableAction.rows), [tableAction.rows]);
 
-  // Local sort indicator (UI only; server actually sorts)
+  // derive headers (once per data change)
+  const headerKeys = useMemo(
+    () => getHeaderKeys(tableAction.rows),
+    [tableAction.rows]
+  );
+
+  // purely visual sort state (server decides actual row order)
   const [sort, setSort] = useState({ col: "", dir: "asc" });
 
   function handleHeaderClick(colName) {
-    const nextDir = sort.col === colName && sort.dir === "asc" ? "desc" : "asc";
+    const nextDir =
+      sort.col === colName && sort.dir === "asc" ? "desc" : "asc";
     setSort({ col: colName, dir: nextDir });
-    output?.({ type: "column", name: colName, dir: nextDir });
+
+    output?.({
+      type: "column",
+      name: colName,
+      dir: nextDir,
+    });
   }
 
-  // Pass action events up with the row data
+  // When a row's action button is clicked, we forward row data too
   function makeRowActionEmitter(row) {
     return (self, e) => {
       output?.({
@@ -108,15 +150,23 @@ export function AlloyTableAction({ tableAction, output }) {
     };
   }
 
+  // Do we have an actions bar at all?
+  const hasActionsBar = !!tableAction.actions;
+
   return (
     <table id={tblIdRef.current} className={tableAction.className}>
       <caption className="caption-top text-center">{tableAction.name}</caption>
+
       <thead>
         <tr>
+          {/* first column: icon */}
           <th scope="col">Type</th>
+
+          {/* data-driven headers */}
           {headerKeys.map((key) => {
             const isActive = sort.col === key;
             const isDesc = isActive && sort.dir === "desc";
+
             return (
               <th key={`h-${key}`} scope="col">
                 <span
@@ -141,52 +191,89 @@ export function AlloyTableAction({ tableAction, output }) {
               </th>
             );
           })}
-          <th scope="col" className="text-end">
-            Actions
-          </th>
+
+          {/* actions column header (optional) */}
+          {hasActionsBar && (
+            <th scope="col" className="text-end">
+              Actions
+            </th>
+          )}
         </tr>
       </thead>
 
       <tbody>
-        {tableAction.rows.map((row, idx) => {
-          const rowId = row?.id ?? idx;
+        {tableAction.rows.length > 0 ? (
+          tableAction.rows.map((row, idx) => {
+            const rowId = row?.id ?? idx;
 
-          // Reuse the SAME actions bar instance for each row (no cloning)
-          const rowBar = tableAction.actions;
+            // We'll reuse the SAME actions bar instance for each row.
+            // The bar itself will emit back to us through makeRowActionEmitter.
+            const rowBar = tableAction.actions;
 
-          return (
-            <tr key={rowId}>
-              <td>
-                <AlloyIcon icon={tableAction.icon} />
-              </td>
+            return (
+              <tr key={rowId}>
+                {/* icon cell */}
+                <td>
+                  <AlloyIcon icon={tableAction.icon} />
+                </td>
 
-              {/* Cells — optionally wrapped in <Link> if tableAction.link is provided */}
-              {headerKeys.map((key) => {
-                const to = tableAction.link ? `${tableAction.link}/${rowId}` : "";
-                return (
-                  <td key={`${rowId}-${key}`}>
-                    {tableAction.link ? (
-                      <Link
-                        to={to}
-                        onClick={() => output?.({ type: "navigate", to, id: rowId, row })}
-                        className="text-decoration-none"
-                      >
+                {/* data cells */}
+                {headerKeys.map((key) => {
+                  const base = tableAction.link || "";
+                  const cleanedBase = base.endsWith("/")
+                    ? base.slice(0, -1)
+                    : base;
+                  const to = cleanedBase ? `${cleanedBase}/${rowId}` : "";
+
+                  return (
+                    <td key={`${rowId}-${key}`}>
+                      {cleanedBase ? (
+                        <Link
+                          to={to}
+                          onClick={() =>
+                            output?.({
+                              type: "navigate",
+                              to,
+                              id: rowId,
+                              row,
+                            })
+                          }
+                          className="text-decoration-none"
+                        >
+                          <span>{row?.[key]}</span>
+                        </Link>
+                      ) : (
                         <span>{row?.[key]}</span>
-                      </Link>
-                    ) : (
-                      <span>{row?.[key]}</span>
-                    )}
-                  </td>
-                );
-              })}
+                      )}
+                    </td>
+                  );
+                })}
 
-              {/* Actions column */}
-              <td className="text-end">
-                <AlloyButtonBar buttonBar={rowBar} output={makeRowActionEmitter(row)} />
-              </td>
-            </tr>
-          );
-        })}
+                {/* actions cell (optional) */}
+                {hasActionsBar && (
+                  <td className="text-end">
+                    <AlloyButtonBar
+                      buttonBar={rowBar}
+                      output={makeRowActionEmitter(row)}
+                    />
+                  </td>
+                )}
+              </tr>
+            );
+          })
+        ) : (
+          <tr>
+            <td
+              colSpan={
+                // icon col + data cols (+ actions col if present)
+                1 + headerKeys.length + (hasActionsBar ? 1 : 0)
+              }
+              className="text-center text-secondary"
+            >
+              No rows
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   );

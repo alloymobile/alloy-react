@@ -2,20 +2,30 @@
 import React, { useMemo, useState } from "react";
 import { AlloyButtonBar, ButtonBarObject } from "../../../src";
 
-/* ─────────────────────────── Defaults (editable) ─────────────────────────── */
+/* ─────────────────────────── Defaults (editable) ───────────────────────────
+   These are plain JSON configs. We pass them into new ButtonBarObject(...).
+   ButtonBarObject will:
+   - generate ids
+   - wrap title into a TagObject
+   - hydrate each entry in buttons[] into ButtonObject or ButtonIconObject
+     depending on `type`.
+*/
 
 const DEFAULT_JSON_BTN = JSON.stringify(
   {
     type: "AlloyButton",
     className: "nav justify-content-center gap-2",
     buttonClass: "nav-item",
-    selected: "active",   // bar-level selected class
-    barName: { show: true, name: "Actions", className: "text-center fw-semibold mb-2" },
+    selected: "active", // class name injected into the selected button's `active`
+    title: {
+      name: "Actions",
+      className: "text-center fw-semibold mb-2",
+    },
     buttons: [
       { id: "save",  name: "Save",   className: "btn btn-primary" },
       { id: "reset", name: "Reset",  className: "btn btn-outline-secondary" },
-      { id: "del",   name: "Delete", className: "btn btn-danger" }
-    ]
+      { id: "del",   name: "Delete", className: "btn btn-danger" },
+    ],
   },
   null,
   2
@@ -26,24 +36,41 @@ const DEFAULT_JSON_BTN_ICON = JSON.stringify(
     type: "AlloyButtonIcon",
     className: "nav justify-content-center gap-2",
     buttonClass: "nav-item",
-    selected: "active",   // bar-level selected class
-    barName: { show: true, name: "Shortcuts", className: "text-center fw-semibold mb-2" },
+    selected: "active",
+    title: {
+      name: "Shortcuts",
+      className: "text-center fw-semibold mb-2",
+    },
     buttons: [
-      { id: "homeI", name: "Home",    icon: { iconClass: "fa-solid fa-house" }, className: "btn btn-light" },
-      { id: "codeI", name: "Code",    icon: { iconClass: "fa-solid fa-code"  }, className: "btn btn-light" },
-      { id: "userI", name: "Profile", icon: { iconClass: "fa-regular fa-user"}, className: "btn btn-light" }
-    ]
+      {
+        id: "homeI",
+        name: "Home",
+        icon: { iconClass: "fa-solid fa-house" },
+        className: "btn btn-light",
+      },
+      {
+        id: "codeI",
+        name: "Code",
+        icon: { iconClass: "fa-solid fa-code" },
+        className: "btn btn-light",
+      },
+      {
+        id: "userI",
+        name: "Profile",
+        icon: { iconClass: "fa-regular fa-user" },
+        className: "btn btn-light",
+      },
+    ],
   },
   null,
   2
 );
 
-/* ───────────────────────── UI helpers ─────────────────────────────────────── */
+/* ───────────────────────── UI helpers ───────────────────────────────────── */
 
 function tagSnippet(type) {
-  return type === "AlloyButtonIcon"
-    ? `<AlloyButtonBar buttonBar={new ButtonBarObject(buttonBarIcon)} output={handleOutput} />`
-    : `<AlloyButtonBar buttonBar={new ButtonBarObject(buttonBar)} output={handleOutput} />`;
+  // just for the <code> example block
+  return `<AlloyButtonBar buttonBar={new ButtonBarObject(buttonBarJson)} output={handleOutput} />`;
 }
 
 function buildOutputPayload(self, e) {
@@ -53,70 +80,79 @@ function buildOutputPayload(self, e) {
       id: self?.id,
       name: self?.name,
       className: self?.className,
-      active: self?.active,       // will include bar's selected class when chosen
+      active: self?.active, // this will include bar.selected ("active") if selected
       disabled: !!self?.disabled,
       title: self?.title,
       ariaLabel: self?.ariaLabel,
       tabIndex: self?.tabIndex,
-      iconClass: self?.icon?.iconClass, // present for ButtonIconObject
+      iconClass: self?.icon?.iconClass || null, // only present for ButtonIconObject
     },
   };
 }
 
-/* ───────────────────────── Section (one tab content) ─────────────────────── */
+/* ───────────────────────── Section (per tab) ────────────────────────────── */
 
-function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) {
+function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }) {
   const [parseError, setParseError] = useState("");
 
+  // Build the live model from the textarea
   const model = useMemo(() => {
     try {
       setParseError("");
       const parsed = JSON.parse(jsonState);
-      // 🔑 Hydration happens inside ButtonBarObject
       return new ButtonBarObject(parsed);
     } catch (e) {
       setParseError(String(e.message || e));
+      // safe fallback if JSON is currently invalid
       return new ButtonBarObject({
-        type: title,
+        type: tabType,
         className: "nav justify-content-center gap-2",
-        barName: { show: true, name: title === "AlloyButton" ? "Actions" : "Shortcuts", className: "text-center fw-semibold mb-2" },
         buttonClass: "nav-item",
         selected: "active",
+        title: {
+          name: tabType === "AlloyButton" ? "Actions" : "Shortcuts",
+          className: "text-center fw-semibold mb-2",
+        },
         buttons: [],
       });
     }
-  }, [jsonState, title]);
+  }, [jsonState, tabType]);
 
+  // capture output from AlloyButtonBar
   function handleOutput(self, e) {
     setOutputJson(JSON.stringify(buildOutputPayload(self, e), null, 2));
   }
 
   return (
     <div className="card p-3 mb-4">
-      <h5 className="mb-3 text-center">{title}</h5>
+      <h5 className="mb-3 text-center">{tabType}</h5>
 
-      {/* Row 1 — Tag sample */}
+      {/* Row 1 — Usage snippet */}
       <div className="row mb-3">
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
-            <code>{tagSnippet(title)}</code>
+            <code>{tagSnippet(tabType)}</code>
           </pre>
         </div>
       </div>
 
-      {/* Row 2 — Demo bar */}
+      {/* Row 2 — Live demo */}
       <div className="row mb-4">
         <div className="col-12 text-center">
           <AlloyButtonBar buttonBar={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
-            Tip: Hover, focus, keydown/keyup, click — all emit via <code>output</code>.  
-            Only one button is “selected” at a time (class from <code>selected</code>).
+            Click, hover, focus, keydown/keyup all emit through{" "}
+            <code>output</code>. Clicking a button marks it as
+            “selected”, and that button’s cloned model gets{" "}
+            <code>selected</code> (for example <code>"active"</code>) injected into its{" "}
+            <code>active</code> field.
           </div>
         </div>
       </div>
 
-      {/* Row 3 — Two columns: editable input JSON and live output JSON */}
+      {/* Row 3 — Editor + Output */}
       <div className="row g-3 align-items-stretch">
+        {/* Left: editable JSON */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="fw-semibold">Input JSON (editable)</span>
@@ -125,9 +161,12 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
                 type="button"
                 className="btn btn-sm btn-outline-secondary"
                 onClick={() => {
-                  const def = title === "AlloyButton" ? DEFAULT_JSON_BTN : DEFAULT_JSON_BTN_ICON;
+                  const def =
+                    tabType === "AlloyButton"
+                      ? DEFAULT_JSON_BTN
+                      : DEFAULT_JSON_BTN_ICON;
                   setJsonState(def);
-                  setOutputJson("// Interact with the buttons to see events here…");
+                  setOutputJson("// Interact with the bar to see events here…");
                 }}
               >
                 Reset
@@ -136,22 +175,53 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
           </div>
 
           <textarea
-            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
+            className={`form-control font-monospace ${
+              parseError ? "is-invalid" : ""
+            }`}
             rows={18}
             value={jsonState}
             onChange={(e) => setJsonState(e.target.value)}
             spellCheck={false}
           />
-          {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
+          {parseError && (
+            <div className="invalid-feedback d-block mt-1">{parseError}</div>
+          )}
+
           <div className="form-text">
-            The constructor of <code>ButtonBarObject</code> hydrates <code>buttons</code> to
-            <code>ButtonObject</code> or <code>ButtonIconObject</code> based on <code>type</code>.
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>type</code> decides which component is used for each
+                button:
+                <code>"AlloyButton"</code> or{" "}
+                <code>"AlloyButtonIcon"</code>.
+              </li>
+              <li>
+                <code>title</code> becomes a TagObject internally. If{" "}
+                <code>title.name</code> is empty, the heading won’t render.
+              </li>
+              <li>
+                <code>buttons</code> is just an array of plain objects here.
+                The <code>ButtonBarObject</code> constructor automatically
+                wraps each into a{" "}
+                <code>ButtonObject</code> or{" "}
+                <code>ButtonIconObject</code>.
+              </li>
+              <li>
+                When you click a button in the preview, that one becomes
+                selected and gets <code>selected</code> (like{" "}
+                <code>"active"</code>) injected into its{" "}
+                <code>active</code> class.
+              </li>
+            </ul>
           </div>
         </div>
 
+        {/* Right: output inspector */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">Output (from <code>output</code> callback)</span>
+            <span className="fw-semibold">
+              Output (from <code>output</code> callback)
+            </span>
             <button
               type="button"
               className="btn btn-sm btn-outline-danger"
@@ -168,7 +238,9 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
             spellCheck={false}
           />
           <div className="form-text">
-            Includes the full clicked button’s model (id, name, className, etc.).
+            You’ll see the full cloned model of whichever button fired the
+            event: <code>id</code>, <code>name</code>,{" "}
+            <code>className</code>, <code>active</code>, etc.
           </div>
         </div>
       </div>
@@ -176,7 +248,7 @@ function Section({ title, jsonState, setJsonState, outputJson, setOutputJson }) 
   );
 }
 
-/* ───────────────────────────── Page (tabs) ──────────────────────────────── */
+/* ───────────────────────────── Page (tabs) ─────────────────────────────── */
 
 export default function ButtonBarPage() {
   const [activeTab, setActiveTab] = useState("AlloyButton");
@@ -184,8 +256,12 @@ export default function ButtonBarPage() {
   const [jsonBtn, setJsonBtn] = useState(DEFAULT_JSON_BTN);
   const [jsonBtnIcon, setJsonBtnIcon] = useState(DEFAULT_JSON_BTN_ICON);
 
-  const [outputBtn, setOutputBtn] = useState("// Interact with the buttons to see events here…");
-  const [outputBtnIcon, setOutputBtnIcon] = useState("// Interact with the buttons to see events here…");
+  const [outputBtn, setOutputBtn] = useState(
+    "// Interact with the bar to see events here…"
+  );
+  const [outputBtnIcon, setOutputBtnIcon] = useState(
+    "// Interact with the bar to see events here…"
+  );
 
   return (
     <div className="container py-4">
@@ -195,15 +271,20 @@ export default function ButtonBarPage() {
       <ul className="nav nav-tabs justify-content-center mb-3">
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === "AlloyButton" ? "active" : ""}`}
+            className={`nav-link ${
+              activeTab === "AlloyButton" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("AlloyButton")}
           >
             AlloyButton
           </button>
         </li>
+
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === "AlloyButtonIcon" ? "active" : ""}`}
+            className={`nav-link ${
+              activeTab === "AlloyButtonIcon" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("AlloyButtonIcon")}
           >
             AlloyButtonIcon
@@ -214,16 +295,17 @@ export default function ButtonBarPage() {
       {/* Panels */}
       {activeTab === "AlloyButton" && (
         <Section
-          title="AlloyButton"
+          tabType="AlloyButton"
           jsonState={jsonBtn}
           setJsonState={setJsonBtn}
           outputJson={outputBtn}
           setOutputJson={setOutputBtn}
         />
       )}
+
       {activeTab === "AlloyButtonIcon" && (
         <Section
-          title="AlloyButtonIcon"
+          tabType="AlloyButtonIcon"
           jsonState={jsonBtnIcon}
           setJsonState={setJsonBtnIcon}
           outputJson={outputBtnIcon}

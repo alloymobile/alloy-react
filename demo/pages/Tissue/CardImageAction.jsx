@@ -2,26 +2,42 @@
 import React, { useMemo, useState } from "react";
 import { AlloyCardImageAction, CardImageActionObject } from "../../../src";
 
-/* ---------------------- Default JSON presets ---------------------- */
-/* Note: each preset includes:
-   - body / fields
-   - logo: { imageUrl, alt, width, height }
-   - logoClass / textClass for layout
-   - type: "AlloyButtonBar" | "AlloyLinkBar"
-   - action: hydrated into ButtonBarObject or LinkBarObject
-*/
+/* ------------------------------------------------------------------
+   Default presets for each variant.
+
+   NOTE:
+   - Every preset includes `link: "/product/123"`.
+   - `link` is OPTIONAL. If you remove it or set it to "", the body
+     will no longer be clickable.
+   - Only the BODY becomes clickable when link is provided.
+     Header, footer, and the footer action bar are never wrapped in <Link/>.
+
+   Shape pieces:
+   - body (required)
+   - fields[] (right column text lines)
+   - logo / logoClass / textClass (2-col layout in body)
+   - footer (required; left text label)
+   - type ("AlloyButtonBar" | "AlloyLinkBar")
+   - action (buttons[] or links[] depending on type)
+------------------------------------------------------------------- */
 
 /* 1) ButtonBar - text only */
 const DEFAULT_BTN_TEXT = JSON.stringify(
   {
     id: "cardImageBtnText01",
     className: "card border m-2 shadow",
+    link: "/product/123",
+
+    header: {
+      id: "cardImageBtnTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Product Actions (Buttons - Text)"
+    },
 
     body: {
       id: "cardImageBtnTextBody",
       className: "card-body d-flex align-items-center",
-      name: "Product Actions (Buttons - Text)",
-      show: true
+      name: "Alloy Mobile Suite"
     },
 
     logo: {
@@ -37,28 +53,28 @@ const DEFAULT_BTN_TEXT = JSON.stringify(
 
     fields: [
       {
-        id: "prodName",
-        className: "fw-semibold",
-        name: "Alloy Mobile Suite",
-        show: true
-      },
-      {
         id: "prodDesc",
         className: "text-muted small",
-        name: "Cross-platform UI kit",
-        show: true
+        name: "Cross-platform UI kit"
       },
       {
         id: "prodPrice",
         className: "text-success fw-semibold",
-        name: "$49 / month",
-        show: true
+        name: "$49 / month"
       }
     ],
 
+    footer: {
+      id: "cardImageBtnTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Purchase & details"
+    },
+
     type: "AlloyButtonBar",
     action: {
-      type: "AlloyButton", // text-only buttons
+      // text-only buttons
+      type: "AlloyButton",
       className: "nav gap-2 p-2 border-top justify-content-end flex-row",
       buttonClass: "nav-item",
       barName: { show: false },
@@ -85,12 +101,18 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
   {
     id: "cardImageBtnIconText01",
     className: "card border m-2 shadow",
+    link: "/product/123",
+
+    header: {
+      id: "cardImageBtnIconTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Product Actions (Buttons - Icon+Text)"
+    },
 
     body: {
       id: "cardImageBtnIconTextBody",
       className: "card-body d-flex align-items-center",
-      name: "Product Actions (Buttons - Icon+Text)",
-      show: true
+      name: "Alloy Analytics"
     },
 
     logo: {
@@ -106,24 +128,23 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
 
     fields: [
       {
-        id: "prodName",
-        className: "fw-semibold",
-        name: "Alloy Analytics",
-        show: true
-      },
-      {
         id: "prodDesc",
         className: "text-muted small",
-        name: "Insights & dashboards",
-        show: true
+        name: "Insights & dashboards"
       },
       {
         id: "prodPrice",
         className: "text-success fw-semibold",
-        name: "$99 / month",
-        show: true
+        name: "$99 / month"
       }
     ],
+
+    footer: {
+      id: "cardImageBtnIconTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Next steps"
+    },
 
     type: "AlloyButtonBar",
     action: {
@@ -154,17 +175,23 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
   2
 );
 
-/* 3) ButtonBar - icon only (no text labels on buttons) */
+/* 3) ButtonBar - icon only */
 const DEFAULT_BTN_ICON_ONLY = JSON.stringify(
   {
     id: "cardImageBtnIconOnly01",
     className: "card border m-2 shadow",
+    link: "/product/123",
+
+    header: {
+      id: "cardImageBtnIconOnlyHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Product Actions (Buttons - Icon Only)"
+    },
 
     body: {
       id: "cardImageBtnIconOnlyBody",
       className: "card-body d-flex align-items-center",
-      name: "Product Actions (Buttons - Icon Only)",
-      show: true
+      name: "Alloy Secure"
     },
 
     logo: {
@@ -180,28 +207,27 @@ const DEFAULT_BTN_ICON_ONLY = JSON.stringify(
 
     fields: [
       {
-        id: "prodName",
-        className: "fw-semibold",
-        name: "Alloy Secure",
-        show: true
-      },
-      {
         id: "prodDesc",
         className: "text-muted small",
-        name: "Access control & audit trail",
-        show: true
+        name: "Access control & audit trail"
       },
       {
         id: "prodCompliance",
         className: "text-info small",
-        name: "SOC2 Ready",
-        show: true
+        name: "SOC2 Ready"
       }
     ],
 
+    footer: {
+      id: "cardImageBtnIconOnlyFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Admin tools"
+    },
+
     type: "AlloyButtonBar",
     action: {
-      // Icon-only buttons (AlloyButtonIcon, omit name)
+      // icon-only buttons (no visible text, ariaLabel/title instead)
       type: "AlloyButtonIcon",
       className: "nav gap-2 p-2 border-top justify-content-end flex-row",
       buttonClass: "nav-item",
@@ -231,12 +257,18 @@ const DEFAULT_LINK_TEXT = JSON.stringify(
   {
     id: "cardImageLinkText01",
     className: "card border m-2 shadow",
+    link: "/product/123",
+
+    header: {
+      id: "cardImageLinkTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Resources (Links - Text)"
+    },
 
     body: {
       id: "cardImageLinkTextBody",
       className: "card-body d-flex align-items-center",
-      name: "Resources (Links - Text)",
-      show: true
+      name: "Alloy Docs"
     },
 
     logo: {
@@ -252,18 +284,18 @@ const DEFAULT_LINK_TEXT = JSON.stringify(
 
     fields: [
       {
-        id: "title",
-        className: "fw-semibold",
-        name: "Alloy Docs",
-        show: true
-      },
-      {
         id: "desc",
         className: "text-muted small",
-        name: "Developer resources & API surface",
-        show: true
+        name: "Developer resources & API surface"
       }
     ],
+
+    footer: {
+      id: "cardImageLinkTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Help and Support"
+    },
 
     type: "AlloyLinkBar",
     action: {
@@ -297,12 +329,18 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
   {
     id: "cardImageLinkIconText01",
     className: "card border m-2 shadow",
+    link: "/product/123",
+
+    header: {
+      id: "cardImageLinkIconTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Resources (Links - Icon+Text)"
+    },
 
     body: {
       id: "cardImageLinkIconTextBody",
       className: "card-body d-flex align-items-center",
-      name: "Resources (Links - Icon+Text)",
-      show: true
+      name: "Support Center"
     },
 
     logo: {
@@ -318,22 +356,22 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
 
     fields: [
       {
-        id: "title",
-        className: "fw-semibold",
-        name: "Support Center",
-        show: true
-      },
-      {
         id: "desc",
         className: "text-muted small",
-        name: "Guides, help, and chat",
-        show: true
+        name: "Guides, help, and chat"
       }
     ],
 
+    footer: {
+      id: "cardImageLinkIconTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Get help"
+    },
+
     type: "AlloyLinkBar",
     action: {
-      // links with icon+text
+      // links with icon + label
       type: "AlloyLinkIcon",
       className: "nav gap-2 p-2 border-top justify-content-end flex-row",
       linkClass: "nav-item",
@@ -367,12 +405,18 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
   {
     id: "cardImageLinkIconOnly01",
     className: "card border m-2 shadow",
+    link: "/product/123",
+
+    header: {
+      id: "cardImageLinkIconOnlyHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Resources (Links - Icon Only)"
+    },
 
     body: {
       id: "cardImageLinkIconOnlyBody",
       className: "card-body d-flex align-items-center",
-      name: "Resources (Links - Icon Only)",
-      show: true
+      name: "Quick Access"
     },
 
     logo: {
@@ -388,22 +432,22 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
 
     fields: [
       {
-        id: "title",
-        className: "fw-semibold",
-        name: "Quick Access",
-        show: true
-      },
-      {
         id: "desc",
         className: "text-muted small",
-        name: "Shortcuts",
-        show: true
+        name: "Shortcuts"
       }
     ],
 
+    footer: {
+      id: "cardImageLinkIconOnlyFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Shortcuts"
+    },
+
     type: "AlloyLinkBar",
     action: {
-      // link icons only (no visible text)
+      // icon links only (ariaLabel/title handles a11y)
       type: "AlloyLinkIcon",
       className: "nav gap-2 p-2 border-top justify-content-end flex-row",
       linkClass: "nav-item",
@@ -432,10 +476,9 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
   2
 );
 
-/* ---------------------- Tag snippet for display ---------------------- */
+/* Tag snippet (display only) */
 const TAG_SNIPPET = `<AlloyCardImageAction cardImageAction={new CardImageActionObject(cardImageActionObject)} output={handleOutput} />`;
 
-/* ---------------------- Page Component ---------------------- */
 export default function CardImageActionPage() {
   const TABS = [
     { key: "BtnText", label: "Button (text)" },
@@ -448,7 +491,7 @@ export default function CardImageActionPage() {
 
   const [active, setActive] = useState("BtnText");
 
-  // per-tab state for editable JSON, parse error, and latest emitted click payload
+  // tab-local editable JSON, parse error, and emitted payload
   const [jsonBtnText, setJsonBtnText] = useState(DEFAULT_BTN_TEXT);
   const [errBtnText, setErrBtnText] = useState("");
   const [emitBtnText, setEmitBtnText] = useState("// click an action to see payload");
@@ -473,7 +516,8 @@ export default function CardImageActionPage() {
   const [errLinkIcon, setErrLinkIcon] = useState("");
   const [emitLinkIcon, setEmitLinkIcon] = useState("// click an action to see payload");
 
-  // hydrate each tab's JSON into a CardImageActionObject
+  /* hydrate each tab's JSON into CardImageActionObject,
+     falling back to a safe preview model if parse blows up */
   const modelBtnText = useMemo(() => {
     try {
       setErrBtnText("");
@@ -482,9 +526,14 @@ export default function CardImageActionPage() {
       setErrBtnText(String(e.message || e));
       return new CardImageActionObject({
         className: "card border m-2 shadow",
+        link: "/product/123",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Button text)"
+        },
         body: {
           className: "card-body d-flex align-items-center",
-          name: "Invalid JSON (Button text)"
+          name: "Parse error"
         },
         logo: {
           imageUrl:
@@ -499,14 +548,18 @@ export default function CardImageActionPage() {
         fields: [
           {
             className: "text-danger",
-            name: "Parse error",
-            show: true
+            name: "Fix the JSON to continue."
           }
         ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Purchase & details"
+        },
         type: "AlloyButtonBar",
         action: {
           type: "AlloyButton",
-          className: "nav p-2 border-top justify-content-end flex-row",
+          className: "nav gap-2 p-2 border-top justify-content-end flex-row",
           buttons: []
         }
       });
@@ -521,9 +574,14 @@ export default function CardImageActionPage() {
       setErrBtnIconText(String(e.message || e));
       return new CardImageActionObject({
         className: "card border m-2 shadow",
+        link: "/product/123",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Button icon+text)"
+        },
         body: {
           className: "card-body d-flex align-items-center",
-          name: "Invalid JSON (Button icon+text)"
+          name: "Parse error"
         },
         logo: {
           imageUrl:
@@ -538,14 +596,18 @@ export default function CardImageActionPage() {
         fields: [
           {
             className: "text-danger",
-            name: "Parse error",
-            show: true
+            name: "Fix the JSON to continue."
           }
         ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Next steps"
+        },
         type: "AlloyButtonBar",
         action: {
           type: "AlloyButtonIcon",
-          className: "nav p-2 border-top justify-content-end flex-row",
+          className: "nav gap-2 p-2 border-top justify-content-end flex-row",
           buttons: []
         }
       });
@@ -560,9 +622,14 @@ export default function CardImageActionPage() {
       setErrBtnIcon(String(e.message || e));
       return new CardImageActionObject({
         className: "card border m-2 shadow",
+        link: "/product/123",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Button icon only)"
+        },
         body: {
           className: "card-body d-flex align-items-center",
-          name: "Invalid JSON (Button icon only)"
+          name: "Parse error"
         },
         logo: {
           imageUrl:
@@ -577,14 +644,18 @@ export default function CardImageActionPage() {
         fields: [
           {
             className: "text-danger",
-            name: "Parse error",
-            show: true
+            name: "Fix the JSON to continue."
           }
         ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Admin tools"
+        },
         type: "AlloyButtonBar",
         action: {
           type: "AlloyButtonIcon",
-          className: "nav p-2 border-top justify-content-end flex-row",
+          className: "nav gap-2 p-2 border-top justify-content-end flex-row",
           buttons: []
         }
       });
@@ -599,9 +670,14 @@ export default function CardImageActionPage() {
       setErrLinkText(String(e.message || e));
       return new CardImageActionObject({
         className: "card border m-2 shadow",
+        link: "/product/123",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Link text)"
+        },
         body: {
           className: "card-body d-flex align-items-center",
-          name: "Invalid JSON (Link text)"
+          name: "Parse error"
         },
         logo: {
           imageUrl:
@@ -616,14 +692,18 @@ export default function CardImageActionPage() {
         fields: [
           {
             className: "text-danger",
-            name: "Parse error",
-            show: true
+            name: "Fix the JSON to continue."
           }
         ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Help and Support"
+        },
         type: "AlloyLinkBar",
         action: {
           type: "AlloyLink",
-          className: "nav p-2 border-top justify-content-end flex-row",
+          className: "nav gap-2 p-2 border-top justify-content-end flex-row",
           links: []
         }
       });
@@ -638,9 +718,14 @@ export default function CardImageActionPage() {
       setErrLinkIconText(String(e.message || e));
       return new CardImageActionObject({
         className: "card border m-2 shadow",
+        link: "/product/123",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Link icon+text)"
+        },
         body: {
           className: "card-body d-flex align-items-center",
-          name: "Invalid JSON (Link icon+text)"
+          name: "Parse error"
         },
         logo: {
           imageUrl:
@@ -655,14 +740,18 @@ export default function CardImageActionPage() {
         fields: [
           {
             className: "text-danger",
-            name: "Parse error",
-            show: true
+            name: "Fix the JSON to continue."
           }
         ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Get help"
+        },
         type: "AlloyLinkBar",
         action: {
           type: "AlloyLinkIcon",
-          className: "nav p-2 border-top justify-content-end flex-row",
+          className: "nav gap-2 p-2 border-top justify-content-end flex-row",
           links: []
         }
       });
@@ -677,9 +766,14 @@ export default function CardImageActionPage() {
       setErrLinkIcon(String(e.message || e));
       return new CardImageActionObject({
         className: "card border m-2 shadow",
+        link: "/product/123",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Link icon only)"
+        },
         body: {
           className: "card-body d-flex align-items-center",
-          name: "Invalid JSON (Link icon only)"
+          name: "Parse error"
         },
         logo: {
           imageUrl:
@@ -694,21 +788,25 @@ export default function CardImageActionPage() {
         fields: [
           {
             className: "text-danger",
-            name: "Parse error",
-            show: true
+            name: "Fix the JSON to continue."
           }
         ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Shortcuts"
+        },
         type: "AlloyLinkBar",
         action: {
           type: "AlloyLinkIcon",
-          className: "nav p-2 border-top justify-content-end flex-row",
+          className: "nav gap-2 p-2 border-top justify-content-end flex-row",
           links: []
         }
       });
     }
   }, [jsonLinkIcon]);
 
-  // handle action click from AlloyCardImageAction
+  /* click from footer action bar -> write JSON payload to the active tab's output box */
   function handleOutput(tabKey, payload) {
     const formatted = JSON.stringify(payload, null, 2);
     switch (tabKey) {
@@ -735,7 +833,7 @@ export default function CardImageActionPage() {
     }
   }
 
-  // active tab binding
+  /* active tab bindings (mirrors AlloyCardActionPage style) */
   const tabBindings = {
     BtnText: {
       label: "Button (text)",
@@ -856,9 +954,31 @@ export default function CardImageActionPage() {
               output={(payload) => handleOutput(active, payload)}
             />
             <div className="small text-secondary mt-2 text-center text-lg-start">
-              Top row = logo image + descriptive text.  
-              Bottom row = <code>AlloyButtonBar</code> or <code>AlloyLinkBar</code>,  
-              supporting text / icon+text / icon-only.
+              <div className="mb-1">
+                <strong>Layout:</strong> Body row = product logo (left) + text
+                lines (right). Footer row = left label text from{" "}
+                <code>footer.name</code> and right-side CTA bar.
+              </div>
+              <div className="mb-1">
+                <strong>CTA bar:</strong>{" "}
+                <code>type</code> switches between{" "}
+                <code>AlloyButtonBar</code> (buttons[] /{" "}
+                <code>AlloyButton</code> / <code>AlloyButtonIcon</code>) and{" "}
+                <code>AlloyLinkBar</code> (links[] /{" "}
+                <code>AlloyLink</code> / <code>AlloyLinkIcon</code>).
+              </div>
+              <div className="mb-1">
+                <strong>Navigation behavior:</strong>{" "}
+                <code>link</code> is optional. If it exists (like{" "}
+                <code>"/product/123"</code> in all these demos),
+                ONLY the <code>body</code> section becomes clickable via React
+                Router <code>&lt;Link/&gt;</code>. Header, footer, and footer
+                actions never become part of that link.
+              </div>
+              <div className="text-muted">
+                Clicking a footer action button/link will emit a payload into
+                the Output panel on the right.
+              </div>
             </div>
           </div>
         </div>
@@ -896,10 +1016,26 @@ export default function CardImageActionPage() {
             )}
 
             <div className="form-text">
-              <code>logo</code> controls the image block (imageUrl / width / height).  
-              <code>logoClass</code> is the left column wrapper.  
-              <code>textClass</code> is the right column wrapper.  
-              <code>type</code> = <code>"AlloyButtonBar"</code> or <code>"AlloyLinkBar"</code>.
+              <ul className="mb-0 ps-3">
+                <li>
+                  <code>link</code> (string) is <strong>optional</strong>. If
+                  provided, ONLY the <code>body</code> becomes clickable.
+                </li>
+                <li>
+                  <code>logo</code> holds the image URL/alt/size.{" "}
+                  <code>logoClass</code> styles the left bubble/column.{" "}
+                  <code>textClass</code> styles the right column.
+                </li>
+                <li>
+                  <code>footer</code> always renders. Its{" "}
+                  <code>name</code> shows on the left; its CTA bar renders on
+                  the right based on <code>type</code>.
+                </li>
+                <li>
+                  The CTA bar items fire <code>output(payload)</code> so you can
+                  route, open dialogs, or start checkout.
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -924,7 +1060,9 @@ export default function CardImageActionPage() {
               spellCheck={false}
             />
             <div className="form-text">
-              Use this payload to drive navigation, checkout flow, modals, etc.
+              This JSON is the payload AlloyCardImageAction emitted for the
+              clicked footer action. You’ll typically branch on{" "}
+              <code>action.id</code> or <code>action.name</code>.
             </div>
           </div>
         </div>

@@ -1,112 +1,128 @@
 // src/components/tissue/AlloyCardAction.jsx
 import React from "react";
-import { CardItem, CardObject } from "./AlloyCard.jsx";
+import { Link } from "react-router-dom";
+
+import { TagObject, generateId } from "../../utils/idHelper.js";
 import AlloyButtonBar, { ButtonBarObject } from "./AlloyButtonBar.jsx";
 import AlloyLinkBar, { LinkBarObject } from "./AlloyLinkBar.jsx";
 
-/* ---------------------- CardActionObject model ---------------------- */
-/**
- * CardActionObject extends CardObject and adds:
- *  - type: string ("AlloyButtonBar" | "AlloyLinkBar")
- *  - action: ButtonBarObject | LinkBarObject
- *
- * Mirrors your Angular AlloyCardAction class.
- */
-export class CardActionObject extends CardObject {
-  /**
-   * @param {{
-   *   id?: string,
-   *   className?: string,
-   *   link?: string,            // (in CardAction template we don't wrap whole card in a Link, but we still inherit)
-   *   body?: CardItem|object,
-   *   fields?: Array<CardItem|object>,
-   *   type?: string,            // "AlloyButtonBar" | "AlloyLinkBar"
-   *   action?: object           // raw config for the bar
-   * }=} res
-   */
-  constructor(res = {}) {
-    super(res);
+/* ------------------ Model ------------------ */
 
-    this.type = res.type ?? "AlloyButtonBar";
+export class CardActionObject {
+  constructor(cardAction = {}) {
+    // outer card shell props
+    this.id = cardAction.id ?? generateId("card-action");
+    this.className = cardAction.className ?? "card border m-2 shadow";
 
-    switch (this.type) {
-      case "AlloyLinkBar": {
-        // hydrate a link bar
-        this.action =
-          res.action instanceof LinkBarObject
-            ? res.action
-            : new LinkBarObject(res.action || {});
-        break;
-      }
+    // NOTE: link is allowed but now ONLY applies to the BODY block
+    this.link = cardAction.link ?? "";
 
-      case "AlloyButtonBar":
-      default: {
-        // hydrate a button bar
-        this.action =
-          res.action instanceof ButtonBarObject
-            ? res.action
-            : new ButtonBarObject(res.action || {});
-        break;
-      }
+    // header (optional TagObject)
+    const rawHeader = cardAction.header ?? {};
+    this.header =
+      rawHeader instanceof TagObject ? rawHeader : new TagObject(rawHeader);
+
+    // body (required-ish; fallback to empty TagObject for safety)
+    const rawBody = cardAction.body ?? {};
+    this.body =
+      rawBody instanceof TagObject ? rawBody : new TagObject(rawBody);
+
+    // fields[]
+    const rawFields = Array.isArray(cardAction.fields)
+      ? cardAction.fields
+      : [];
+    this.fields = rawFields.map((f) =>
+      f instanceof TagObject ? f : new TagObject(f || {})
+    );
+
+    // footer (required-ish; we always create one so layout is predictable)
+    const rawFooter = cardAction.footer ?? {};
+    this.footer =
+      rawFooter instanceof TagObject ? rawFooter : new TagObject(rawFooter);
+
+    // action bar config
+    this.type = cardAction.type ?? "AlloyButtonBar";
+
+    const rawAction = cardAction.action;
+    if (this.type === "AlloyLinkBar") {
+      this.action =
+        rawAction instanceof LinkBarObject
+          ? rawAction
+          : rawAction
+          ? new LinkBarObject(rawAction)
+          : undefined;
+    } else {
+      this.action =
+        rawAction instanceof ButtonBarObject
+          ? rawAction
+          : rawAction
+          ? new ButtonBarObject(rawAction)
+          : undefined;
     }
   }
 }
 
-/* ---------------------- Component ---------------------- */
-/**
- * Props:
- *  - cardAction: CardActionObject (required)
- *  - output?: (payload: any) => void
- *
- * Emits:
- *   { type: "action", action: <button/link meta>, card: <cardAction snapshot> }
- */
+/* ------------------ View ------------------ */
+
 export function AlloyCardAction({ cardAction, output }) {
   if (!cardAction || !(cardAction instanceof CardActionObject)) {
-    throw new Error("AlloyCardAction requires `cardAction` (CardActionObject instance).");
+    throw new Error(
+      "AlloyCardAction requires `cardAction` (CardActionObject instance)."
+    );
   }
 
-  // We’ll reuse the approach from AlloyTableAction:
-  // The inner bar (AlloyButtonBar / AlloyLinkBar) will call us back with
-  // (self, e). We translate that into a structured payload.
-  function makeActionEmitter() {
-    return (self, e) => {
-      // collect a minimal snapshot of the clicked item / bar item
-      output?.({
-        type: "action",
-        action: {
-          id: self?.id,
-          name: self?.name,
-          className: self?.className,
-          active: self?.active,
-          disabled: !!self?.disabled,
-          title: self?.title,
-          ariaLabel: self?.ariaLabel,
-          tabIndex: self?.tabIndex,
-          iconClass: self?.icon?.iconClass,
-          href: self?.href,
-        },
-        card: {
-          id: cardAction.id,
-          bodyId: cardAction.body?.id,
-        },
-      });
-    };
+  // bubble up footer button/link clicks
+  function handleBarOutput(self, e) {
+    output?.({
+      type: "action",
+      action: {
+        id: self?.id,
+        name: self?.name,
+        className: self?.className,
+        active: self?.active,
+        disabled: self?.disabled ?? false,
+        title: self?.title,
+        ariaLabel: self?.ariaLabel,
+        tabIndex: self?.tabIndex,
+        iconClass: self?.icon?.iconClass,
+        href: self?.href,
+      },
+      card: {
+        id: cardAction.id,
+      },
+    });
   }
 
-  // Render the "body" portion (fields)
-  const bodySection = (
+  /* ------- header block (NEVER link) ------- */
+  // Only render if header.name is non-empty
+  const headerBlock = cardAction.header?.name ? (
+    <div
+      id={cardAction.header.id}
+      className={
+        cardAction.header.className ?? "card-header py-2 fw-semibold"
+      }
+    >
+      {cardAction.header.name}
+    </div>
+  ) : null;
+
+  /* ------- body content core ------- */
+  // This is the visual body markup WITHOUT link wrapping yet.
+  const bodyInner = (
     <div
       id={cardAction.body.id}
-      className={cardAction.body.className}
-      aria-label={cardAction.body.name}
+      className={cardAction.body.className ?? "card-body"}
     >
+      {cardAction.body.name ? (
+        <div className="fw-semibold mb-1">{cardAction.body.name}</div>
+      ) : null}
+
       {cardAction.fields.map((field) =>
-        field?.show ? (
+        field?.name ? (
           <div
-            key={field.id}
+            key={field.id ?? generateId("card-field")}
             id={field.id}
-            className={field.className}
+            className={field.className ?? ""}
           >
             {field.name}
           </div>
@@ -115,30 +131,59 @@ export function AlloyCardAction({ cardAction, output }) {
     </div>
   );
 
-  // Render the "action" portion, switching on cardAction.type
-  // We always apply the id/className of the bar container div as in Angular.
-  const actionSection = (
-    <div
-      id={cardAction.action?.id}
-      className={cardAction.action?.className}
-      role="group"
+  /* ------- bodyBlock (ONLY this can be <Link>) ------- */
+  // If cardAction.link is provided, wrap ONLY bodyInner with <Link>.
+  // Otherwise, render bodyInner as-is.
+  const bodyBlock = cardAction.link ? (
+    <Link
+      to={cardAction.link}
+      className="text-decoration-none d-block"
+      // we do NOT forward cardAction.className here; that stays on the outer .card
+      aria-label={cardAction.body?.name}
     >
-      {cardAction.type === "AlloyLinkBar" ? (
-        <AlloyLinkBar linkBar={cardAction.action} output={makeActionEmitter()} />
-      ) : (
-        // default: AlloyButtonBar
-        <AlloyButtonBar
-          buttonBar={cardAction.action}
-          output={makeActionEmitter()}
-        />
-      )}
+      {bodyInner}
+    </Link>
+  ) : (
+    bodyInner
+  );
+
+  /* ------- footer block (NEVER link) ------- */
+  const footerBlock = (
+    <div
+      id={cardAction.footer.id}
+      className={
+        cardAction.footer.className ??
+        "card-footer d-flex align-items-center gap-2 py-2"
+      }
+    >
+      {cardAction.footer.name ? (
+        <div className="me-auto small text-muted">{cardAction.footer.name}</div>
+      ) : null}
+
+      {cardAction.action ? (
+        cardAction.type === "AlloyLinkBar" ? (
+          <AlloyLinkBar linkBar={cardAction.action} output={handleBarOutput} />
+        ) : (
+          <AlloyButtonBar
+            buttonBar={cardAction.action}
+            output={handleBarOutput}
+          />
+        )
+      ) : null}
     </div>
   );
 
+  /* ------- final card layout ------- */
+  // OUTER is always a plain <div class="card ..."> now.
+  // Inside order: header (if any) → body (link-wrapped or not) → footer.
   return (
-    <div id={cardAction.id} className={cardAction.className}>
-      {bodySection}
-      {actionSection}
+    <div
+      id={cardAction.id}
+      className={cardAction.className ?? "card border m-2 shadow"}
+    >
+      {headerBlock}
+      {bodyBlock}
+      {footerBlock}
     </div>
   );
 }

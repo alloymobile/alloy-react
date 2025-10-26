@@ -2,52 +2,81 @@
 import React, { useMemo, useState } from "react";
 import { AlloyCardIconAction, CardIconActionObject } from "../../../src";
 
-/* ---------------------- Default JSON presets ---------------------- */
-/* All six variants include the icon/avatar block at the top and
-   an action area at the bottom that can be either ButtonBar or LinkBar. */
+/* ------------------------------------------------------------------
+   Default presets for each variant.
+
+   NOTE:
+   - Every preset includes `link: "/users/101"`.
+   - `link` is OPTIONAL. If you remove it or set it to "", the body
+     will no longer be clickable.
+   - Only the BODY becomes clickable when link is provided.
+     Header, footer, and the footer action bar are never wrapped
+     in <Link/>.
+
+   Layout details for CardIconActionObject:
+   - header (optional; renders only if header.name)
+   - body   (required; also where the optional link click lives)
+   - icon / iconClass  (left bubble/avatar in body row)
+   - textClass + fields[] (right column lines in body row)
+   - footer (required; always rendered)
+        - footer.name = left text
+        - footer action bar (ButtonBar or LinkBar) = right side
+   - type + action configure footer bar behavior and content
+------------------------------------------------------------------- */
 
 /* 1) ButtonBar - text only */
 const DEFAULT_BTN_TEXT = JSON.stringify(
   {
     id: "cardIconBtnText01",
     className: "card border m-2 shadow",
+    link: "/users/101",
+
+    header: {
+      id: "cardIconBtnTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "User Actions (Buttons - Text)"
+    },
 
     body: {
       id: "cardIconBtnTextBody",
       className: "card-body d-flex align-items-center",
-      name: "User Actions (Buttons - Text)",
-      show: true
+      name: "User Summary"
     },
 
-    // icon/avatar column on the left
+    // avatar / glyph column on the left
     icon: {
       iconClass: "fa-solid fa-user fa-2xl"
     },
     iconClass:
-      "col-4 icon-lg rounded-circle bg-warning text-white mb-0 d-flex align-items-center justify-content-center",
+      "col-4 rounded-circle bg-warning text-white mb-0 d-flex align-items-center justify-content-center",
     textClass: "col-8",
 
-    // right-side info fields
+    // right column lines
     fields: [
       {
         id: "fullName",
         className: "fw-semibold",
-        name: "Ada Lovelace",
-        show: true
+        name: "Ada Lovelace"
       },
       {
         id: "role",
         className: "text-muted small",
-        name: "Admin",
-        show: true
+        name: "Admin"
       }
     ],
 
+    footer: {
+      id: "cardIconBtnTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Manage this user"
+    },
+
     type: "AlloyButtonBar",
     action: {
-      // ButtonBarObject hydrate
-      type: "AlloyButton", // plain text buttons
-      className: "nav gap-2 p-2 border-top justify-content-end flex-row",
+      // ButtonBarObject (text buttons)
+      type: "AlloyButton",
+      className: "nav gap-2",
       buttonClass: "nav-item",
       barName: { show: false },
       buttons: [
@@ -73,41 +102,52 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
   {
     id: "cardIconBtnIconText01",
     className: "card border m-2 shadow",
+    link: "/users/101",
+
+    header: {
+      id: "cardIconBtnIconTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "User Actions (Buttons - Icon+Text)"
+    },
 
     body: {
       id: "cardIconBtnIconTextBody",
       className: "card-body d-flex align-items-center",
-      name: "User Actions (Buttons - Icon+Text)",
-      show: true
+      name: "User Summary"
     },
 
     icon: {
       iconClass: "fa-solid fa-user-gear fa-2xl"
     },
     iconClass:
-      "col-4 icon-lg rounded-circle bg-primary text-white mb-0 d-flex align-items-center justify-content-center",
+      "col-4 rounded-circle bg-primary text-white mb-0 d-flex align-items-center justify-content-center",
     textClass: "col-8",
 
     fields: [
       {
         id: "fullName",
         className: "fw-semibold",
-        name: "Linus Torvalds",
-        show: true
+        name: "Linus Torvalds"
       },
       {
         id: "role",
         className: "text-muted small",
-        name: "User",
-        show: true
+        name: "User"
       }
     ],
 
+    footer: {
+      id: "cardIconBtnIconTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Available actions"
+    },
+
     type: "AlloyButtonBar",
     action: {
-      // `AlloyButtonIcon` means icon+text per button
+      // ButtonBarObject w/ ButtonIconObject children (icon+text buttons)
       type: "AlloyButtonIcon",
-      className: "nav gap-2 p-2 border-top justify-content-end flex-row",
+      className: "nav gap-2",
       buttonClass: "nav-item",
       barName: { show: false },
       buttons: [
@@ -132,45 +172,57 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
   2
 );
 
-/* 3) ButtonBar - icon only (no text label on the buttons) */
+/* 3) ButtonBar - icon only */
 const DEFAULT_BTN_ICON_ONLY = JSON.stringify(
   {
     id: "cardIconBtnIconOnly01",
     className: "card border m-2 shadow",
+    link: "/users/101",
+
+    header: {
+      id: "cardIconBtnIconOnlyHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "User Actions (Buttons - Icon Only)"
+    },
 
     body: {
       id: "cardIconBtnIconOnlyBody",
       className: "card-body d-flex align-items-center",
-      name: "User Actions (Buttons - Icon Only)",
-      show: true
+      name: "User Summary"
     },
 
     icon: {
       iconClass: "fa-solid fa-user-astronaut fa-2xl"
     },
     iconClass:
-      "col-4 icon-lg rounded-circle bg-dark text-white mb-0 d-flex align-items-center justify-content-center",
+      "col-4 rounded-circle bg-dark text-white mb-0 d-flex align-items-center justify-content-center",
     textClass: "col-8",
 
     fields: [
       {
         id: "fullName",
         className: "fw-semibold",
-        name: "Margaret Hamilton",
-        show: true
+        name: "Margaret Hamilton"
       },
       {
         id: "role",
         className: "text-muted small",
-        name: "Owner",
-        show: true
+        name: "Owner"
       }
     ],
 
+    footer: {
+      id: "cardIconBtnIconOnlyFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Admin tools"
+    },
+
     type: "AlloyButtonBar",
     action: {
-      type: "AlloyButtonIcon", // icon buttons
-      className: "nav gap-2 p-2 border-top justify-content-end flex-row",
+      // icon-only buttons
+      type: "AlloyButtonIcon",
+      className: "nav gap-2",
       buttonClass: "nav-item",
       barName: { show: false },
       buttons: [
@@ -198,41 +250,52 @@ const DEFAULT_LINK_TEXT = JSON.stringify(
   {
     id: "cardIconLinkText01",
     className: "card border m-2 shadow",
+    link: "/users/101",
+
+    header: {
+      id: "cardIconLinkTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Resources (Links - Text)"
+    },
 
     body: {
       id: "cardIconLinkTextBody",
       className: "card-body d-flex align-items-center",
-      name: "Resources (Links - Text)",
-      show: true
+      name: "Docs & Help"
     },
 
     icon: {
       iconClass: "fa-solid fa-book-open fa-2xl"
     },
     iconClass:
-      "col-4 icon-lg rounded-circle bg-info text-white mb-0 d-flex align-items-center justify-content-center",
+      "col-4 rounded-circle bg-info text-white mb-0 d-flex align-items-center justify-content-center",
     textClass: "col-8",
 
     fields: [
       {
         id: "title",
         className: "fw-semibold",
-        name: "Alloy Docs",
-        show: true
+        name: "Alloy Docs"
       },
       {
         id: "desc",
         className: "text-muted small",
-        name: "Developer resources & API surface",
-        show: true
+        name: "Developer resources & API surface"
       }
     ],
+
+    footer: {
+      id: "cardIconLinkTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Helpful links"
+    },
 
     type: "AlloyLinkBar",
     action: {
       // LinkBarObject hydrate: plain text links
       type: "AlloyLink",
-      className: "nav gap-2 p-2 border-top justify-content-end flex-row",
+      className: "nav gap-2",
       linkClass: "nav-item",
       barName: { show: false },
       links: [
@@ -260,41 +323,52 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
   {
     id: "cardIconLinkIconText01",
     className: "card border m-2 shadow",
+    link: "/users/101",
+
+    header: {
+      id: "cardIconLinkIconTextHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Resources (Links - Icon+Text)"
+    },
 
     body: {
       id: "cardIconLinkIconTextBody",
       className: "card-body d-flex align-items-center",
-      name: "Resources (Links - Icon+Text)",
-      show: true
+      name: "Guides, help, chat"
     },
 
     icon: {
       iconClass: "fa-solid fa-life-ring fa-2xl"
     },
     iconClass:
-      "col-4 icon-lg rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
+      "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
     textClass: "col-8",
 
     fields: [
       {
         id: "title",
         className: "fw-semibold",
-        name: "Support Center",
-        show: true
+        name: "Support Center"
       },
       {
         id: "desc",
         className: "text-muted small",
-        name: "Guides, help, and chat",
-        show: true
+        name: "Guides, help, and chat"
       }
     ],
 
+    footer: {
+      id: "cardIconLinkIconTextFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Support options"
+    },
+
     type: "AlloyLinkBar",
     action: {
-      // LinkBarObject hydrate: links w/ icon + text
+      // LinkBarObject hydrate: links w/ icon + label
       type: "AlloyLinkIcon",
-      className: "nav gap-2 p-2 border-top justify-content-end flex-row",
+      className: "nav gap-2",
       linkClass: "nav-item",
       barName: { show: false },
       links: [
@@ -321,46 +395,57 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
   2
 );
 
-/* 6) LinkBar - icon only (no text label) */
+/* 6) LinkBar - icon only */
 const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
   {
     id: "cardIconLinkIconOnly01",
     className: "card border m-2 shadow",
+    link: "/users/101",
+
+    header: {
+      id: "cardIconLinkIconOnlyHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Resources (Links - Icon Only)"
+    },
 
     body: {
       id: "cardIconLinkIconOnlyBody",
       className: "card-body d-flex align-items-center",
-      name: "Resources (Links - Icon Only)",
-      show: true
+      name: "Shortcuts"
     },
 
     icon: {
       iconClass: "fa-solid fa-bolt fa-2xl"
     },
     iconClass:
-      "col-4 icon-lg rounded-circle bg-warning text-white mb-0 d-flex align-items-center justify-content-center",
+      "col-4 rounded-circle bg-warning text-white mb-0 d-flex align-items-center justify-content-center",
     textClass: "col-8",
 
     fields: [
       {
         id: "title",
         className: "fw-semibold",
-        name: "Quick Access",
-        show: true
+        name: "Quick Access"
       },
       {
         id: "desc",
         className: "text-muted small",
-        name: "Shortcuts",
-        show: true
+        name: "Shortcuts"
       }
     ],
 
+    footer: {
+      id: "cardIconLinkIconOnlyFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Jump to…"
+    },
+
     type: "AlloyLinkBar",
     action: {
-      // LinkBarObject hydrate: links w/ icons only
+      // LinkBarObject hydrate: icon links only (ariaLabel/title drive a11y)
       type: "AlloyLinkIcon",
-      className: "nav gap-2 p-2 border-top justify-content-end flex-row",
+      className: "nav gap-2",
       linkClass: "nav-item",
       barName: { show: false },
       links: [
@@ -390,9 +475,8 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
 /* ---------------------- Tag snippet (display only) ---------------------- */
 const TAG_SNIPPET = `<AlloyCardIconAction cardIconAction={new CardIconActionObject(cardIconActionObject)} output={handleOutput} />`;
 
-/* ---------------------- Page Component ---------------------- */
 export default function CardIconActionPage() {
-  // tabs for each variant
+  // same 6 tabs style as CardActionPage
   const TABS = [
     { key: "BtnText", label: "Button (text)" },
     { key: "BtnIconText", label: "Button (icon+text)" },
@@ -404,32 +488,44 @@ export default function CardIconActionPage() {
 
   const [active, setActive] = useState("BtnText");
 
-  // per-tab state: editable JSON string, parse error, and output emitted by clicks
+  // editable JSON per tab
   const [jsonBtnText, setJsonBtnText] = useState(DEFAULT_BTN_TEXT);
-  const [errBtnText, setErrBtnText] = useState("");
-  const [emitBtnText, setEmitBtnText] = useState("// click an action to see payload");
-
   const [jsonBtnIconText, setJsonBtnIconText] = useState(DEFAULT_BTN_ICON_TEXT);
-  const [errBtnIconText, setErrBtnIconText] = useState("");
-  const [emitBtnIconText, setEmitBtnIconText] = useState("// click an action to see payload");
-
   const [jsonBtnIcon, setJsonBtnIcon] = useState(DEFAULT_BTN_ICON_ONLY);
-  const [errBtnIcon, setErrBtnIcon] = useState("");
-  const [emitBtnIcon, setEmitBtnIcon] = useState("// click an action to see payload");
-
   const [jsonLinkText, setJsonLinkText] = useState(DEFAULT_LINK_TEXT);
-  const [errLinkText, setErrLinkText] = useState("");
-  const [emitLinkText, setEmitLinkText] = useState("// click an action to see payload");
-
-  const [jsonLinkIconText, setJsonLinkIconText] = useState(DEFAULT_LINK_ICON_TEXT);
-  const [errLinkIconText, setErrLinkIconText] = useState("");
-  const [emitLinkIconText, setEmitLinkIconText] = useState("// click an action to see payload");
-
+  const [jsonLinkIconText, setJsonLinkIconText] =
+    useState(DEFAULT_LINK_ICON_TEXT);
   const [jsonLinkIcon, setJsonLinkIcon] = useState(DEFAULT_LINK_ICON_ONLY);
-  const [errLinkIcon, setErrLinkIcon] = useState("");
-  const [emitLinkIcon, setEmitLinkIcon] = useState("// click an action to see payload");
 
-  // hydrate each tab into a CardIconActionObject
+  // parse errors
+  const [errBtnText, setErrBtnText] = useState("");
+  const [errBtnIconText, setErrBtnIconText] = useState("");
+  const [errBtnIcon, setErrBtnIcon] = useState("");
+  const [errLinkText, setErrLinkText] = useState("");
+  const [errLinkIconText, setErrLinkIconText] = useState("");
+  const [errLinkIcon, setErrLinkIcon] = useState("");
+
+  // emitted output (from footer bar click)
+  const [emitBtnText, setEmitBtnText] = useState(
+    "// click an action to see payload"
+  );
+  const [emitBtnIconText, setEmitBtnIconText] = useState(
+    "// click an action to see payload"
+  );
+  const [emitBtnIcon, setEmitBtnIcon] = useState(
+    "// click an action to see payload"
+  );
+  const [emitLinkText, setEmitLinkText] = useState(
+    "// click an action to see payload"
+  );
+  const [emitLinkIconText, setEmitLinkIconText] = useState(
+    "// click an action to see payload"
+  );
+  const [emitLinkIcon, setEmitLinkIcon] = useState(
+    "// click an action to see payload"
+  );
+
+  /* ---------------- model builders per tab ---------------- */
   const modelBtnText = useMemo(() => {
     try {
       setErrBtnText("");
@@ -438,13 +534,36 @@ export default function CardIconActionPage() {
       setErrBtnText(String(e.message || e));
       return new CardIconActionObject({
         className: "card border m-2 shadow",
-        body: { className: "card-body d-flex align-items-center", name: "Invalid JSON (Button text)" },
+        link: "/users/101",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Button text)"
+        },
+        body: {
+          className: "card-body d-flex align-items-center",
+          name: "Parse error"
+        },
         icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass: "col-4 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center",
+        iconClass:
+          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
         textClass: "col-8",
-        fields: [{ className: "text-danger", name: "Parse error", show: true }],
+        fields: [
+          {
+            className: "text-danger",
+            name: "Fix JSON to preview actions"
+          }
+        ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Manage this user"
+        },
         type: "AlloyButtonBar",
-        action: { type: "AlloyButton", className: "nav p-2 border-top justify-content-end flex-row", buttons: [] }
+        action: {
+          type: "AlloyButton",
+          className: "nav gap-2",
+          buttons: []
+        }
       });
     }
   }, [jsonBtnText]);
@@ -457,13 +576,36 @@ export default function CardIconActionPage() {
       setErrBtnIconText(String(e.message || e));
       return new CardIconActionObject({
         className: "card border m-2 shadow",
-        body: { className: "card-body d-flex align-items-center", name: "Invalid JSON (Button icon+text)" },
+        link: "/users/101",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Button icon+text)"
+        },
+        body: {
+          className: "card-body d-flex align-items-center",
+          name: "Parse error"
+        },
         icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass: "col-4 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center",
+        iconClass:
+          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
         textClass: "col-8",
-        fields: [{ className: "text-danger", name: "Parse error", show: true }],
+        fields: [
+          {
+            className: "text-danger",
+            name: "Fix JSON to preview actions"
+          }
+        ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Available actions"
+        },
         type: "AlloyButtonBar",
-        action: { type: "AlloyButtonIcon", className: "nav p-2 border-top justify-content-end flex-row", buttons: [] }
+        action: {
+          type: "AlloyButtonIcon",
+          className: "nav gap-2",
+          buttons: []
+        }
       });
     }
   }, [jsonBtnIconText]);
@@ -476,13 +618,36 @@ export default function CardIconActionPage() {
       setErrBtnIcon(String(e.message || e));
       return new CardIconActionObject({
         className: "card border m-2 shadow",
-        body: { className: "card-body d-flex align-items-center", name: "Invalid JSON (Button icon only)" },
+        link: "/users/101",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Button icon only)"
+        },
+        body: {
+          className: "card-body d-flex align-items-center",
+          name: "Parse error"
+        },
         icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass: "col-4 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center",
+        iconClass:
+          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
         textClass: "col-8",
-        fields: [{ className: "text-danger", name: "Parse error", show: true }],
+        fields: [
+          {
+            className: "text-danger",
+            name: "Fix JSON to preview actions"
+          }
+        ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Admin tools"
+        },
         type: "AlloyButtonBar",
-        action: { type: "AlloyButtonIcon", className: "nav p-2 border-top justify-content-end flex-row", buttons: [] }
+        action: {
+          type: "AlloyButtonIcon",
+          className: "nav gap-2",
+          buttons: []
+        }
       });
     }
   }, [jsonBtnIcon]);
@@ -495,13 +660,36 @@ export default function CardIconActionPage() {
       setErrLinkText(String(e.message || e));
       return new CardIconActionObject({
         className: "card border m-2 shadow",
-        body: { className: "card-body d-flex align-items-center", name: "Invalid JSON (Link text)" },
+        link: "/users/101",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Link text)"
+        },
+        body: {
+          className: "card-body d-flex align-items-center",
+          name: "Parse error"
+        },
         icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass: "col-4 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center",
+        iconClass:
+          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
         textClass: "col-8",
-        fields: [{ className: "text-danger", name: "Parse error", show: true }],
+        fields: [
+          {
+            className: "text-danger",
+            name: "Fix JSON to preview actions"
+          }
+        ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Helpful links"
+        },
         type: "AlloyLinkBar",
-        action: { type: "AlloyLink", className: "nav p-2 border-top justify-content-end flex-row", links: [] }
+        action: {
+          type: "AlloyLink",
+          className: "nav gap-2",
+          links: []
+        }
       });
     }
   }, [jsonLinkText]);
@@ -514,13 +702,36 @@ export default function CardIconActionPage() {
       setErrLinkIconText(String(e.message || e));
       return new CardIconActionObject({
         className: "card border m-2 shadow",
-        body: { className: "card-body d-flex align-items-center", name: "Invalid JSON (Link icon+text)" },
+        link: "/users/101",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Link icon+text)"
+        },
+        body: {
+          className: "card-body d-flex align-items-center",
+          name: "Parse error"
+        },
         icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass: "col-4 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center",
+        iconClass:
+          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
         textClass: "col-8",
-        fields: [{ className: "text-danger", name: "Parse error", show: true }],
+        fields: [
+          {
+            className: "text-danger",
+            name: "Fix JSON to preview actions"
+          }
+        ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Support options"
+        },
         type: "AlloyLinkBar",
-        action: { type: "AlloyLinkIcon", className: "nav p-2 border-top justify-content-end flex-row", links: [] }
+        action: {
+          type: "AlloyLinkIcon",
+          className: "nav gap-2",
+          links: []
+        }
       });
     }
   }, [jsonLinkIconText]);
@@ -533,45 +744,41 @@ export default function CardIconActionPage() {
       setErrLinkIcon(String(e.message || e));
       return new CardIconActionObject({
         className: "card border m-2 shadow",
-        body: { className: "card-body d-flex align-items-center", name: "Invalid JSON (Link icon only)" },
+        link: "/users/101",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Link icon only)"
+        },
+        body: {
+          className: "card-body d-flex align-items-center",
+          name: "Parse error"
+        },
         icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass: "col-4 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center",
+        iconClass:
+          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
         textClass: "col-8",
-        fields: [{ className: "text-danger", name: "Parse error", show: true }],
+        fields: [
+          {
+            className: "text-danger",
+            name: "Fix JSON to preview actions"
+          }
+        ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Jump to…"
+        },
         type: "AlloyLinkBar",
-        action: { type: "AlloyLinkIcon", className: "nav p-2 border-top justify-content-end flex-row", links: [] }
+        action: {
+          type: "AlloyLinkIcon",
+          className: "nav gap-2",
+          links: []
+        }
       });
     }
   }, [jsonLinkIcon]);
 
-  // handle click output from AlloyCardIconAction -> output textarea
-  function handleOutput(tabKey, payload) {
-    const formatted = JSON.stringify(payload, null, 2);
-    switch (tabKey) {
-      case "BtnText":
-        setEmitBtnText(formatted);
-        break;
-      case "BtnIconText":
-        setEmitBtnIconText(formatted);
-        break;
-      case "BtnIcon":
-        setEmitBtnIcon(formatted);
-        break;
-      case "LinkText":
-        setEmitLinkText(formatted);
-        break;
-      case "LinkIconText":
-        setEmitLinkIconText(formatted);
-        break;
-      case "LinkIcon":
-        setEmitLinkIcon(formatted);
-        break;
-      default:
-        break;
-    }
-  }
-
-  // per-tab bindings for cleaner render
+  /* ---------------- tab bindings (active tab drives UI panes) ---------------- */
   const tabBindings = {
     BtnText: {
       label: "Button (text)",
@@ -579,11 +786,13 @@ export default function CardIconActionPage() {
       inputJson: jsonBtnText,
       setInputJson: setJsonBtnText,
       parseError: errBtnText,
+      setParseError: setErrBtnText,
       outputJson: emitBtnText,
       setOutputJson: setEmitBtnText,
       resetJson: () => {
         setJsonBtnText(DEFAULT_BTN_TEXT);
         setEmitBtnText("// click an action to see payload");
+        setErrBtnText("");
       }
     },
     BtnIconText: {
@@ -592,11 +801,13 @@ export default function CardIconActionPage() {
       inputJson: jsonBtnIconText,
       setInputJson: setJsonBtnIconText,
       parseError: errBtnIconText,
+      setParseError: setErrBtnIconText,
       outputJson: emitBtnIconText,
       setOutputJson: setEmitBtnIconText,
       resetJson: () => {
         setJsonBtnIconText(DEFAULT_BTN_ICON_TEXT);
         setEmitBtnIconText("// click an action to see payload");
+        setErrBtnIconText("");
       }
     },
     BtnIcon: {
@@ -605,11 +816,13 @@ export default function CardIconActionPage() {
       inputJson: jsonBtnIcon,
       setInputJson: setJsonBtnIcon,
       parseError: errBtnIcon,
+      setParseError: setErrBtnIcon,
       outputJson: emitBtnIcon,
       setOutputJson: setEmitBtnIcon,
       resetJson: () => {
         setJsonBtnIcon(DEFAULT_BTN_ICON_ONLY);
         setEmitBtnIcon("// click an action to see payload");
+        setErrBtnIcon("");
       }
     },
     LinkText: {
@@ -618,11 +831,13 @@ export default function CardIconActionPage() {
       inputJson: jsonLinkText,
       setInputJson: setJsonLinkText,
       parseError: errLinkText,
+      setParseError: setErrLinkText,
       outputJson: emitLinkText,
       setOutputJson: setEmitLinkText,
       resetJson: () => {
         setJsonLinkText(DEFAULT_LINK_TEXT);
         setEmitLinkText("// click an action to see payload");
+        setErrLinkText("");
       }
     },
     LinkIconText: {
@@ -631,11 +846,13 @@ export default function CardIconActionPage() {
       inputJson: jsonLinkIconText,
       setInputJson: setJsonLinkIconText,
       parseError: errLinkIconText,
+      setParseError: setErrLinkIconText,
       outputJson: emitLinkIconText,
       setOutputJson: setEmitLinkIconText,
       resetJson: () => {
         setJsonLinkIconText(DEFAULT_LINK_ICON_TEXT);
         setEmitLinkIconText("// click an action to see payload");
+        setErrLinkIconText("");
       }
     },
     LinkIcon: {
@@ -644,14 +861,22 @@ export default function CardIconActionPage() {
       inputJson: jsonLinkIcon,
       setInputJson: setJsonLinkIcon,
       parseError: errLinkIcon,
+      setParseError: setErrLinkIcon,
       outputJson: emitLinkIcon,
       setOutputJson: setEmitLinkIcon,
       resetJson: () => {
         setJsonLinkIcon(DEFAULT_LINK_ICON_ONLY);
         setEmitLinkIcon("// click an action to see payload");
+        setErrLinkIcon("");
       }
     }
   }[active];
+
+  /* ---------------- footer action click -> capture payload for that tab ---------------- */
+  function handleOutput(payload) {
+    const formatted = JSON.stringify(payload, null, 2);
+    tabBindings.setOutputJson(formatted);
+  }
 
   return (
     <div className="container py-3 d-flex flex-column align-items-center">
@@ -677,7 +902,7 @@ export default function CardIconActionPage() {
         <div className="row mb-3 justify-content-center">
           <div className="col-12 d-flex align-items-center justify-content-center">
             <pre className="bg-light text-dark border rounded-3 p-3 small mb-0 text-center">
-              <code>{`<AlloyCardIconAction cardIconAction={new CardIconActionObject(cardIconActionObject)} output={handleOutput} />`}</code>
+              <code>{TAG_SNIPPET}</code>
             </pre>
           </div>
         </div>
@@ -687,19 +912,31 @@ export default function CardIconActionPage() {
           <div className="col-12 col-lg-10 col-xl-8">
             <AlloyCardIconAction
               cardIconAction={tabBindings.model}
-              output={(payload) => handleOutput(active, payload)}
+              output={handleOutput}
             />
             <div className="small text-secondary mt-2 text-center text-lg-start">
-              Top row = avatar/icon + text fields.  
-              Bottom row = <code>AlloyButtonBar</code> or <code>AlloyLinkBar</code>  
-              in text / icon+text / icon-only variants.
+              <div className="mb-1">
+                <strong>Navigation behavior:</strong>{" "}
+                <code>link</code> is optional.
+                If it exists (like <code>"/users/101"</code> in these demos),
+                ONLY the <code>body</code> row (the icon + text block) becomes
+                clickable via React Router <code>&lt;Link/&gt;</code>.
+              </div>
+              <div className="mb-1">
+                The header, footer, and the footer action bar are never part of
+                that link. Footer actions still work and still fire{" "}
+                <code>output()</code>.
+              </div>
+              <div className="text-muted">
+                Remove or clear <code>link</code> to make the body non-clickable.
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Editable JSON + Output side by side */}
+        {/* Input JSON + Output payload side by side */}
         <div className="row g-3 align-items-stretch justify-content-center mb-5">
-          {/* Left: Input JSON */}
+          {/* Left pane: JSON editor */}
           <div className="col-12 col-lg-6">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <span className="fw-semibold">
@@ -730,16 +967,37 @@ export default function CardIconActionPage() {
             )}
 
             <div className="form-text">
-              <code>icon.iconClass</code> controls the left avatar/bubble.<br />
-              <code>iconClass</code>/<code>textClass</code> control layout of the row.<br />
-              <code>type</code> picks <code>"AlloyButtonBar"</code> or <code>"AlloyLinkBar"</code>.
+              <ul className="mb-0 ps-3">
+                <li>
+                  <code>iconClass</code> usually includes{" "}
+                  <code>d-flex align-items-center justify-content-center</code>{" "}
+                  so the avatar bubble is centered.
+                </li>
+                <li>
+                  <code>textClass</code> is the right column wrapper that
+                  renders your <code>fields[]</code> lines.
+                </li>
+                <li>
+                  <code>footer</code> always renders. The left side shows{" "}
+                  <code>footer.name</code>; the right side renders either{" "}
+                  <code>AlloyButtonBar</code> or <code>AlloyLinkBar</code>{" "}
+                  depending on <code>type</code>.
+                </li>
+                <li>
+                  Clicking any footer button/link emits an{" "}
+                  <code>output(payload)</code> with
+                  <code>action</code> details and the card id.
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Right: Output payload */}
+          {/* Right pane: emitted output */}
           <div className="col-12 col-lg-6">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="fw-semibold">Output (from action click)</span>
+              <span className="fw-semibold">
+                Output (from action click)
+              </span>
               <button
                 type="button"
                 className="btn btn-sm btn-outline-danger"
@@ -757,7 +1015,10 @@ export default function CardIconActionPage() {
               spellCheck={false}
             />
             <div className="form-text">
-              You’ll consume this payload to route, open dialogs, call APIs, etc.
+              This payload is what you'll use to route,
+              open dialogs, or call APIs. You’ll usually key off{" "}
+              <code>action.id</code>, <code>action.name</code>, or{" "}
+              <code>action.href</code>.
             </div>
           </div>
         </div>

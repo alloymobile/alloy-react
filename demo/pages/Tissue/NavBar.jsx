@@ -2,11 +2,23 @@
 import React, { useMemo, useState } from "react";
 import { AlloyNavBar, NavBarObject } from "../../../src";
 
-/* ── Default JSON (three variants) ───────────────────────── */
+/* ───────────────────────── Default JSON configs ───────────────────────────
+   Each block below is plain JSON. We feed it into new NavBarObject(...).
+   NavBarObject will:
+   - generate a navbar id if missing
+   - wrap `logo` into a LinkLogoObject
+   - wrap `linkBar` into a LinkBarObject
+     - LinkBarObject will itself wrap `title` into TagObject
+     - and hydrate each link in `links[]` (LinkObject, LinkIconObject, LinkLogoObject)
+     - and manage `selected` logic
+*/
+
 const DEFAULT_JSON_NAV_LINK = JSON.stringify(
   {
     id: "navbarDemo1",
-    className: "navbar navbar-expand-lg navbar-light bg-light shadow-sm",
+    className:
+      "navbar navbar-expand-lg navbar-light bg-light shadow-sm",
+
     logo: {
       id: "brand",
       name: "Alloy",
@@ -17,16 +29,43 @@ const DEFAULT_JSON_NAV_LINK = JSON.stringify(
       logoAlt: "Alloy",
       className: "navbar-brand d-flex align-items-center gap-2"
     },
+
     linkBar: {
       type: "AlloyLink",
       className: "navbar-nav ms-auto mb-2 mb-lg-0 gap-2",
       linkClass: "nav-item",
-      selected: "active",                      // <— bar-level selected class
-      barName: { show: false },
+
+      // class injected into the currently selected link
+      selected: "active",
+
+      // navbar usually doesn't render a heading above links,
+      // so we give an empty name to suppress it
+      title: {
+        name: "",
+        className: "text-center fw-semibold mb-2"
+      },
+
       links: [
-        { id: "docs", name: "Docs", href: "https://alloymobile.com", className: "nav-link", target: "_blank", rel: "noopener" },
-        { id: "api",  name: "API",  href: "#api", className: "nav-link" },
-        { id: "blog", name: "Blog", href: "#blog", className: "nav-link" }
+        {
+          id: "docs",
+          name: "Docs",
+          href: "https://alloymobile.com",
+          className: "nav-link",
+          target: "_blank",
+          rel: "noopener"
+        },
+        {
+          id: "api",
+          name: "API",
+          href: "#api",
+          className: "nav-link"
+        },
+        {
+          id: "blog",
+          name: "Blog",
+          href: "#blog",
+          className: "nav-link"
+        }
       ]
     }
   },
@@ -37,7 +76,9 @@ const DEFAULT_JSON_NAV_LINK = JSON.stringify(
 const DEFAULT_JSON_NAV_ICON = JSON.stringify(
   {
     id: "navbarDemo2",
-    className: "navbar navbar-expand-lg navbar-light bg-white border-bottom",
+    className:
+      "navbar navbar-expand-lg navbar-light bg-white border-bottom",
+
     logo: {
       id: "brand2",
       name: "Alloy",
@@ -48,16 +89,40 @@ const DEFAULT_JSON_NAV_ICON = JSON.stringify(
       logoAlt: "Alloy",
       className: "navbar-brand d-flex align-items-center gap-2"
     },
+
     linkBar: {
       type: "AlloyLinkIcon",
       className: "navbar-nav ms-auto mb-2 mb-lg-0 gap-2",
       linkClass: "nav-item",
-      selected: "active",                      // <— bar-level selected class
-      barName: { show: false },
+      selected: "active",
+
+      title: {
+        name: "",
+        className: "text-center fw-semibold mb-2"
+      },
+
       links: [
-        { id: "homeI", name: "Home", href: "/",     icon: { iconClass: "fa-solid fa-house" }, className: "nav-link" },
-        { id: "codeI", name: "Code", href: "#code", icon: { iconClass: "fa-solid fa-code"  }, className: "nav-link" },
-        { id: "userI", name: "Me",   href: "#me",   icon: { iconClass: "fa-regular fa-user"}, className: "nav-link" }
+        {
+          id: "homeI",
+          name: "Home",
+          href: "/",
+          icon: { iconClass: "fa-solid fa-house" },
+          className: "nav-link"
+        },
+        {
+          id: "codeI",
+          name: "Code",
+          href: "#code",
+          icon: { iconClass: "fa-solid fa-code" },
+          className: "nav-link"
+        },
+        {
+          id: "userI",
+          name: "Me",
+          href: "#me",
+          icon: { iconClass: "fa-regular fa-user" },
+          className: "nav-link"
+        }
       ]
     }
   },
@@ -69,6 +134,7 @@ const DEFAULT_JSON_NAV_LOGO = JSON.stringify(
   {
     id: "navbarDemo3",
     className: "navbar navbar-expand-lg navbar-dark bg-dark",
+
     logo: {
       id: "brand3",
       name: "Alloy",
@@ -79,15 +145,39 @@ const DEFAULT_JSON_NAV_LOGO = JSON.stringify(
       logoAlt: "Alloy",
       className: "navbar-brand d-flex align-items-center gap-2"
     },
+
     linkBar: {
       type: "AlloyLinkLogo",
       className: "navbar-nav ms-auto mb-2 mb-lg-0 gap-3",
       linkClass: "nav-item",
-      selected: "active",                      // <— bar-level selected class
-      barName: { show: false },
+      selected: "active",
+
+      title: {
+        name: "",
+        className: "text-center fw-semibold mb-2"
+      },
+
       links: [
-        { id: "brandA", name: "Brand A", href: "#a", logo: "/logos/logo-a.svg", width: 96, height: 24, logoAlt: "Brand A", className: "nav-link" },
-        { id: "brandB", name: "Brand B", href: "#b", logo: "/logos/logo-b.svg", width: 96, height: 24, logoAlt: "Brand B", className: "nav-link" }
+        {
+          id: "brandA",
+          name: "Brand A",
+          href: "#a",
+          logo: "/logos/logo-a.svg",
+          width: 96,
+          height: 24,
+          logoAlt: "Brand A",
+          className: "nav-link"
+        },
+        {
+          id: "brandB",
+          name: "Brand B",
+          href: "#b",
+          logo: "/logos/logo-b.svg",
+          width: 96,
+          height: 24,
+          logoAlt: "Brand B",
+          className: "nav-link"
+        }
       ]
     }
   },
@@ -95,11 +185,21 @@ const DEFAULT_JSON_NAV_LOGO = JSON.stringify(
   2
 );
 
-/* ── Section (Tag → Render → JSON editor) ─────────────────── */
+/* ───────────────────────── Helpers ───────────────────────── */
+
 function tagSnippet(type) {
-  const v = type === "AlloyLinkIcon" ? "new NavBarObject(navBarIcon)" : type === "AlloyLinkLogo" ? "new NavBarObject(navBarLogo)" : "new NavBarObject(navBar)";
-  return `<AlloyNavBar navBar={${v}} />`;
+  // just for the code preview box
+  // (you'll probably rename navBarLink/navBarIcon/navBarLogo in your docs)
+  if (type === "AlloyLinkIcon") {
+    return `<AlloyNavBar navBar={new NavBarObject(navBarIcon)} />`;
+  }
+  if (type === "AlloyLinkLogo") {
+    return `<AlloyNavBar navBar={new NavBarObject(navBarLogo)} />`;
+  }
+  return `<AlloyNavBar navBar={new NavBarObject(navBar)} />`;
 }
+
+/* ────────────────────── Section Component ────────────────── */
 
 function Section({ title, jsonState, setJsonState }) {
   const [parseError, setParseError] = useState("");
@@ -108,13 +208,36 @@ function Section({ title, jsonState, setJsonState }) {
     try {
       setParseError("");
       const parsed = JSON.parse(jsonState);
-      return new NavBarObject(parsed); // hydration happens inside (LinkBarObject + selected)
+      // NavBarObject will normalize logo + linkBar internally
+      return new NavBarObject(parsed);
     } catch (e) {
       setParseError(String(e.message || e));
+
+      // Fallback: minimal-but-valid NavBarObject config structure.
+      // `title.name` left as "" to suppress heading in collapsed menu.
       return new NavBarObject({
-        className: "navbar navbar-expand-lg navbar-light bg-light",
-        logo: { href: "/", logo: "/logos/alloy.svg", name: "Alloy" },
-        linkBar: { type: title, className: "navbar-nav ms-auto mb-2 mb-lg-0 gap-2", linkClass: "nav-item", selected: "active", links: [] }
+        className:
+          "navbar navbar-expand-lg navbar-light bg-light shadow-sm",
+        logo: {
+          href: "/",
+          logo: "/logos/alloy.svg",
+          name: "Alloy",
+          width: 110,
+          height: 28,
+          logoAlt: "Alloy",
+          className: "navbar-brand d-flex align-items-center gap-2"
+        },
+        linkBar: {
+          type: title, // "AlloyLink" | "AlloyLinkIcon" | "AlloyLinkLogo"
+          className: "navbar-nav ms-auto mb-2 mb-lg-0 gap-2",
+          linkClass: "nav-item",
+          selected: "active",
+          title: {
+            name: "",
+            className: "text-center fw-semibold mb-2"
+          },
+          links: []
+        }
       });
     }
   }, [jsonState, title]);
@@ -123,7 +246,7 @@ function Section({ title, jsonState, setJsonState }) {
     <div className="card p-3 mb-4">
       <h5 className="mb-3 text-center">{title}</h5>
 
-      {/* 1) Tag */}
+      {/* 1) Usage snippet */}
       <div className="row mb-2">
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
@@ -132,14 +255,14 @@ function Section({ title, jsonState, setJsonState }) {
         </div>
       </div>
 
-      {/* 2) Rendered navbar */}
+      {/* 2) Live preview */}
       <div className="row mb-3">
         <div className="col-12">
           <AlloyNavBar navBar={model} />
         </div>
       </div>
 
-      {/* 3) Editable JSON */}
+      {/* 3) JSON editor */}
       <div className="row">
         <div className="col-12">
           <div className="d-flex justify-content-between align-items-center mb-2">
@@ -162,17 +285,51 @@ function Section({ title, jsonState, setJsonState }) {
           </div>
 
           <textarea
-            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
+            className={`form-control font-monospace ${
+              parseError ? "is-invalid" : ""
+            }`}
             rows={16}
             value={jsonState}
             onChange={(e) => setJsonState(e.target.value)}
             spellCheck={false}
           />
-          {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
+          {parseError && (
+            <div className="invalid-feedback d-block mt-1">
+              {parseError}
+            </div>
+          )}
 
           <div className="form-text">
-            The bar’s <code>selected</code> (e.g. <code>"active"</code>) is applied only to the clicked link.  
-            Per-link <code>active</code> is no longer needed.
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>logo</code> becomes a <code>LinkLogoObject</code>:
+                it handles brand image/link on the left.
+              </li>
+              <li>
+                <code>linkBar</code> becomes a <code>LinkBarObject</code>:
+                it handles the right-side nav links.
+              </li>
+              <li>
+                <code>linkBar.title</code> becomes a <code>TagObject</code>.
+                If <code>title.name</code> is <code>""</code> then the
+                heading will not render at all.
+              </li>
+              <li>
+                <code>linkBar.selected</code> is the CSS class injected
+                into the clicked link’s cloned model (for example{" "}
+                <code>"active"</code>). Only one link is "selected"
+                at a time.
+              </li>
+              <li>
+                Each item in <code>linkBar.links</code> is plain JSON
+                here, but inside <code>LinkBarObject</code> it will
+                hydrate automatically to:
+                <code>LinkObject</code>,
+                <code>LinkIconObject</code>, or
+                <code>LinkLogoObject</code> depending on{" "}
+                <code>linkBar.type</code>.
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -180,7 +337,8 @@ function Section({ title, jsonState, setJsonState }) {
   );
 }
 
-/* ── Page (tabs) ──────────────────────────────────────────── */
+/* ─────────────────────────── Page w/ tabs ─────────────────────────── */
+
 export default function NavBarPage() {
   const [activeTab, setActiveTab] = useState("AlloyLink");
 
@@ -195,23 +353,31 @@ export default function NavBarPage() {
       <ul className="nav nav-tabs justify-content-center mb-3">
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === "AlloyLink" ? "active" : ""}`}
+            className={`nav-link ${
+              activeTab === "AlloyLink" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("AlloyLink")}
           >
             AlloyLink
           </button>
         </li>
+
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === "AlloyLinkIcon" ? "active" : ""}`}
+            className={`nav-link ${
+              activeTab === "AlloyLinkIcon" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("AlloyLinkIcon")}
           >
             AlloyLinkIcon
           </button>
         </li>
+
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === "AlloyLinkLogo" ? "active" : ""}`}
+            className={`nav-link ${
+              activeTab === "AlloyLinkLogo" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("AlloyLinkLogo")}
           >
             AlloyLinkLogo
@@ -220,13 +386,27 @@ export default function NavBarPage() {
       </ul>
 
       {activeTab === "AlloyLink" && (
-        <Section title="AlloyLink" jsonState={jsonLink} setJsonState={setJsonLink} />
+        <Section
+          title="AlloyLink"
+          jsonState={jsonLink}
+          setJsonState={setJsonLink}
+        />
       )}
+
       {activeTab === "AlloyLinkIcon" && (
-        <Section title="AlloyLinkIcon" jsonState={jsonIcon} setJsonState={setJsonIcon} />
+        <Section
+          title="AlloyLinkIcon"
+          jsonState={jsonIcon}
+          setJsonState={setJsonIcon}
+        />
       )}
+
       {activeTab === "AlloyLinkLogo" && (
-        <Section title="AlloyLinkLogo" jsonState={jsonLogo} setJsonState={setJsonLogo} />
+        <Section
+          title="AlloyLinkLogo"
+          jsonState={jsonLogo}
+          setJsonState={setJsonLogo}
+        />
       )}
     </div>
   );

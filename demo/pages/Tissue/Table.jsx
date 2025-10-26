@@ -1,18 +1,22 @@
+// demo/pages/tissue/Table.jsx
 import React, { useMemo, useState } from "react";
 import { AlloyTable, TableObject } from "../../../src";
 
 /* ---------------------- Default editable JSON ---------------------- */
 const DEFAULT_INPUT = JSON.stringify(
   {
+    // `id` is optional; TableObject will auto-generate with generateId("table")
     id: "userTable01",
     name: "Users",
     className: "table table-hover align-middle",
-    // icon and sort have sensible defaults:
-    //   icon:  fa-solid fa-user
-    //   sort:  fa-solid fa-arrow-down
+
+    // icon and sort are optional:
+    //   icon -> <td> leading icon in each row (defaults to "fa-solid fa-user")
+    //   sort -> header sort indicator icon (defaults to "fa-solid fa-arrow-down")
+
     rows: [
-      { id: 1, name: "Ada Lovelace",  role: "Admin",  joined: "2023-12-01" },
-      { id: 2, name: "Linus Torvalds", role: "User",  joined: "2024-04-15" },
+      { id: 1, name: "Ada Lovelace", role: "Admin",    joined: "2023-12-01" },
+      { id: 2, name: "Linus Torvalds", role: "User",   joined: "2024-04-15" },
       { id: 3, name: "Margaret Hamilton", role: "Owner", joined: "2022-07-22" }
     ]
   },
@@ -38,7 +42,7 @@ export default function TablePage() {
       return new TableObject(raw);
     } catch (e) {
       setParseError(String(e.message || e));
-      // Safe fallback
+      // Safe fallback if JSON is broken
       return new TableObject({
         name: "Invalid JSON",
         className: "table table-striped",
@@ -48,8 +52,8 @@ export default function TablePage() {
   }, [inputJson]);
 
   function handleOutput(payload) {
-    // You’ll call your API from the parent using this payload to fetch server-sorted rows.
-    // We just log it to the right-hand box.
+    // Parent could call an API with this payload.
+    // We just mirror it in the Output panel.
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
@@ -71,7 +75,7 @@ export default function TablePage() {
         <div className="col-12">
           <AlloyTable table={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
-            Sorting is server-driven: clicking a header only emits the intent (no client sorting).
+            Sorting is server-driven: clicking a header only emits intent (no client sorting).
           </div>
         </div>
       </div>
@@ -105,11 +109,22 @@ export default function TablePage() {
             onChange={(e) => setInputJson(e.target.value)}
             spellCheck={false}
           />
-          {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
+          {parseError && (
+            <div className="invalid-feedback d-block mt-1">
+              {parseError}
+            </div>
+          )}
 
           <div className="form-text">
-            Rows define the columns by the <em>first row’s</em> keys (excluding <code>id</code>).  
-            Icons default to <code>fa-solid fa-user</code> (type column) and <code>fa-solid fa-arrow-down</code> (sort).
+            Columns come from the first row’s keys (excluding <code>id</code>).{" "}
+            <br />
+            <code>icon</code> and <code>sort</code> are optional; if you omit
+            them, <code>TableObject</code> will inject defaults (
+            <code>fa-solid fa-user</code> and{" "}
+            <code>fa-solid fa-arrow-down</code>).
+            <br />
+            <code>id</code> on the table is optional; if missing,{" "}
+            <code>TableObject</code> calls <code>generateId("table")</code>.
           </div>
         </div>
 
@@ -127,6 +142,7 @@ export default function TablePage() {
               Clear
             </button>
           </div>
+
           <textarea
             className="form-control font-monospace"
             rows={18}
@@ -134,8 +150,11 @@ export default function TablePage() {
             onChange={(e) => setOutputJson(e.target.value)}
             spellCheck={false}
           />
+
           <div className="form-text">
-            Use the emitted payload to request server sorting and re-supply <code>rows</code>.
+            You’ll usually take this payload, hit the server, get sorted data
+            back, and then rebuild the table via{" "}
+            <code>new TableObject({"{"} rows: newRows {"}"})</code>.
           </div>
         </div>
       </div>

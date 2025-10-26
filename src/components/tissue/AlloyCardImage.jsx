@@ -1,112 +1,129 @@
 // src/components/tissue/AlloyCardImage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { CardItem, CardObject } from "./AlloyCard.jsx";
+import { generateId, TagObject } from "../../utils/idHelper.js";
 
-/* ---------------------- LogoObject ---------------------- */
 /**
- * Represents the image/logo block shown on the left side.
- *
- * Fields:
- *  - imageUrl: string (src)
- *  - alt: string (alt text)
- *  - width: string (css width — e.g. "72", "auto", "64px")
- *  - height: string (css height)
+ * LogoObject
  */
 export class LogoObject {
-  /**
-   * @param {{
-   *   imageUrl?: string,
-   *   alt?: string,
-   *   width?: string,
-   *   height?: string
-   * }=} res
-   */
-  constructor(res = {}) {
-    if (res && Object.keys(res).length > 0) {
-      this.imageUrl =
-        res.imageUrl ??
-        "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png";
-      this.alt = res.alt ?? "Alloymobile";
-      this.width = res.width ?? "auto";
-      this.height = res.height ?? "auto";
-    } else {
-      this.imageUrl =
-        "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png";
-      this.alt = "Alloymobile";
-      this.width = "72";
-      this.height = "auto";
-    }
+  constructor(logo = {}) {
+    this.id = logo.id ?? generateId("logo");
+
+    // safe defaults
+    this.imageUrl =
+      logo.imageUrl ??
+      "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png";
+
+    this.alt = logo.alt ?? "Alloymobile";
+    this.width = logo.width ?? "72px";
+    this.height = logo.height ?? "auto";
   }
 }
 
-/* ---------------------- CardImageObject model ---------------------- */
 /**
- * CardImageObject extends CardObject with:
- *  - logo: LogoObject (left column visual, instead of icon)
- *  - logoClass: string (class for the left logo column wrapper)
- *  - textClass: string (class for the right text column wrapper)
+ * CardImageObject
  *
- * Inherits:
- *  - id, className, link, body, fields
+ * Matches our standard card contract:
+ *  - id, className
+ *  - link?: string  (ONLY body becomes clickable if present)
+ *  - header?: TagObject
+ *  - body:   TagObject (required-ish; we normalize even if empty)
+ *  - footer?: TagObject
+ *  - fields?: TagObject[]
+ *
+ * Plus:
+ *  - logo: LogoObject (required for this variant)
+ *  - logoClass, textClass for body layout columns
  */
-export class CardImageObject extends CardObject {
-  /**
-   * @param {{
-   *   id?: string,
-   *   className?: string,
-   *   link?: string,
-   *   body?: CardItem|object,
-   *   fields?: Array<CardItem|object>,
-   *   logo?: LogoObject|object,
-   *   logoClass?: string,
-   *   textClass?: string
-   * }=} res
-   */
-  constructor(res = {}) {
-    super(res);
+export class CardImageObject {
+  constructor(cfg = {}) {
+    // outer card shell
+    this.id = cfg.id ?? generateId("card");
+    this.className = cfg.className ?? "card border m-2 shadow";
 
-    // hydrate logo sub-object
+    // IMPORTANT: link now only applies to body, not the full card
+    this.link = typeof cfg.link === "string" ? cfg.link : "";
+
+    // normalize header/body/footer to TagObject
+    this.header =
+      cfg.header instanceof TagObject
+        ? cfg.header
+        : new TagObject(cfg.header || {});
+
+    this.body =
+      cfg.body instanceof TagObject
+        ? cfg.body
+        : new TagObject(cfg.body || {});
+
+    this.footer =
+      cfg.footer instanceof TagObject
+        ? cfg.footer
+        : new TagObject(cfg.footer || {});
+
+    // fields[] -> TagObject[]
+    const rawFields = Array.isArray(cfg.fields) ? cfg.fields : [];
+    this.fields = rawFields.map((f) =>
+      f instanceof TagObject ? f : new TagObject(f || {})
+    );
+
+    // required visual block
     this.logo =
-      res.logo instanceof LogoObject
-        ? res.logo
-        : new LogoObject(res.logo || {});
+      cfg.logo instanceof LogoObject
+        ? cfg.logo
+        : new LogoObject(cfg.logo || {});
 
-    // left column styling (similar to iconClass we used before)
+    // body row column classes
     this.logoClass =
-      res.logoClass ??
+      cfg.logoClass ??
       "col-4 d-flex align-items-center justify-content-center bg-light rounded mb-0";
 
-    // right column styling
-    this.textClass = res.textClass ?? "col-8";
+    this.textClass = cfg.textClass ?? "col-8";
   }
 }
 
-/* ---------------------- AlloyCardImage component ---------------------- */
 /**
+ * AlloyCardImage
+ *
  * Props:
- *  - cardImage: CardImageObject (required)
+ *   - cardImage: CardImageObject (required)
  *
  * Behavior:
- *  - If cardImage.link is set, wrap whole card in <Link>.
- *  - Otherwise render as a static div.
- *
- * Layout:
+ *   - Outer wrapper is ALWAYS <div className="card ...">.
+ *   - Header is never wrapped in <Link>.
+ *   - Footer is never wrapped in <Link>.
+ *   - ONLY the body block is wrapped in <Link> if cardImage.link is provided.
  */
 export function AlloyCardImage({ cardImage }) {
-  if (!cardImage || !(cardImage instanceof CardImageObject)) {
-    throw new Error("AlloyCardImage requires `cardImage` (CardImageObject instance).");
+  if (!(cardImage instanceof CardImageObject)) {
+    throw new Error(
+      "AlloyCardImage requires `cardImage` (CardImageObject instance)."
+    );
   }
 
-  // inner body content (logo column + text column)
-  const bodyContent = (
+  /* ----- header (optional if .name is non-empty) ----- */
+  const headerBlock =
+    cardImage.header?.name ? (
+      <div
+        id={cardImage.header.id}
+        className={
+          cardImage.header.className || "card-header py-2 fw-semibold"
+        }
+        aria-label={cardImage.header.name}
+      >
+        {cardImage.header.name}
+      </div>
+    ) : null;
+
+  /* ----- bodyInner (visual content, no link wrapping yet) ----- */
+  const bodyInner = (
     <div
       id={cardImage.body.id}
-      className={cardImage.body.className}
+      className={cardImage.body.className || "card-body py-3"}
       aria-label={cardImage.body.name}
     >
       <div className="row m-0">
-        {/* left logo column */}
+        {/* LEFT: logo / image */}
         <div className={cardImage.logoClass}>
           <img
             src={cardImage.logo.imageUrl}
@@ -114,23 +131,31 @@ export function AlloyCardImage({ cardImage }) {
             style={{
               width: cardImage.logo.width,
               height: cardImage.logo.height,
-              maxWidth: "100%", // keep image from overflowing
-              objectFit: "contain"
+              maxWidth: "100%",
+              objectFit: "contain",
             }}
           />
         </div>
 
-        {/* right text column */}
+        {/* RIGHT: text content */}
         <div className={cardImage.textClass}>
           <div className="row p-1">
-            {cardImage.fields.map((field) =>
-              field?.show ? (
+            {/* body.name as "headline"/title line */}
+            {cardImage.body?.name ? (
+              <div className="fw-semibold mb-1">
+                {cardImage.body.name}
+              </div>
+            ) : null}
+
+            {/* additional rows from fields[] */}
+            {cardImage.fields.map((fieldObj) =>
+              fieldObj?.name ? (
                 <div
-                  key={field.id}
-                  id={field.id}
-                  className={field.className}
+                  key={fieldObj.id ?? generateId("card-image-field")}
+                  id={fieldObj.id}
+                  className={fieldObj.className || ""}
                 >
-                  {field.name}
+                  {fieldObj.name}
                 </div>
               ) : null
             )}
@@ -140,18 +165,45 @@ export function AlloyCardImage({ cardImage }) {
     </div>
   );
 
-  // wrap card in <Link> if there's a link, otherwise plain <div>
-  return cardImage.link ? (
+  /* ----- bodySection (ONLY this becomes clickable) ----- */
+  const bodySection = cardImage.link ? (
     <Link
-      id={cardImage.id}
       to={cardImage.link}
-      className={cardImage.className + " text-decoration-none"}
+      className="text-decoration-none d-block"
+      aria-label={cardImage.body?.name}
     >
-      {bodyContent}
+      {bodyInner}
     </Link>
   ) : (
-    <div id={cardImage.id} className={cardImage.className}>
-      {bodyContent}
+    bodyInner
+  );
+
+  /* ----- footer (optional if .name is non-empty) ----- */
+  const footerBlock =
+    cardImage.footer?.name ? (
+      <div
+        id={cardImage.footer.id}
+        className={
+          cardImage.footer.className ||
+          "card-footer small text-muted py-2"
+        }
+        aria-label={cardImage.footer.name}
+      >
+        {cardImage.footer.name}
+      </div>
+    ) : null;
+
+  /* ----- final outer shell ----- */
+  // We NEVER wrap the entire card in <Link>.
+  // We ALWAYS render <div className="card ..."> as the root.
+  return (
+    <div
+      id={cardImage.id}
+      className={cardImage.className}
+    >
+      {headerBlock}
+      {bodySection}
+      {footerBlock}
     </div>
   );
 }
