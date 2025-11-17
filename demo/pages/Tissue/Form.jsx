@@ -198,15 +198,15 @@ export default function FormPage() {
   /* Per-tab state */
   const [jsonText, setJsonText] = useState(DEFAULT_FORM_TEXT);
   const [errText, setErrText] = useState("");
-  const [submitOutText, setSubmitOutText] = useState("// submit payload here");
+  const [submitOutText, setSubmitOutText] = useState("// submit OutputObject here");
 
   const [jsonIcon, setJsonIcon] = useState(DEFAULT_FORM_ICON);
   const [errIcon, setErrIcon] = useState("");
-  const [submitOutIcon, setSubmitOutIcon] = useState("// submit payload here");
+  const [submitOutIcon, setSubmitOutIcon] = useState("// submit OutputObject here");
 
   const [jsonFloat, setJsonFloat] = useState(DEFAULT_FORM_FLOAT);
   const [errFloat, setErrFloat] = useState("");
-  const [submitOutFloat, setSubmitOutFloat] = useState("// submit payload here");
+  const [submitOutFloat, setSubmitOutFloat] = useState("// submit OutputObject here");
 
   /* Hydrate models */
   const modelText = useMemo(() => {
@@ -278,9 +278,17 @@ export default function FormPage() {
     }
   }, [jsonFloat]);
 
-  /* handle submit from AlloyForm */
+  /* handle submit from AlloyForm
+   * payload is now ALWAYS an OutputObject from AlloyForm
+   */
   function handleOutput(tabKey, payload) {
-    const formatted = JSON.stringify(payload, null, 2);
+    const plain =
+      payload && typeof payload.toJSON === "function"
+        ? payload.toJSON()
+        : payload;
+
+    const formatted = JSON.stringify(plain, null, 2);
+
     switch (tabKey) {
       case "Text":
         setSubmitOutText(formatted);
@@ -309,7 +317,7 @@ export default function FormPage() {
         setOutVal: setSubmitOutText,
         resetJson: () => {
           setJsonText(DEFAULT_FORM_TEXT);
-          setSubmitOutText("// submit payload here");
+          setSubmitOutText("// submit OutputObject here");
         }
       },
       Icon: {
@@ -322,7 +330,7 @@ export default function FormPage() {
         setOutVal: setSubmitOutIcon,
         resetJson: () => {
           setJsonIcon(DEFAULT_FORM_ICON);
-          setSubmitOutIcon("// submit payload here");
+          setSubmitOutIcon("// submit OutputObject here");
         }
       },
       Float: {
@@ -335,7 +343,7 @@ export default function FormPage() {
         setOutVal: setSubmitOutFloat,
         resetJson: () => {
           setJsonFloat(DEFAULT_FORM_FLOAT);
-          setSubmitOutFloat("// submit payload here");
+          setSubmitOutFloat("// submit OutputObject here");
         }
       }
     }[active];
@@ -364,7 +372,7 @@ export default function FormPage() {
       <div className="row mb-4">
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0 text-center w-100">
-            <code>{`<AlloyForm form={new FormObject(formObject)} output={handleOutput} />`}</code>
+            <code>{TAG_SNIPPET}</code>
           </pre>
         </div>
       </div>
@@ -437,7 +445,7 @@ export default function FormPage() {
         {/* Right: latest submit output mirror */}
         <div className="col-12 col-lg-6">
           <div className="fw-semibold mb-2 text-center text-lg-start">
-            Submit Output (read-only mirror)
+            Submit Output (OutputObject from <code>AlloyForm</code>)
           </div>
           <textarea
             className="form-control font-monospace bg-light border"
@@ -447,8 +455,31 @@ export default function FormPage() {
             spellCheck={false}
           />
           <div className="form-text">
-            When you click the form's Submit button, we emit your
-            collected field values plus <code>action</code>.
+            On submit, <code>AlloyForm</code> emits a single{" "}
+            <code>OutputObject</code>:
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>type</code> is always <code>"form"</code>.
+              </li>
+              <li>
+                <code>action</code> is <code>"submit"</code>.
+              </li>
+              <li>
+                <code>data</code> contains the form snapshot:
+                <code>id</code>, <code>name</code>, <code>action</code>,{" "}
+                <code>event</code>, <code>values</code>, and{" "}
+                <code>fields</code> (per-field validity + errors).
+              </li>
+              <li>
+                <code>error</code> is <code>true</code> if ANY field is
+                invalid.
+              </li>
+              <li>
+                <code>errorMessage</code> is an array of all field errors,
+                prefixed with the field name (e.g.{" "}
+                <code>"email: This field is required."</code>).
+              </li>
+            </ul>
           </div>
         </div>
       </div>

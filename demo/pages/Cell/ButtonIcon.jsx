@@ -5,7 +5,7 @@ import { AlloyButtonIcon, ButtonIconObject } from "../../../src";
 const DEFAULT_INPUT = JSON.stringify(
   {
     id: "alloyBtnIcon01",
-    name: "Sync",                        // remove this to see icon-only
+    name: "Sync", // remove this to see icon-only
     className: "btn btn-primary",
     active: "active",
     disabled: false,
@@ -51,24 +51,11 @@ export default function ButtonIconPage() {
   }, [inputJson]);
 
   // Global output hook for AlloyButtonIcon
-  function handleOutput(self, e) {
-    const payload = {
-      event: e?.type ?? "unknown",
-      buttonIcon: {
-        id: self.id,
-        name: self.name ?? null,
-        className: self.className,
-        active: self.active,
-        disabled: self.disabled,
-        title: self.title,
-        ariaLabel: self.ariaLabel,
-        tabIndex: self.tabIndex,
-        icon: {
-          id: self.icon.id,
-          iconClass: self.icon.iconClass
-        }
-      }
-    };
+  // Receives a single OutputObject instance
+  function handleOutput(out) {
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
@@ -113,7 +100,8 @@ export default function ButtonIconPage() {
           />
           <div className="small text-secondary mt-2">
             If <code>name</code> is missing ⇒ icon-only button. All events emit
-            through <code>output</code>.
+            an <code>OutputObject</code> with{" "}
+            <code>{`{ id, type: "button-icon", action, error, data: { name } }`}</code>.
           </div>
         </div>
       </div>
@@ -175,7 +163,7 @@ export default function ButtonIconPage() {
             <code>id</code> is optional — it will auto-generate if missing.
             <br />
             <code>title</code> and <code>ariaLabel</code> default to{" "}
-            <code>name</code> (or "icon button" if no name).
+            <code>name</code> (or <code>"icon button"</code> if no name).
           </div>
         </div>
 
@@ -202,7 +190,9 @@ export default function ButtonIconPage() {
             spellCheck={false}
           />
           <div className="form-text">
-            This updates on every interaction with the icon button.
+            Output is an <code>OutputObject</code>:
+            <br />
+            <code>{`{ id, type, action, error, data: { name } }`}</code>.
           </div>
         </div>
       </div>

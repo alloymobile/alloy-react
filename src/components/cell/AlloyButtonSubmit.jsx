@@ -6,7 +6,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
-import { generateId } from "../../utils/idHelper.js";
+import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /**
  * @typedef {Object} ButtonSubmitConfig
@@ -103,9 +103,6 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
   );
 
   // arm() tries to move us into "loading". It returns true if we armed.
-  // This DOES mutate the model instance so output() sees loading:true,
-  // but actual rendering will still ultimately follow parent props.
-  // Parent is expected to flip loading:false later.
   const arm = () => {
     if (firedRef.current || isDisabled) return false;
 
@@ -115,31 +112,41 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
     buttonSubmit.loading = true;
     buttonSubmit.disabled = true;
 
-    // update our local mirror right away so UI shows spinner instantly,
-    // without waiting for parent to re-render with updated props.
+    // update our local mirror right away
     setLoading(true);
 
     return true;
   };
 
-  // emit helper: fire parent output and model handler
-  const emit = (e, handler) => {
-    output?.(buttonSubmit, e);
+  // emit helper: build OutputObject and fire parent + model handler
+  const emit = (e, handler, action) => {
+    if (typeof output === "function") {
+      const out = new OutputObject({
+        id: buttonSubmit.id,
+        type: "button-submit",
+        action,
+        error: false,
+        data: {
+          name: buttonSubmit.name,
+        },
+      });
+      output(out);
+    }
     handler?.(e, buttonSubmit);
   };
 
   const handleClick = (e) => {
-    if (arm()) emit(e, buttonSubmit.onClick);
+    if (arm()) emit(e, buttonSubmit.onClick, "click");
   };
 
   const handleMouseDown = (e) => {
-    if (arm()) emit(e, buttonSubmit.onMouseDown);
+    if (arm()) emit(e, buttonSubmit.onMouseDown, "mousedown");
   };
 
   const handleKeyDown = (e) => {
     const key = e.key;
     if (key === "Enter" || key === " ") {
-      if (arm()) emit(e, buttonSubmit.onKeyDown);
+      if (arm()) emit(e, buttonSubmit.onKeyDown, "keydown");
     }
   };
 

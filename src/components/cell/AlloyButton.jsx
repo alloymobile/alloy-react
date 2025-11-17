@@ -6,7 +6,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { generateId } from "../../utils/idHelper.js";
+import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* -------------------------------------------
  * useActiveClass
@@ -44,20 +44,6 @@ function useActiveClass(className = "", active = "") {
 
 /* -------------------------------------------
  * ButtonObject
- *
- * This is the normalized model for AlloyButton.
- * It guarantees:
- *   - required `name`
- *   - stable unique `id`
- *   - safe defaults for all other fields
- *   - event handlers carried along on the instance
- *
- * We ALSO expose optional per-event callbacks:
- *   onClick, onKeyDown, onKeyUp, onFocus, onBlur,
- *   onMouseEnter, onMouseLeave
- *
- * And AlloyButton will call them in addition to a
- * parent-level `output` callback prop.
  * ----------------------------------------- */
 
 /**
@@ -91,8 +77,8 @@ export class ButtonObject {
     this.id = button.id ?? generateId("btn");
     this.name = button.name;
 
-    this.className = button.className ?? "";
-    this.active = button.active ?? "btn btn-primary";
+    this.className = button.className ?? "btn btn-primary";
+    this.active = button.active ?? "";
     this.disabled = !!button.disabled;
     this.title = button.title ?? button.name;
     this.ariaLabel = button.ariaLabel ?? button.name;
@@ -111,26 +97,6 @@ export class ButtonObject {
 
 /* -------------------------------------------
  * AlloyButton
- *
- * Props:
- *   - button: ButtonObject   (required)
- *   - output?: (self: ButtonObject, e?: any) => void
- *        Global event tap. Called for all supported events.
- *
- * Ref:
- *   ref.current = {
- *     el,        // underlying <button> element
- *     model,     // the same ButtonObject you passed
- *     focus(),   // focus the button
- *     click(),   // click() the button
- *   }
- *
- * Behavior:
- *   - Uses hover/press/focus state to apply button.active classes.
- *   - Wires events so they call:
- *       1. output(self, event)         // if provided
- *       2. per-event handler on model  // e.g. button.onClick(event, model)
- *   - Keeps DOM id stable via useRef(button.id).
  * ----------------------------------------- */
 export const AlloyButton = forwardRef(function AlloyButton(
   { button, output },
@@ -161,29 +127,56 @@ export const AlloyButton = forwardRef(function AlloyButton(
     [button]
   );
 
-  // Helper builder:
-  // emitThen(handler, alsoCallInternal?) returns an event listener.
-  //
-  // Order:
-  //   alsoCallInternal(e)   -> keeps internal hover/press/focus state in sync
-  //   output(button, e)     -> global listener from parent
-  //   handler(e, button)    -> specific handler from this ButtonObject
-  const emitThen = (handler, alsoCallInternal) => (e) => {
+  /**
+   * emitThen(handler, alsoCallInternal, action) → event listener
+   *
+   * Order:
+   *  1. alsoCallInternal(e)         → hover / press / focus state
+   *  2. output(OutputObject)        → parent-level callback
+   *  3. handler(e, button)          → model's own handler
+   */
+  const emitThen = (handler, alsoCallInternal, action) => (e) => {
+    // 1) internal active-class tracking
     alsoCallInternal?.(e);
-    output?.(button, e);
+
+    // 2) normalized OutputObject for parent
+    if (typeof output === "function") {
+      // Success path only; no error here.
+      const out = OutputObject.ok({
+        id: button.id,
+        type: "button",
+        action,
+        data: {
+          // keep payload minimal; we don't duplicate id here
+          name: button.name
+        },
+      });
+
+      output(out);
+    }
+
+    // 3) per-event ButtonObject handler
     handler?.(e, button);
   };
 
   const mergedEvents = {
-    onClick: emitThen(button.onClick),
-    onKeyDown: emitThen(button.onKeyDown, events.onFocus),
-    onKeyUp: emitThen(button.onKeyUp),
-    onFocus: emitThen(button.onFocus, events.onFocus),
-    onBlur: emitThen(button.onBlur, events.onBlur),
-    onMouseEnter: emitThen(button.onMouseEnter, events.onMouseEnter),
-    onMouseLeave: emitThen(button.onMouseLeave, events.onMouseLeave),
-    onMouseDown: emitThen(undefined, events.onMouseDown),
-    onMouseUp: emitThen(undefined, events.onMouseUp),
+    onClick: emitThen(button.onClick, undefined, "click"),
+    onKeyDown: emitThen(button.onKeyDown, events.onFocus, "keydown"),
+    onKeyUp: emitThen(button.onKeyUp, undefined, "keyup"),
+    onFocus: emitThen(button.onFocus, events.onFocus, "focus"),
+    onBlur: emitThen(button.onBlur, events.onBlur, "blur"),
+    onMouseEnter: emitThen(
+      button.onMouseEnter,
+      events.onMouseEnter,
+      "mouseenter"
+    ),
+    onMouseLeave: emitThen(
+      button.onMouseLeave,
+      events.onMouseLeave,
+      "mouseleave"
+    ),
+    onMouseDown: emitThen(undefined, events.onMouseDown, "mousedown"),
+    onMouseUp: emitThen(undefined, events.onMouseUp, "mouseup"),
   };
 
   return (

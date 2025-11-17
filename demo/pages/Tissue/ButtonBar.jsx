@@ -68,26 +68,9 @@ const DEFAULT_JSON_BTN_ICON = JSON.stringify(
 
 /* ───────────────────────── UI helpers ───────────────────────────────────── */
 
-function tagSnippet(type) {
+function tagSnippet() {
   // just for the <code> example block
   return `<AlloyButtonBar buttonBar={new ButtonBarObject(buttonBarJson)} output={handleOutput} />`;
-}
-
-function buildOutputPayload(self, e) {
-  return {
-    event: e?.type ?? "unknown",
-    button: {
-      id: self?.id,
-      name: self?.name,
-      className: self?.className,
-      active: self?.active, // this will include bar.selected ("active") if selected
-      disabled: !!self?.disabled,
-      title: self?.title,
-      ariaLabel: self?.ariaLabel,
-      tabIndex: self?.tabIndex,
-      iconClass: self?.icon?.iconClass || null, // only present for ButtonIconObject
-    },
-  };
 }
 
 /* ───────────────────────── Section (per tab) ────────────────────────────── */
@@ -118,9 +101,12 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
     }
   }, [jsonState, tabType]);
 
-  // capture output from AlloyButtonBar
-  function handleOutput(self, e) {
-    setOutputJson(JSON.stringify(buildOutputPayload(self, e), null, 2));
+  // capture OutputObject from AlloyButtonBar
+  function handleOutput(out) {
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
+    setOutputJson(JSON.stringify(payload, null, 2));
   }
 
   return (
@@ -141,11 +127,12 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
         <div className="col-12 text-center">
           <AlloyButtonBar buttonBar={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
-            Click, hover, focus, keydown/keyup all emit through{" "}
-            <code>output</code>. Clicking a button marks it as
-            “selected”, and that button’s cloned model gets{" "}
-            <code>selected</code> (for example <code>"active"</code>) injected into its{" "}
-            <code>active</code> field.
+            Click, hover, focus, keydown/keyup all emit via{" "}
+            <code>output</code> as an <code>OutputObject</code>.
+            Clicking a button marks it as “selected”, and that button’s cloned
+            model gets <code>selected</code> (for example <code>"active"</code>) injected
+            into its <code>active</code> field inside the output’s{" "}
+            <code>data.button</code>.
           </div>
         </div>
       </div>
@@ -191,8 +178,7 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
             <ul className="mb-0 ps-3">
               <li>
                 <code>type</code> decides which component is used for each
-                button:
-                <code>"AlloyButton"</code> or{" "}
+                button: <code>"AlloyButton"</code> or{" "}
                 <code>"AlloyButtonIcon"</code>.
               </li>
               <li>
@@ -200,7 +186,7 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
                 <code>title.name</code> is empty, the heading won’t render.
               </li>
               <li>
-                <code>buttons</code> is just an array of plain objects here.
+                <code>buttons</code> is an array of plain objects here.
                 The <code>ButtonBarObject</code> constructor automatically
                 wraps each into a{" "}
                 <code>ButtonObject</code> or{" "}
@@ -238,9 +224,36 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
             spellCheck={false}
           />
           <div className="form-text">
-            You’ll see the full cloned model of whichever button fired the
-            event: <code>id</code>, <code>name</code>,{" "}
-            <code>className</code>, <code>active</code>, etc.
+            This is the normalized <code>OutputObject</code>, typically:
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>type</code>: <code>"button"</code>
+              </li>
+              <li>
+                <code>action</code>: e.g. <code>"click"</code>,{" "}
+                <code>"keydown"</code>, etc.
+              </li>
+              <li>
+                <code>data</code>: includes button model snapshot:
+                <ul className="mb-0 ps-3">
+                  <li>
+                    <code>id</code>, <code>name</code>,{" "}
+                    <code>className</code>, <code>active</code>
+                  </li>
+                  <li>
+                    <code>disabled</code>, <code>title</code>,{" "}
+                    <code>ariaLabel</code>, <code>tabIndex</code>
+                  </li>
+                  <li>
+                    For icon variant: <code>button.iconClass</code> if present.
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Top-level <code>error</code> /{" "}
+                <code>errorMessage</code> are reserved for flow-level errors.
+              </li>
+            </ul>
           </div>
         </div>
       </div>

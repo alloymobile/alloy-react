@@ -1,4 +1,3 @@
-// pages/Cell/Input.jsx
 import React, { useMemo, useState } from "react";
 import { AlloyInput, InputObject } from "../../../src";
 
@@ -142,10 +141,6 @@ export default function InputPage() {
    * Build an InputObject from whatever's in the editor.
    * If parsing fails, fallback to that tab's default preset
    * so the preview never explodes.
-   *
-   * NOTE: AlloyInput itself now uses useEffect to react to any changes
-   * in required, minLength, etc., so removing/adding validation rules
-   * in the JSON will update live without remounting.
    */
   const inputModel = useMemo(() => {
     try {
@@ -158,9 +153,12 @@ export default function InputPage() {
     }
   }, [inputJson, tab]);
 
-  // AlloyInput calls this on every change/blur
-  function handleOutput(report) {
-    setOutputJson(JSON.stringify(report, null, 2));
+  // AlloyInput calls this on change/blur with OutputObject
+  function handleOutput(out) {
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
+    setOutputJson(JSON.stringify(payload, null, 2));
   }
 
   // switch tabs (ex: "text" -> "email")
@@ -321,19 +319,23 @@ export default function InputPage() {
           />
 
           <div className="form-text">
-            Contains:
-            <ul className="mb-0 ps-3">
-              <li>
-                <code>value</code> (current field value)
-              </li>
-              <li>
-                <code>valid</code> / <code>error</code>
-              </li>
-              <li>
-                <code>errors</code> array (messages like
-                "This field is required.")
-              </li>
-            </ul>
+            The callback receives a normalized <code>OutputObject</code>, e.g.:
+            <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
+{`{
+  "id": "input-xyz",
+  "type": "input",
+  "action": "change",   // or "blur"
+  "error": false,       // true if validation failed
+  "errorMessage": [],
+  "data": {
+    "name": "email",
+    "value": "user@example.com",
+    "errors": []        // array of validation messages for this field
+  }
+}`}
+            </pre>
+            Use <code>error</code> to know if the field is currently invalid,
+            and read <code>data.value</code> for the latest value.
           </div>
         </div>
       </div>

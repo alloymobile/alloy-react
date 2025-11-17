@@ -7,7 +7,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
-import { generateId } from "../../utils/idHelper.js";
+import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* -------------------------------------------
  * useActiveClass
@@ -55,12 +55,6 @@ function useActiveClass(className = "", active = "") {
  * This is just like ButtonObject, but:
  * - `icon` is required
  * - `name` is optional (so you can have icon-only buttons)
- *
- * Responsibilities:
- *  - validate `icon`
- *  - normalize defaults
- *  - attach per-event callbacks
- *  - guarantee a stable `id`
  * ----------------------------------------- */
 
 /**
@@ -94,7 +88,6 @@ export class ButtonIconObject {
       throw new Error("ButtonIconObject requires `icon`.");
     }
 
-    // normalize icon: accept IconObject instance or plain { iconClass: "..." }
     const normalizedIcon =
       buttonIcon.icon instanceof IconObject
         ? buttonIcon.icon
@@ -108,13 +101,11 @@ export class ButtonIconObject {
     this.active = buttonIcon.active ?? "";
     this.disabled = !!buttonIcon.disabled;
 
-    // tooltip/title defaults to name or "icon button"
     this.title =
       buttonIcon.title ??
       buttonIcon.name ??
       "icon button";
 
-    // aria-label defaults to ariaLabel -> name -> "icon button"
     this.ariaLabel =
       buttonIcon.ariaLabel ??
       buttonIcon.name ??
@@ -135,27 +126,6 @@ export class ButtonIconObject {
 
 /* -------------------------------------------
  * AlloyButtonIcon
- *
- * Props:
- *   - buttonIcon: ButtonIconObject (required)
- *   - output?: (self: ButtonIconObject, e?: any) => void
- *        A global "event tap" that fires on all events.
- *
- * Ref:
- *   ref.current = {
- *     el,      // <button> element
- *     model,   // the ButtonIconObject instance you passed in
- *     focus(), // programmatically focus the button
- *     click(), // programmatically click the button
- *   }
- *
- * Behavior:
- *   - Applies hover/press/focus styling via useActiveClass
- *   - Handles disabled
- *   - Emits events in order:
- *        1. alsoCallInternal(e)  -> keeps hover/press/focus state
- *        2. output(model, e)     -> parent-level listener
- *        3. handler(e, model)    -> model's specific handler, e.g. onClick
  * ----------------------------------------- */
 export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
   { buttonIcon, output },
@@ -188,23 +158,48 @@ export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
     [buttonIcon]
   );
 
-  // Same emit ordering we standardized in AlloyButton
-  const emitThen = (handler, alsoCallInternal) => (e) => {
+  // Emit OutputObject with:
+  //   id (top-level), type, action, error, data: { name }
+  const emitThen = (handler, alsoCallInternal, action) => (e) => {
+    // 1) internal hover/press/focus state
     alsoCallInternal?.(e);
-    output?.(buttonIcon, e);
+
+    // 2) normalized OutputObject for parent
+    if (typeof output === "function") {
+      const out = new OutputObject({
+        id: buttonIcon.id,
+        type: "button-icon",
+        action,
+        data: {
+          // minimal payload: only "name" (no disabled, iconClass, etc.)
+          name: buttonIcon.name ?? ""
+        }
+      });
+      output(out);
+    }
+
+    // 3) per-event model handler
     handler?.(e, buttonIcon);
   };
 
   const mergedEvents = {
-    onClick: emitThen(buttonIcon.onClick),
-    onKeyDown: emitThen(buttonIcon.onKeyDown, events.onFocus),
-    onKeyUp: emitThen(buttonIcon.onKeyUp),
-    onFocus: emitThen(buttonIcon.onFocus, events.onFocus),
-    onBlur: emitThen(buttonIcon.onBlur, events.onBlur),
-    onMouseEnter: emitThen(buttonIcon.onMouseEnter, events.onMouseEnter),
-    onMouseLeave: emitThen(buttonIcon.onMouseLeave, events.onMouseLeave),
-    onMouseDown: emitThen(undefined, events.onMouseDown),
-    onMouseUp: emitThen(undefined, events.onMouseUp),
+    onClick: emitThen(buttonIcon.onClick, undefined, "click"),
+    onKeyDown: emitThen(buttonIcon.onKeyDown, events.onFocus, "keydown"),
+    onKeyUp: emitThen(buttonIcon.onKeyUp, undefined, "keyup"),
+    onFocus: emitThen(buttonIcon.onFocus, events.onFocus, "focus"),
+    onBlur: emitThen(buttonIcon.onBlur, events.onBlur, "blur"),
+    onMouseEnter: emitThen(
+      buttonIcon.onMouseEnter,
+      events.onMouseEnter,
+      "mouseenter"
+    ),
+    onMouseLeave: emitThen(
+      buttonIcon.onMouseLeave,
+      events.onMouseLeave,
+      "mouseleave"
+    ),
+    onMouseDown: emitThen(undefined, events.onMouseDown, "mousedown"),
+    onMouseUp: emitThen(undefined, events.onMouseUp, "mouseup"),
   };
 
   return (

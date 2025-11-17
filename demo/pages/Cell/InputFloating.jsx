@@ -1,4 +1,3 @@
-// pages/Cell/InputFloatingPage.jsx
 import React, { useMemo, useState } from "react";
 import { AlloyInput, InputObject } from "../../../src";
 
@@ -80,7 +79,6 @@ export default function InputFloatingPage() {
   const [parseError, setParseError] = useState("");
 
   // Build model from current JSON, fallback to tab default if broken.
-  // AlloyInput syncs validation + className props on each render now.
   const model = useMemo(() => {
     try {
       const raw = JSON.parse(inputJson || "{}");
@@ -92,8 +90,12 @@ export default function InputFloatingPage() {
     }
   }, [inputJson, tab]);
 
-  function handleOutput(report) {
-    setOutputJson(JSON.stringify(report, null, 2));
+  // Now receives OutputObject from AlloyInput
+  function handleOutput(out) {
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
+    setOutputJson(JSON.stringify(payload, null, 2));
   }
 
   function switchTab(nextTab) {
@@ -175,10 +177,10 @@ export default function InputFloatingPage() {
 
             <div className="mb-0">
               Validation (<code>required</code>, <code>pattern</code>,{" "}
-              <code>passwordStrength</code>, <code>min</code>, etc.) now
-              re-syncs every render. If you delete <code>required</code> from
-              the JSON and blur again, the "required" error should go away.
-              Errors are spoken with <code>aria-live="polite"</code>.
+              <code>passwordStrength</code>, <code>min</code>, etc.) re-syncs
+              every render. If you delete <code>required</code> from the JSON
+              and blur again, the "required" error should go away. Errors are
+              spoken with <code>aria-live="polite"</code>.
             </div>
           </div>
         </div>
@@ -232,7 +234,7 @@ export default function InputFloatingPage() {
               </li>
               <li>
                 <code>className</code> customizes the control’s classes. We
-                default to <code>"form-control"</code> for you.
+                default to <code>"form-control"</code>.
               </li>
               <li>
                 Add validation knobs like{" "}
@@ -274,18 +276,23 @@ export default function InputFloatingPage() {
           />
 
           <div className="form-text">
-            Output shows:
-            <ul className="mb-0 ps-3">
-              <li>
-                <code>value</code>
-              </li>
-              <li>
-                <code>valid</code> / <code>error</code>
-              </li>
-              <li>
-                <code>errors</code> (array of human-readable messages)
-              </li>
-            </ul>
+            The callback gets a normalized <code>OutputObject</code>, like:
+            <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
+{`{
+  "id": "input-xyz",
+  "type": "input",
+  "action": "change",
+  "error": false,
+  "errorMessage": [],
+  "data": {
+    "name": "email",
+    "value": "user@example.com",
+    "errors": []
+  }
+}`}
+            </pre>
+            Use <code>error</code> / <code>errorMessage</code> for flow-level
+            logic, and <code>data.value</code> for the latest field value.
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import AlloyButton, { ButtonObject } from "../cell/AlloyButton.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 
-import { generateId, TagObject } from "../../utils/idHelper.js";
+import { generateId, TagObject, OutputObject } from "../../utils/idHelper.js";
 
 /**
  * @typedef {Object} ButtonBarConfig
@@ -67,11 +67,11 @@ export class ButtonBarObject {
 
     // Normalize title into TagObject
     if (bar.title instanceof TagObject) {
-        this.title = bar.title;
+      this.title = bar.title;
     } else if (bar.title) {
-        this.title = new TagObject(bar.title);
+      this.title = new TagObject(bar.title);
     } else {
-        this.title = new TagObject({}); // defaults to name:"" so UI can safely check .name
+      this.title = new TagObject({}); // defaults to name:"" so UI can safely check .name
     }
 
     // Normalize buttons
@@ -97,10 +97,12 @@ export class ButtonBarObject {
  * We don't mutate the original button model. We create a *new* instance
  * of the same class (ButtonObject or ButtonIconObject), but with:
  *  - updated `active` (only if selected)
- *  - wrapped handlers so we can emit up (`output`) AND maintain selection
+ *  - wrapped output so we can:
+ *      - maintain selection
+ *      - forward the child's OutputObject up to parent
  *
  * We return:
- *   { model: <newBtnInstance>, onAnyEvent: <event forwarder> }
+ *   { model: <newBtnInstance>, onAnyEvent: (out: OutputObject) => void }
  *
  * The calling component then wires that handler into the rendered component's
  * `output` prop.
@@ -114,15 +116,28 @@ function cloneWithActiveAndWrapOutput(
 ) {
   const activeClass = isSelected ? injectedActiveClass : "";
 
-  // We'll wrap all events going out of the child component.
-  // parentOutput(self, e) mirrors what AlloyButtonBar previously did.
-  function passUp(self, e) {
-    // If it's a click, mark this button selected
-    if (e?.type === "click") {
-      const nextId = self?.id ?? "";
-      setSelectedId(nextId);
+  // Wrapper for child's OutputObject
+  /**
+   * @param {OutputObject|any} out
+   */
+  function passUp(out) {
+    if (!out) {
+      return;
     }
-    parentOutput?.(self, e);
+
+    // Try to detect a click to manage "selected" state.
+    const action = out.action || out?.data?.event || "";
+    const isClick = action === "click";
+
+    if (isClick) {
+      const nextId = out?.data?.id ?? "";
+      if (nextId) {
+        setSelectedId(nextId);
+      }
+    }
+
+    // Forward child's OutputObject (unchanged) to parent.
+    parentOutput?.(out);
   }
 
   // Rebuild the model with the same fields, but replaced `active`.
@@ -144,7 +159,7 @@ function cloneWithActiveAndWrapOutput(
       onFocus: btnModel.onFocus,
       onBlur: btnModel.onBlur,
       onMouseEnter: btnModel.onMouseEnter,
-      onMouseLeave: btnModel.onMouseLeave,
+      onMouseLeave: btnModel.onMouseLeave
     });
 
     return { model: cloned, onAnyEvent: passUp };
@@ -167,7 +182,7 @@ function cloneWithActiveAndWrapOutput(
       onFocus: btnModel.onFocus,
       onBlur: btnModel.onBlur,
       onMouseEnter: btnModel.onMouseEnter,
-      onMouseLeave: btnModel.onMouseLeave,
+      onMouseLeave: btnModel.onMouseLeave
     });
 
     return { model: cloned, onAnyEvent: passUp };
@@ -182,7 +197,7 @@ function cloneWithActiveAndWrapOutput(
  *
  * Props:
  *  - buttonBar: ButtonBarObject (required)
- *  - output?: (self: ButtonObject|ButtonIconObject, e?: any) => void
+ *  - output?: (out: OutputObject) => void
  *
  * Behavior:
  *  - Renders optional title if buttonBar.title.name is truthy
@@ -190,7 +205,7 @@ function cloneWithActiveAndWrapOutput(
  *  - Tracks which button is "selected" in local state
  *  - Injects `buttonBar.selected` class name into that selected button's `active`
  *    via a cloned model
- *  - Forwards all child events through `output`, and updates the selectedId
+ *  - Forwards all child OutputObjects through `output`, and updates the selectedId
  *    on click
  */
 export function AlloyButtonBar({ buttonBar, output }) {

@@ -110,9 +110,12 @@ export default function InputIconPage() {
     }
   }, [inputJson, tab]);
 
-  // AlloyInput calls this whenever the field changes / blurs
-  function handleOutput(report) {
-    setOutputJson(JSON.stringify(report, null, 2));
+  // AlloyInput calls this whenever the field changes (OutputObject)
+  function handleOutput(out) {
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
+    setOutputJson(JSON.stringify(payload, null, 2));
   }
 
   // Switch tabs between username / email / password / age / dob
@@ -280,18 +283,23 @@ export default function InputIconPage() {
           />
 
           <div className="form-text">
-            Output includes:
-            <ul className="mb-0 ps-3">
-              <li>
-                <code>value</code> (current value)
-              </li>
-              <li>
-                <code>valid</code> / <code>error</code>
-              </li>
-              <li>
-                <code>errors</code> array with human messages
-              </li>
-            </ul>
+            The callback receives a normalized <code>OutputObject</code>, e.g.:
+            <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
+{`{
+  "id": "input-abc123",
+  "type": "input",
+  "action": "change",
+  "error": false,
+  "errorMessage": [],
+  "data": {
+    "name": "username",
+    "value": "imtapas",
+    "errors": []
+  }
+}`}
+            </pre>
+            Use <code>data.value</code> for the payload, and{" "}
+            <code>error</code> / <code>errorMessage</code> for flow-level logic.
           </div>
         </div>
       </div>

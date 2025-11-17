@@ -11,7 +11,7 @@ import {
   ButtonSubmitObject
 } from "../cell/AlloyButtonSubmit.jsx";
 
-import { generateId } from "../../utils/idHelper.js";
+import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* ------------------------------------------------------------------
  * FormObject
@@ -45,8 +45,6 @@ export class FormObject {
       data
     } = res;
 
-    // Consistent ID creation across the app.
-    // If caller didn't supply an id, we generate one with the shared helper.
     this.id = id ?? generateId("form");
 
     this.title = title;
@@ -85,15 +83,6 @@ export class FormObject {
 
 /* ------------------------------------------------------------------
  * validateField(fieldDef, value, allValues)
- *
- * Runs core validation for a single field:
- *   - required
- *   - minLength / maxLength
- *   - pattern
- *   - passwordStrength
- *   - matchWith (compare to some other field by name)
- *
- * Returns { valid, error, errors[] }
  * ------------------------------------------------------------------ */
 function validateField(fieldDef, value, allValues) {
   let isValid = true;
@@ -155,11 +144,6 @@ function validateField(fieldDef, value, allValues) {
 
   // passwordStrength
   if (isValid && fieldDef.passwordStrength && typeof value === "string") {
-    // must contain:
-    // - lowercase
-    // - uppercase
-    // - digit
-    // - at least 8 chars
     const strongRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/;
     if (!strongRegex.test(value)) {
       isValid = false;
@@ -189,16 +173,18 @@ function validateField(fieldDef, value, allValues) {
  *
  * Props:
  *   - form: FormObject | plain JSON config
- *   - output?: (finalOut:any) => void
+ *   - output?: (out: OutputObject) => void
  *
  * Behavior:
  *   - Hydrates the model into a FormObject (so IDs/fields are normalized).
  *   - Tracks value+validation for every field in internal state.
  *   - Disables submit until all fields are valid.
- *   - On submit, emits { ...values, action: form.action } via `output`.
- *
- * Accessibility:
- *   - Each AlloyInput already handles aria-invalid and aria-live for errors.
+ *   - On submit, emits a single OutputObject with:
+ *       type: "form",
+ *       action: "submit",
+ *       data: { <flat fieldName>: value },
+ *       error: true/false,
+ *       errorMessage: all field errors (flattened)
  * ------------------------------------------------------------------ */
 export function AlloyForm({ form, output }) {
   //
@@ -219,7 +205,6 @@ export function AlloyForm({ form, output }) {
 
   //
   // 2. Initialize per-field state.
-  //    We'll keep { value, valid, error, errors } for each field by name.
   //
   const [fieldState, setFieldState] = useState(() => {
     const init = {};
@@ -252,8 +237,6 @@ export function AlloyForm({ form, output }) {
 
   //
   // 3. recomputeAllValidity(draftFieldState)
-  //    Given a draft of { [fname]: {value,...} }, run validation on all fields,
-  //    including cross-field checks like matchWith.
   //
   const recomputeAllValidity = useCallback(
     (draftFieldState) => {
@@ -285,16 +268,25 @@ export function AlloyForm({ form, output }) {
 
   //
   // 4. When a field updates (AlloyInput.output),
-  //    update that one field's value, then fully revalidate.
+  //    we now receive an OutputObject from AlloyInput.
   //
-  function handleFieldOutput(fieldPayload) {
-    if (!fieldPayload || !fieldPayload.name) return;
-    const { name, value } = fieldPayload;
+  function handleFieldOutput(out) {
+    // Expecting OutputObject from AlloyInput
+    const payload =
+      out instanceof OutputObject ? out.data || {} : out || {};
+
+    const { name, value } = payload;
+    if (!name) return;
 
     setFieldState((prev) => {
       const draft = { ...prev };
       draft[name] = {
-        ...prev[name],
+        ...(prev[name] || {
+          value: undefined,
+          valid: true,
+          error: false,
+          errors: []
+        }),
         value
       };
 
@@ -324,18 +316,39 @@ export function AlloyForm({ form, output }) {
 
   //
   // 7. Submit handler.
+  //    We receive OutputObject from AlloyButtonSubmit but we
+  //    only use it for event/action if ever needed.
   //
-  function handleSubmit(btnModel /* ButtonSubmitObject */, e) {
-    const finalOut = {
-      ...dataPayload,
-      action: hydrated.action
-    };
+  function handleSubmit(btnOut) {
+    // Aggregate all field errors into a flat list of messages.
+    const aggregatedErrors = [];
+    let hasError = false;
 
-    // snapshot on the hydrated form instance
-    hydrated.data = finalOut;
+    Object.entries(fieldState).forEach(([fname, state]) => {
+      if (state.error || !state.valid) {
+        hasError = true;
+        (state.errors || []).forEach((msg) => {
+          aggregatedErrors.push(`${fname}: ${msg}`);
+        });
+      }
+    });
+
+    // Final values only (flat map)
+    const finalValues = { ...dataPayload };
+
+    // Optionally keep snapshot on hydrated form instance
+    hydrated.data = finalValues;
     hydrated.message = "";
 
-    output?.(finalOut);
+    const out = new OutputObject({
+      type: "form",
+      action: "submit",
+      data: finalValues,          // ⬅️ ONLY fieldName -> value
+      error: hasError,
+      errorMessage: aggregatedErrors
+    });
+
+    output?.(out);
   }
 
   //

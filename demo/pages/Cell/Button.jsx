@@ -28,15 +28,14 @@ export default function ButtonPage() {
   // Turn JSON string -> ButtonObject model
   const model = useMemo(() => {
     try {
-      // Try to parse user-edited JSON
       const raw = JSON.parse(inputJson || "{}");
       setParseError("");
 
-      // Try to build a valid ButtonObject
       return new ButtonObject(raw);
     } catch (e) {
       // If either parse fails or model validation fails ("name" missing, etc.)
       setParseError(String(e.message || e));
+
       // Safe fallback: disabled button so preview still renders
       return new ButtonObject({
         name: "Invalid JSON",
@@ -47,21 +46,12 @@ export default function ButtonPage() {
   }, [inputJson]);
 
   // Global output hook for AlloyButton
-  // This fires on every meaningful interaction event
-  function handleOutput(self, e) {
-    const payload = {
-      event: e?.type ?? "unknown",
-      button: {
-        id: self.id,
-        name: self.name,
-        className: self.className,
-        active: self.active,
-        disabled: self.disabled,
-        title: self.title,
-        ariaLabel: self.ariaLabel,
-        tabIndex: self.tabIndex
-      }
-    };
+  // NOW: receives a single OutputObject instance from AlloyButton
+  function handleOutput(out) {
+    // If it's an OutputObject, use its safe JSON representation
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
@@ -103,7 +93,9 @@ export default function ButtonPage() {
           <AlloyButton ref={btnRef} button={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
             Tip: Hover, focus, blur, keydown/keyup, click — all emit via{" "}
-            <code>output</code>.
+            <code>output</code> as an <code>OutputObject</code> with{" "}
+            <code>id</code>, <code>type</code>, <code>action</code>,{" "}
+            <code>error</code> and a minimal <code>data</code> payload.
           </div>
         </div>
       </div>
@@ -194,7 +186,19 @@ export default function ButtonPage() {
             spellCheck={false}
           />
           <div className="form-text">
-            This shows what AlloyButton tells you on every interaction.
+            Shape:
+            <pre className="mb-0 mt-1 small">
+{`{
+  "id": "alloyBtn01",
+  "type": "button",
+  "action": "click",
+  "error": false,
+  "data": {
+    "name": "Primary",
+    "disabled": false
+  }
+}`}
+            </pre>
           </div>
         </div>
       </div>
