@@ -479,6 +479,17 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
 /* Tag snippet (display only) */
 const TAG_SNIPPET = `<AlloyCardImageAction cardImageAction={new CardImageActionObject(cardImageActionObject)} output={handleOutput} />`;
 
+// Standard default output description (matches AlloyCardAction / AlloyCardIconAction)
+const defaultOutputMsg =
+  '// click a footer action to see OutputObject:\n' +
+  '// {\n' +
+  '//   id: "<card-id>",\n' +
+  '//   type: "card-action",\n' +
+  '//   action: "<name | ariaLabel | title | id>",\n' +
+  '//   error: false,\n' +
+  '//   data: { "<field.id>": "<field.name>", ... }\n' +
+  '// }';
+
 export default function CardImageActionPage() {
   const TABS = [
     { key: "BtnText", label: "Button (text)" },
@@ -494,27 +505,29 @@ export default function CardImageActionPage() {
   // tab-local editable JSON, parse error, and emitted payload
   const [jsonBtnText, setJsonBtnText] = useState(DEFAULT_BTN_TEXT);
   const [errBtnText, setErrBtnText] = useState("");
-  const [emitBtnText, setEmitBtnText] = useState("// click an action to see payload");
+  const [emitBtnText, setEmitBtnText] = useState(defaultOutputMsg);
 
   const [jsonBtnIconText, setJsonBtnIconText] = useState(DEFAULT_BTN_ICON_TEXT);
   const [errBtnIconText, setErrBtnIconText] = useState("");
-  const [emitBtnIconText, setEmitBtnIconText] = useState("// click an action to see payload");
+  const [emitBtnIconText, setEmitBtnIconText] = useState(defaultOutputMsg);
 
   const [jsonBtnIcon, setJsonBtnIcon] = useState(DEFAULT_BTN_ICON_ONLY);
   const [errBtnIcon, setErrBtnIcon] = useState("");
-  const [emitBtnIcon, setEmitBtnIcon] = useState("// click an action to see payload");
+  const [emitBtnIcon, setEmitBtnIcon] = useState(defaultOutputMsg);
 
   const [jsonLinkText, setJsonLinkText] = useState(DEFAULT_LINK_TEXT);
   const [errLinkText, setErrLinkText] = useState("");
-  const [emitLinkText, setEmitLinkText] = useState("// click an action to see payload");
+  const [emitLinkText, setEmitLinkText] = useState(defaultOutputMsg);
 
-  const [jsonLinkIconText, setJsonLinkIconText] = useState(DEFAULT_LINK_ICON_TEXT);
+  const [jsonLinkIconText, setJsonLinkIconText] = useState(
+    DEFAULT_LINK_ICON_TEXT
+  );
   const [errLinkIconText, setErrLinkIconText] = useState("");
-  const [emitLinkIconText, setEmitLinkIconText] = useState("// click an action to see payload");
+  const [emitLinkIconText, setEmitLinkIconText] = useState(defaultOutputMsg);
 
   const [jsonLinkIcon, setJsonLinkIcon] = useState(DEFAULT_LINK_ICON_ONLY);
   const [errLinkIcon, setErrLinkIcon] = useState("");
-  const [emitLinkIcon, setEmitLinkIcon] = useState("// click an action to see payload");
+  const [emitLinkIcon, setEmitLinkIcon] = useState(defaultOutputMsg);
 
   /* hydrate each tab's JSON into CardImageActionObject,
      falling back to a safe preview model if parse blows up */
@@ -807,7 +820,11 @@ export default function CardImageActionPage() {
   }, [jsonLinkIcon]);
 
   /* click from footer action bar -> write JSON payload to the active tab's output box */
-  function handleOutput(tabKey, payload) {
+  function handleOutput(tabKey, out) {
+    // AlloyCardImageAction now emits OutputObject
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
     const formatted = JSON.stringify(payload, null, 2);
     switch (tabKey) {
       case "BtnText":
@@ -845,7 +862,7 @@ export default function CardImageActionPage() {
       setOutputJson: setEmitBtnText,
       resetJson: () => {
         setJsonBtnText(DEFAULT_BTN_TEXT);
-        setEmitBtnText("// click an action to see payload");
+        setEmitBtnText(defaultOutputMsg);
       }
     },
     BtnIconText: {
@@ -858,7 +875,7 @@ export default function CardImageActionPage() {
       setOutputJson: setEmitBtnIconText,
       resetJson: () => {
         setJsonBtnIconText(DEFAULT_BTN_ICON_TEXT);
-        setEmitBtnIconText("// click an action to see payload");
+        setEmitBtnIconText(defaultOutputMsg);
       }
     },
     BtnIcon: {
@@ -871,7 +888,7 @@ export default function CardImageActionPage() {
       setOutputJson: setEmitBtnIcon,
       resetJson: () => {
         setJsonBtnIcon(DEFAULT_BTN_ICON_ONLY);
-        setEmitBtnIcon("// click an action to see payload");
+        setEmitBtnIcon(defaultOutputMsg);
       }
     },
     LinkText: {
@@ -884,7 +901,7 @@ export default function CardImageActionPage() {
       setOutputJson: setEmitLinkText,
       resetJson: () => {
         setJsonLinkText(DEFAULT_LINK_TEXT);
-        setEmitLinkText("// click an action to see payload");
+        setEmitLinkText(defaultOutputMsg);
       }
     },
     LinkIconText: {
@@ -897,7 +914,7 @@ export default function CardImageActionPage() {
       setOutputJson: setEmitLinkIconText,
       resetJson: () => {
         setJsonLinkIconText(DEFAULT_LINK_ICON_TEXT);
-        setEmitLinkIconText("// click an action to see payload");
+        setEmitLinkIconText(defaultOutputMsg);
       }
     },
     LinkIcon: {
@@ -910,7 +927,7 @@ export default function CardImageActionPage() {
       setOutputJson: setEmitLinkIcon,
       resetJson: () => {
         setJsonLinkIcon(DEFAULT_LINK_ICON_ONLY);
-        setEmitLinkIcon("// click an action to see payload");
+        setEmitLinkIcon(defaultOutputMsg);
       }
     }
   }[active];
@@ -939,9 +956,7 @@ export default function CardImageActionPage() {
         <div className="row mb-3 justify-content-center">
           <div className="col-12 d-flex align-items-center justify-content-center">
             <pre className="bg-light text-dark border rounded-3 p-3 small mb-0 text-center">
-              <code>
-                {`<AlloyCardImageAction cardImageAction={new CardImageActionObject(cardImageActionObject)} output={handleOutput} />`}
-              </code>
+              <code>{TAG_SNIPPET}</code>
             </pre>
           </div>
         </div>
@@ -976,8 +991,8 @@ export default function CardImageActionPage() {
                 actions never become part of that link.
               </div>
               <div className="text-muted">
-                Clicking a footer action button/link will emit a payload into
-                the Output panel on the right.
+                Clicking a footer action button/link will emit a standardized{" "}
+                <code>OutputObject</code> into the Output panel on the right.
               </div>
             </div>
           </div>
@@ -1032,8 +1047,9 @@ export default function CardImageActionPage() {
                   the right based on <code>type</code>.
                 </li>
                 <li>
-                  The CTA bar items fire <code>output(payload)</code> so you can
-                  route, open dialogs, or start checkout.
+                  When an action is clicked, fields with both{" "}
+                  <code>id</code> and <code>name</code> become a key/value map
+                  in <code>OutputObject.data</code>.
                 </li>
               </ul>
             </div>
@@ -1046,7 +1062,7 @@ export default function CardImageActionPage() {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-danger"
-                onClick={() => tabBindings.setOutputJson("// cleared")}
+                onClick={() => tabBindings.setOutputJson(defaultOutputMsg)}
               >
                 Clear
               </button>
@@ -1060,9 +1076,33 @@ export default function CardImageActionPage() {
               spellCheck={false}
             />
             <div className="form-text">
-              This JSON is the payload AlloyCardImageAction emitted for the
-              clicked footer action. You’ll typically branch on{" "}
-              <code>action.id</code> or <code>action.name</code>.
+              Standard <code>OutputObject</code> from{" "}
+              <code>AlloyCardImageAction</code>:
+              <pre className="mt-2 mb-1 small bg-light border rounded-3 p-2">
+{`{
+  id: "<card-id>",
+  type: "card-action",
+  action: "<name | ariaLabel | title | id>",
+  error: false,
+  data: {
+    "<field.id>": "<field.name>",
+    ...
+  }
+}`}
+              </pre>
+              Typical usage:
+              <ul className="mb-0 ps-3">
+                <li>
+                  Branch on <code>action</code> (e.g.{" "}
+                  <code>"Buy"</code>, <code>"Details"</code>,{" "}
+                  <code>"Docs"</code>).
+                </li>
+                <li>
+                  Use <code>data</code> as a pre-normalized payload of the
+                  card’s field values (e.g. <code>prodDesc</code>,{" "}
+                  <code>prodPrice</code>, etc.).
+                </li>
+              </ul>
             </div>
           </div>
         </div>

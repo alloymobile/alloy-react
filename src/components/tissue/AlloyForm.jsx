@@ -1,3 +1,4 @@
+// AlloyForm.jsx
 import React, {
   useMemo,
   useState,
@@ -179,12 +180,31 @@ function validateField(fieldDef, value, allValues) {
  *   - Hydrates the model into a FormObject (so IDs/fields are normalized).
  *   - Tracks value+validation for every field in internal state.
  *   - Disables submit until all fields are valid.
- *   - On submit, emits a single OutputObject with:
- *       type: "form",
- *       action: "submit",
- *       data: { <flat fieldName>: value },
- *       error: true/false,
- *       errorMessage: all field errors (flattened)
+ *   - On submit, emits a single OutputObject:
+ *
+ *     SUCCESS:
+ *       {
+ *         id: "<form-id>",
+ *         type: "form",
+ *         action: "submit",
+ *         error: false,
+ *         data: {
+ *           email: "imtapas@yahoo.com",
+ *           password: "Hello@2025"
+ *         }
+ *       }
+ *
+ *     ERROR:
+ *       {
+ *         id: "<form-id>",
+ *         type: "form",
+ *         action: "submit",
+ *         error: true,
+ *         data: {
+ *           email: { value, valid, error, errors: [...] },
+ *           password: { value, valid, error, errors: [...] }
+ *         }
+ *       }
  * ------------------------------------------------------------------ */
 export function AlloyForm({ form, output }) {
   //
@@ -205,6 +225,7 @@ export function AlloyForm({ form, output }) {
 
   //
   // 2. Initialize per-field state.
+  //    Keep { value, valid, error, errors } for each field by name.
   //
   const [fieldState, setFieldState] = useState(() => {
     const init = {};
@@ -268,7 +289,7 @@ export function AlloyForm({ form, output }) {
 
   //
   // 4. When a field updates (AlloyInput.output),
-  //    we now receive an OutputObject from AlloyInput.
+  //    we receive an OutputObject from AlloyInput.
   //
   function handleFieldOutput(out) {
     // Expecting OutputObject from AlloyInput
@@ -316,36 +337,35 @@ export function AlloyForm({ form, output }) {
 
   //
   // 7. Submit handler.
-  //    We receive OutputObject from AlloyButtonSubmit but we
-  //    only use it for event/action if ever needed.
   //
   function handleSubmit(btnOut) {
-    // Aggregate all field errors into a flat list of messages.
-    const aggregatedErrors = [];
+    // detect if any field is invalid
     let hasError = false;
-
-    Object.entries(fieldState).forEach(([fname, state]) => {
+    Object.values(fieldState).forEach((state) => {
       if (state.error || !state.valid) {
         hasError = true;
-        (state.errors || []).forEach((msg) => {
-          aggregatedErrors.push(`${fname}: ${msg}`);
-        });
       }
     });
 
-    // Final values only (flat map)
+    // final flat values
     const finalValues = { ...dataPayload };
 
-    // Optionally keep snapshot on hydrated form instance
+    // optional snapshot
     hydrated.data = finalValues;
     hydrated.message = "";
 
+    // when error: send full fieldState (with errors arrays) so
+    // the target system can analyze them.
+    // when success: send only flat values.
+    const dataForOutput = hasError ? { ...fieldState } : finalValues;
+
     const out = new OutputObject({
+      id: hydrated.id,       // top-level id, as you requested
       type: "form",
       action: "submit",
-      data: finalValues,          // ⬅️ ONLY fieldName -> value
-      error: hasError,
-      errorMessage: aggregatedErrors
+      data: dataForOutput,
+      error: hasError
+      // no errorMessage; all useful info is inside data for error=true
     });
 
     output?.(out);

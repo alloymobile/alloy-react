@@ -6,7 +6,7 @@ import { CardImageObject } from "./AlloyCardImage.jsx";
 
 import AlloyButtonBar, { ButtonBarObject } from "./AlloyButtonBar.jsx";
 import AlloyLinkBar, { LinkBarObject } from "./AlloyLinkBar.jsx";
-import { TagObject } from "../../utils/idHelper.js";
+import { TagObject, OutputObject } from "../../utils/idHelper.js";
 
 /* ------------------------------------------------------------------
  * CardImageActionObject
@@ -58,9 +58,6 @@ export class CardImageActionObject extends CardImageObject {
     //   fields, logo, logoClass, textClass
     super(res);
 
-    // We keep this.link exactly as super() set it:
-    // this.link = typeof res.link === "string" ? res.link : ""
-
     // Normalize/override header/body/footer/fields into consistent TagObjects.
     this.header =
       res.header instanceof TagObject
@@ -68,7 +65,7 @@ export class CardImageActionObject extends CardImageObject {
         : new TagObject(
             res.header || {
               className: "card-header py-2 fw-semibold",
-              name: "",
+              name: ""
             }
           );
 
@@ -78,7 +75,7 @@ export class CardImageActionObject extends CardImageObject {
         : new TagObject(
             res.body || {
               className: "card-body d-flex align-items-center",
-              name: "Card Body",
+              name: "Card Body"
             }
           );
 
@@ -89,7 +86,7 @@ export class CardImageActionObject extends CardImageObject {
         : new TagObject({
             id: f?.id || `field_${idx + 1}`,
             className: f?.className ?? "",
-            name: f?.name ?? "",
+            name: f?.name ?? ""
           })
     );
 
@@ -100,7 +97,7 @@ export class CardImageActionObject extends CardImageObject {
             res.footer || {
               className:
                 "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
-              name: "Footer",
+              name: "Footer"
             }
           );
 
@@ -117,7 +114,7 @@ export class CardImageActionObject extends CardImageObject {
                   linkClass: "nav-item",
                   barName: { show: false },
                   type: "AlloyLink",
-                  links: [],
+                  links: []
                 }
               );
         break;
@@ -135,7 +132,7 @@ export class CardImageActionObject extends CardImageObject {
                   buttonClass: "nav-item",
                   barName: { show: false },
                   type: "AlloyButton",
-                  buttons: [],
+                  buttons: []
                 }
               );
         break;
@@ -149,7 +146,7 @@ export class CardImageActionObject extends CardImageObject {
  *
  * Props:
  *   - cardImageAction: CardImageActionObject (required)
- *   - output?: (payload:any) => void
+ *   - output?: (payload: OutputObject) => void
  *
  * Layout / behavior:
  *   - Root is ALWAYS <div className="card ...">.
@@ -157,15 +154,15 @@ export class CardImageActionObject extends CardImageObject {
  *   - Footer is never wrapped in a link.
  *   - ONLY the body becomes clickable if `cardImageAction.link` is set.
  *
- * Footer actions emit:
+ * Footer actions emit standardized OutputObject (same as AlloyCardAction):
  * {
- *   type: "action",
- *   action: {
- *     id, name, title, href, className, iconClass,
- *     active, disabled, ariaLabel, tabIndex
- *   },
- *   card: {
- *     id, bodyId
+ *   id: "<card-id>",
+ *   type: "card-action",
+ *   action: "<name | ariaLabel | title | id>",
+ *   error: false,
+ *   data: {
+ *     "<field.id>": "<field.name>",
+ *     ...
  *   }
  * }
  * ------------------------------------------------------------------ */
@@ -179,28 +176,37 @@ export function AlloyCardImageAction({ cardImageAction, output }) {
     );
   }
 
-  // translate footer bar item click -> parent output payload
+  // translate footer bar item click -> standardized OutputObject
   function emitActionWrapper() {
     return (self, e) => {
-      output?.({
-        type: "action",
-        action: {
-          id: self?.id,
-          name: self?.name,
-          title: self?.title,
-          href: self?.href,
-          className: self?.className,
-          iconClass: self?.icon?.iconClass,
-          active: self?.active,
-          disabled: !!self?.disabled,
-          ariaLabel: self?.ariaLabel,
-          tabIndex: self?.tabIndex,
-        },
-        card: {
-          id: cardImageAction.id,
-          bodyId: cardImageAction.body?.id,
-        },
+      if (typeof output !== "function") return;
+
+      // Derive a meaningful action name
+      const actionName = resolveActionName(self);
+
+      // Build the data map from fields[]
+      const fieldMap = {};
+      if (Array.isArray(cardImageAction.fields)) {
+        cardImageAction.fields.forEach((field) => {
+          if (!field) return;
+          const key = field.id;
+          const value = field.name;
+          if (key && typeof value !== "undefined") {
+            fieldMap[key] = value;
+          }
+        });
+      }
+
+      const wrapped = new OutputObject({
+        id: cardImageAction.id,
+        type: "card-action",
+        action: actionName,
+        error: false,
+        errorMessage: [],
+        data: fieldMap
       });
+
+      output(wrapped);
     };
   }
 
@@ -240,7 +246,7 @@ export function AlloyCardImageAction({ cardImageAction, output }) {
               width: cardImageAction.logo?.width,
               height: cardImageAction.logo?.height,
               maxWidth: "100%",
-              objectFit: "contain",
+              objectFit: "contain"
             }}
           />
         </div>
@@ -325,6 +331,29 @@ export function AlloyCardImageAction({ cardImageAction, output }) {
       {footerSection}
     </div>
   );
+}
+
+/* ---------------- helper: resolveActionName ---------------- */
+function resolveActionName(self) {
+  if (!self || typeof self !== "object") return "";
+
+  const name =
+    typeof self.name === "string" ? self.name.trim() : "";
+  if (name) return name;
+
+  const aria =
+    typeof self.ariaLabel === "string" ? self.ariaLabel.trim() : "";
+  if (aria) return aria;
+
+  const title =
+    typeof self.title === "string" ? self.title.trim() : "";
+  if (title) return title;
+
+  const id =
+    typeof self.id === "string" ? self.id.trim() : "";
+  if (id) return id;
+
+  return "";
 }
 
 export default AlloyCardImageAction;

@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import { TagObject, generateId } from "../../utils/idHelper.js";
+import { TagObject, generateId, OutputObject } from "../../utils/idHelper.js";
 import AlloyButtonBar, { ButtonBarObject } from "./AlloyButtonBar.jsx";
 import AlloyLinkBar, { LinkBarObject } from "./AlloyLinkBar.jsx";
 
@@ -71,30 +71,112 @@ export function AlloyCardAction({ cardAction, output }) {
     );
   }
 
-  // bubble up footer button/link clicks
-  function handleBarOutput(self, e) {
-    output?.({
-      type: "action",
-      action: {
-        id: self?.id,
-        name: self?.name,
-        className: self?.className,
-        active: self?.active,
-        disabled: self?.disabled ?? false,
-        title: self?.title,
-        ariaLabel: self?.ariaLabel,
-        tabIndex: self?.tabIndex,
-        iconClass: self?.icon?.iconClass,
-        href: self?.href,
-      },
-      card: {
-        id: cardAction.id,
-      },
+  /**
+   * handleBarOutput
+   *
+   * STANDARDIZED OUTPUT:
+   *
+   * {
+   *   id: "<card-id>",
+   *   type: "card-action",
+   *   action: "<name | ariaLabel | title | id of clicked control>",
+   *   error: false,
+   *   data: {
+   *     "<field.id>": "<field.name>",
+   *     ...
+   *   }
+   * }
+   */
+  function handleBarOutput(innerOut) {
+    if (typeof output !== "function") return;
+
+    const base =
+      innerOut && typeof innerOut.toJSON === "function"
+        ? innerOut.toJSON()
+        : innerOut || {};
+
+    const { error = false, errorMessage = [] } = base;
+
+    // Resolve action name from innerOut (prefers nested data)
+    const actionName = resolveActionName(base);
+
+    // Build the data map from fields[]
+    const fieldMap = {};
+    if (Array.isArray(cardAction.fields)) {
+      cardAction.fields.forEach((field) => {
+        if (!field) return;
+        const key = field.id;
+        const value = field.name;
+        if (key && typeof value !== "undefined") {
+          fieldMap[key] = value;
+        }
+      });
+    }
+
+    const wrapped = new OutputObject({
+      id: cardAction.id,
+      type: "card-action",
+      action: actionName,
+      error: !!error,
+      errorMessage: errorMessage || [],
+      data: fieldMap
     });
+
+    output(wrapped);
+  }
+
+  // name → ariaLabel → title → id, preferring data.* first
+  function resolveActionName(source) {
+    if (!source || typeof source !== "object") return "";
+
+    const pickFrom = (obj) => {
+      if (!obj || typeof obj !== "object") return "";
+      const name =
+        typeof obj.name === "string" ? obj.name.trim() : "";
+      if (name) return name;
+
+      const aria =
+        typeof obj.ariaLabel === "string" ? obj.ariaLabel.trim() : "";
+      if (aria) return aria;
+
+      const title =
+        typeof obj.title === "string" ? obj.title.trim() : "";
+      if (title) return title;
+
+      const id =
+        typeof obj.id === "string" ? obj.id.trim() : "";
+      if (id) return id;
+
+      return "";
+    };
+
+    const data =
+      source.data && typeof source.data === "object" ? source.data : null;
+
+    // Try nested shapes first (future-proof for ButtonBar/LinkBar internals)
+    if (data) {
+      if (data.action && typeof data.action === "object") {
+        const v = pickFrom(data.action);
+        if (v) return v;
+      }
+      if (data.button && typeof data.button === "object") {
+        const v = pickFrom(data.button);
+        if (v) return v;
+      }
+      if (data.link && typeof data.link === "object") {
+        const v = pickFrom(data.link);
+        if (v) return v;
+      }
+
+      const v = pickFrom(data);
+      if (v) return v;
+    }
+
+    // Fallback to root object
+    return pickFrom(source);
   }
 
   /* ------- header block (NEVER link) ------- */
-  // Only render if header.name is non-empty
   const headerBlock = cardAction.header?.name ? (
     <div
       id={cardAction.header.id}
@@ -107,7 +189,6 @@ export function AlloyCardAction({ cardAction, output }) {
   ) : null;
 
   /* ------- body content core ------- */
-  // This is the visual body markup WITHOUT link wrapping yet.
   const bodyInner = (
     <div
       id={cardAction.body.id}
@@ -132,13 +213,10 @@ export function AlloyCardAction({ cardAction, output }) {
   );
 
   /* ------- bodyBlock (ONLY this can be <Link>) ------- */
-  // If cardAction.link is provided, wrap ONLY bodyInner with <Link>.
-  // Otherwise, render bodyInner as-is.
   const bodyBlock = cardAction.link ? (
     <Link
       to={cardAction.link}
       className="text-decoration-none d-block"
-      // we do NOT forward cardAction.className here; that stays on the outer .card
       aria-label={cardAction.body?.name}
     >
       {bodyInner}
@@ -147,7 +225,7 @@ export function AlloyCardAction({ cardAction, output }) {
     bodyInner
   );
 
-  /* ------- footer block (NEVER link) ------- */
+  /* ------- footer block (NEVER link wrapper) ------- */
   const footerBlock = (
     <div
       id={cardAction.footer.id}
@@ -157,7 +235,9 @@ export function AlloyCardAction({ cardAction, output }) {
       }
     >
       {cardAction.footer.name ? (
-        <div className="me-auto small text-muted">{cardAction.footer.name}</div>
+        <div className="me-auto small text-muted">
+          {cardAction.footer.name}
+        </div>
       ) : null}
 
       {cardAction.action ? (
@@ -174,8 +254,6 @@ export function AlloyCardAction({ cardAction, output }) {
   );
 
   /* ------- final card layout ------- */
-  // OUTER is always a plain <div class="card ..."> now.
-  // Inside order: header (if any) → body (link-wrapped or not) → footer.
   return (
     <div
       id={cardAction.id}

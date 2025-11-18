@@ -154,9 +154,29 @@ const TAG_SNIPPET = `<AlloyTableAction tableAction={new TableActionObject(tableA
 /* ---------------------- Helpers ---------------------- */
 function preamble() {
   return [
-    "// Header click → { type: 'column', name, dir }  (ask server for sorted rows).",
-    "// Action click → { type: 'action', action, row }",
-    "// Row cell click (when `link` present) → { type: 'navigate', to, id, row }"
+    "// Header click → OutputObject {",
+    "//   id: <table-id>,",
+    "//   type: 'column',",
+    "//   action: 'Sort',",
+    "//   error: false,",
+    "//   data: { name: <columnName>, dir: 'asc' | 'desc' }",
+    "// }",
+    "//",
+    "// Action click → OutputObject {",
+    "//   id: <table-id>,",
+    "//   type: 'table',",
+    "//   action: <buttonName | ariaLabel | title | id>,",
+    "//   error: false,",
+    "//   data: <full row object>",
+    "// }",
+    "//",
+    "// Row cell click (when `link` present) → OutputObject {",
+    "//   id: <table-id>,",
+    "//   type: 'row',",
+    "//   action: 'navigate',",
+    "//   error: false,",
+    "//   data: { to: <url>, ...row }",
+    "// }"
   ].join("\n");
 }
 
@@ -218,7 +238,12 @@ export default function TableActionPage() {
 
   // helper: set output for whichever tab is active
   function handleOutput(tab, payload) {
-    const s = JSON.stringify(payload, null, 2);
+    const normalized =
+      payload && typeof payload.toJSON === "function"
+        ? payload.toJSON()
+        : payload;
+
+    const s = JSON.stringify(normalized, null, 2);
     switch (tab) {
       case "PlainTable":
         setOutPlain(s);
@@ -348,9 +373,12 @@ export default function TableActionPage() {
             output={(payload) => handleOutput(active, payload)}
           />
           <div className="small text-secondary mt-2">
-            Server-driven sort. If <code>link</code> is present, cells link to{" "}
-            <code>{`"${bindings.model.link || "/path"}/{row.id}"`}</code>.{" "}
-            If <code>actions</code> is provided, a shared <code>AlloyButtonBar</code> renders in the last column.
+            Server-driven sort. If <code>link</code> is present, clicking a cell
+            emits an <code>OutputObject</code> with{" "}
+            <code>{`{ id, type: 'row', action: 'navigate', data: { to, ...row } }`}</code>.{" "}
+            If <code>actions</code> is provided, a shared{" "}
+            <code>AlloyButtonBar</code> renders in the last column and emits{" "}
+            <code>{`{ id, type: 'table', action, data: row }`}</code> on click.
           </div>
         </div>
       </div>
@@ -360,7 +388,9 @@ export default function TableActionPage() {
         {/* Left: Input JSON */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">Input JSON (editable) — {active}</span>
+            <span className="fw-semibold">
+              Input JSON (editable) — {active}
+            </span>
             <div className="d-flex gap-2">
               <button
                 type="button"
@@ -380,12 +410,16 @@ export default function TableActionPage() {
             spellCheck={false}
           />
           {bindings.parseError && (
-            <div className="invalid-feedback d-block mt-1">{bindings.parseError}</div>
+            <div className="invalid-feedback d-block mt-1">
+              {bindings.parseError}
+            </div>
           )}
           <div className="form-text">
             Columns come from the first row (excluding <code>id</code>).<br />
-            <code>link</code> turns cells into navigable links.<br />
-            <code>actions</code> (ButtonBarObject config) renders action buttons in each row.
+            <code>link</code> turns cells into navigable links (emitting a
+            standardized <code>OutputObject</code>).<br />
+            <code>actions</code> (ButtonBarObject config) renders action buttons
+            in each row.
           </div>
         </div>
 
@@ -411,9 +445,21 @@ export default function TableActionPage() {
             spellCheck={false}
           />
           <div className="form-text">
-            • Header click → sort intent.<br />
-            • Action click → which button + which row.<br />
-            • Cell click → nav intent (if <code>link</code> exists).
+            All events are normalized to <code>OutputObject</code>:
+            <ul className="mb-0 ps-3">
+              <li>
+                Header click →{" "}
+                <code>{`{ id, type: 'column', action: 'Sort', error, data: { name, dir } }`}</code>
+              </li>
+              <li>
+                Action button click →{" "}
+                <code>{`{ id, type: 'table', action, error, data: row }`}</code>
+              </li>
+              <li>
+                Cell click (with <code>link</code>) →{" "}
+                <code>{`{ id, type: 'row', action: 'navigate', error, data: { to, ...row } }`}</code>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

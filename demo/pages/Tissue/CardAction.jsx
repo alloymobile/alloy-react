@@ -1,72 +1,51 @@
-// demo/pages/tissue/CardIconActionPage.jsx
+// demo/pages/tissue/CardActionPage.jsx
 import React, { useMemo, useState } from "react";
-import { AlloyCardIconAction, CardIconActionObject } from "../../../src";
+import { AlloyCardAction, CardActionObject } from "../../../src";
 
 /* ------------------------------------------------------------------
    Default presets for each variant.
 
-   NOTE:
-   - Every preset includes `link: "/users/101"`.
-   - `link` is OPTIONAL. If you remove it or set it to "", the body
-     will no longer be clickable.
-   - Only the BODY becomes clickable when link is provided.
-     Header, footer, and the footer action bar are never wrapped
-     in <Link/>.
-
-   Layout details for CardIconActionObject:
-   - header (optional; renders only if header.name)
-   - body   (required; also where the optional link click lives)
-   - icon / iconClass  (left bubble/avatar in body row)
-   - textClass + fields[] (right column lines in body row)
-   - footer (required; always rendered)
-        - footer.name = left text
-        - footer action bar (ButtonBar or LinkBar) = right side
-   - type + action configure footer bar behavior and content
+   Layout details for CardActionObject:
+   - cardAction.id, .className
+   - link (optional): ONLY wraps the body in <Link>; header/footer stay normal
+   - header: TagObject (optional; renders only if header.name)
+   - body:   TagObject (main title / summary)
+   - fields: TagObject[] (extra lines under body)
+   - footer: TagObject (left side text)
+   - type + action: configure footer bar:
+        type = "AlloyButtonBar" or "AlloyLinkBar"
+        action = ButtonBarObject / LinkBarObject config
 ------------------------------------------------------------------- */
 
-/* 1) ButtonBar - text only */
+/* 1) ButtonBar - text buttons */
 const DEFAULT_BTN_TEXT = JSON.stringify(
   {
-    id: "cardIconBtnText01",
+    id: "cardBtnText01",
     className: "card border m-2 shadow",
     link: "/users/101",
 
     header: {
-      id: "cardIconBtnTextHeader",
+      id: "cardBtnTextHeader",
       className: "card-header py-2 fw-semibold",
       name: "User Actions (Buttons - Text)"
     },
 
     body: {
-      id: "cardIconBtnTextBody",
-      className: "card-body d-flex align-items-center",
-      name: "User Summary"
+      id: "cardBtnTextBody",
+      className: "card-body",
+      name: "Ada Lovelace"
     },
 
-    // avatar / glyph column on the left
-    icon: {
-      iconClass: "fa-solid fa-user fa-2xl"
-    },
-    iconClass:
-      "col-4 rounded-circle bg-warning text-white mb-0 d-flex align-items-center justify-content-center",
-    textClass: "col-8",
-
-    // right column lines
     fields: [
-      {
-        id: "fullName",
-        className: "fw-semibold",
-        name: "Ada Lovelace"
-      },
       {
         id: "role",
         className: "text-muted small",
-        name: "Admin"
+        name: "Admin · Active since 2020"
       }
     ],
 
     footer: {
-      id: "cardIconBtnTextFooter",
+      id: "cardBtnTextFooter",
       className:
         "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
       name: "Manage this user"
@@ -74,7 +53,6 @@ const DEFAULT_BTN_TEXT = JSON.stringify(
 
     type: "AlloyButtonBar",
     action: {
-      // ButtonBarObject (text buttons)
       type: "AlloyButton",
       className: "nav gap-2",
       buttonClass: "nav-item",
@@ -97,47 +75,35 @@ const DEFAULT_BTN_TEXT = JSON.stringify(
   2
 );
 
-/* 2) ButtonBar - icon + text */
+/* 2) ButtonBar - icon + text buttons */
 const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
   {
-    id: "cardIconBtnIconText01",
+    id: "cardBtnIconText01",
     className: "card border m-2 shadow",
-    link: "/users/101",
+    link: "/projects/501",
 
     header: {
-      id: "cardIconBtnIconTextHeader",
+      id: "cardBtnIconTextHeader",
       className: "card-header py-2 fw-semibold",
-      name: "User Actions (Buttons - Icon+Text)"
+      name: "Project Actions (Buttons - Icon+Text)"
     },
 
     body: {
-      id: "cardIconBtnIconTextBody",
-      className: "card-body d-flex align-items-center",
-      name: "User Summary"
+      id: "cardBtnIconTextBody",
+      className: "card-body",
+      name: "Compiler Migration"
     },
-
-    icon: {
-      iconClass: "fa-solid fa-user-gear fa-2xl"
-    },
-    iconClass:
-      "col-4 rounded-circle bg-primary text-white mb-0 d-flex align-items-center justify-content-center",
-    textClass: "col-8",
 
     fields: [
       {
-        id: "fullName",
-        className: "fw-semibold",
-        name: "Linus Torvalds"
-      },
-      {
-        id: "role",
+        id: "status",
         className: "text-muted small",
-        name: "User"
+        name: "Status: In progress · Priority: High"
       }
     ],
 
     footer: {
-      id: "cardIconBtnIconTextFooter",
+      id: "cardBtnIconTextFooter",
       className:
         "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
       name: "Available actions"
@@ -145,25 +111,24 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
 
     type: "AlloyButtonBar",
     action: {
-      // ButtonBarObject w/ ButtonIconObject children (icon+text buttons)
       type: "AlloyButtonIcon",
       className: "nav gap-2",
       buttonClass: "nav-item",
       barName: { show: false },
       buttons: [
         {
-          id: "editBtn",
-          name: "Edit",
+          id: "detailsBtn",
+          name: "Details",
           className:
-            "btn btn-sm btn-outline-primary d-flex align-items-center gap-1",
-          icon: { iconClass: "fa-regular fa-pen-to-square" }
+            "btn btn-sm btn-outline-secondary d-flex align-items-center gap-1",
+          icon: { iconClass: "fa-regular fa-file-lines" }
         },
         {
-          id: "delBtn",
-          name: "Delete",
+          id: "assignBtn",
+          name: "Assign",
           className:
-            "btn btn-sm btn-outline-danger d-flex align-items-center gap-1",
-          icon: { iconClass: "fa-regular fa-trash-can" }
+            "btn btn-sm btn-outline-primary d-flex align-items-center gap-1",
+          icon: { iconClass: "fa-regular fa-user" }
         }
       ]
     }
@@ -172,47 +137,35 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
   2
 );
 
-/* 3) ButtonBar - icon only */
+/* 3) ButtonBar - icon-only buttons */
 const DEFAULT_BTN_ICON_ONLY = JSON.stringify(
   {
-    id: "cardIconBtnIconOnly01",
+    id: "cardBtnIconOnly01",
     className: "card border m-2 shadow",
-    link: "/users/101",
+    link: "/servers/42",
 
     header: {
-      id: "cardIconBtnIconOnlyHeader",
+      id: "cardBtnIconOnlyHeader",
       className: "card-header py-2 fw-semibold",
-      name: "User Actions (Buttons - Icon Only)"
+      name: "Server Actions (Buttons - Icon Only)"
     },
 
     body: {
-      id: "cardIconBtnIconOnlyBody",
-      className: "card-body d-flex align-items-center",
-      name: "User Summary"
+      id: "cardBtnIconOnlyBody",
+      className: "card-body",
+      name: "prod-api-01"
     },
-
-    icon: {
-      iconClass: "fa-solid fa-user-astronaut fa-2xl"
-    },
-    iconClass:
-      "col-4 rounded-circle bg-dark text-white mb-0 d-flex align-items-center justify-content-center",
-    textClass: "col-8",
 
     fields: [
       {
-        id: "fullName",
-        className: "fw-semibold",
-        name: "Margaret Hamilton"
-      },
-      {
-        id: "role",
+        id: "meta",
         className: "text-muted small",
-        name: "Owner"
+        name: "Region: us-east · Status: Healthy"
       }
     ],
 
     footer: {
-      id: "cardIconBtnIconOnlyFooter",
+      id: "cardBtnIconOnlyFooter",
       className:
         "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
       name: "Admin tools"
@@ -220,23 +173,24 @@ const DEFAULT_BTN_ICON_ONLY = JSON.stringify(
 
     type: "AlloyButtonBar",
     action: {
-      // icon-only buttons
       type: "AlloyButtonIcon",
       className: "nav gap-2",
       buttonClass: "nav-item",
       barName: { show: false },
       buttons: [
         {
-          id: "editBtn",
-          ariaLabel: "Edit",
-          className: "btn btn-sm btn-outline-primary",
-          icon: { iconClass: "fa-regular fa-pen-to-square" }
+          id: "restartBtn",
+          ariaLabel: "Restart",
+          title: "Restart",
+          className: "btn btn-sm btn-outline-warning",
+          icon: { iconClass: "fa-solid fa-rotate-right" }
         },
         {
-          id: "delBtn",
-          ariaLabel: "Delete",
-          className: "btn btn-sm btn-outline-danger",
-          icon: { iconClass: "fa-regular fa-trash-can" }
+          id: "logsBtn",
+          ariaLabel: "View logs",
+          title: "View logs",
+          className: "btn btn-sm btn-outline-secondary",
+          icon: { iconClass: "fa-regular fa-file-lines" }
         }
       ]
     }
@@ -245,47 +199,35 @@ const DEFAULT_BTN_ICON_ONLY = JSON.stringify(
   2
 );
 
-/* 4) LinkBar - text only */
+/* 4) LinkBar - text links */
 const DEFAULT_LINK_TEXT = JSON.stringify(
   {
-    id: "cardIconLinkText01",
+    id: "cardLinkText01",
     className: "card border m-2 shadow",
-    link: "/users/101",
+    link: "/docs/overview",
 
     header: {
-      id: "cardIconLinkTextHeader",
+      id: "cardLinkTextHeader",
       className: "card-header py-2 fw-semibold",
       name: "Resources (Links - Text)"
     },
 
     body: {
-      id: "cardIconLinkTextBody",
-      className: "card-body d-flex align-items-center",
-      name: "Docs & Help"
+      id: "cardLinkTextBody",
+      className: "card-body",
+      name: "Alloy Documentation"
     },
-
-    icon: {
-      iconClass: "fa-solid fa-book-open fa-2xl"
-    },
-    iconClass:
-      "col-4 rounded-circle bg-info text-white mb-0 d-flex align-items-center justify-content-center",
-    textClass: "col-8",
 
     fields: [
       {
-        id: "title",
-        className: "fw-semibold",
-        name: "Alloy Docs"
-      },
-      {
         id: "desc",
         className: "text-muted small",
-        name: "Developer resources & API surface"
+        name: "Guides, API reference, and examples"
       }
     ],
 
     footer: {
-      id: "cardIconLinkTextFooter",
+      id: "cardLinkTextFooter",
       className:
         "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
       name: "Helpful links"
@@ -293,7 +235,6 @@ const DEFAULT_LINK_TEXT = JSON.stringify(
 
     type: "AlloyLinkBar",
     action: {
-      // LinkBarObject hydrate: plain text links
       type: "AlloyLink",
       className: "nav gap-2",
       linkClass: "nav-item",
@@ -318,38 +259,26 @@ const DEFAULT_LINK_TEXT = JSON.stringify(
   2
 );
 
-/* 5) LinkBar - icon + text */
+/* 5) LinkBar - icon+text links */
 const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
   {
-    id: "cardIconLinkIconText01",
+    id: "cardLinkIconText01",
     className: "card border m-2 shadow",
-    link: "/users/101",
+    link: "/support",
 
     header: {
-      id: "cardIconLinkIconTextHeader",
+      id: "cardLinkIconTextHeader",
       className: "card-header py-2 fw-semibold",
-      name: "Resources (Links - Icon+Text)"
+      name: "Support (Links - Icon+Text)"
     },
 
     body: {
-      id: "cardIconLinkIconTextBody",
-      className: "card-body d-flex align-items-center",
-      name: "Guides, help, chat"
+      id: "cardLinkIconTextBody",
+      className: "card-body",
+      name: "Help & Support"
     },
-
-    icon: {
-      iconClass: "fa-solid fa-life-ring fa-2xl"
-    },
-    iconClass:
-      "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
-    textClass: "col-8",
 
     fields: [
-      {
-        id: "title",
-        className: "fw-semibold",
-        name: "Support Center"
-      },
       {
         id: "desc",
         className: "text-muted small",
@@ -358,7 +287,7 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
     ],
 
     footer: {
-      id: "cardIconLinkIconTextFooter",
+      id: "cardLinkIconTextFooter",
       className:
         "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
       name: "Support options"
@@ -366,7 +295,6 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
 
     type: "AlloyLinkBar",
     action: {
-      // LinkBarObject hydrate: links w/ icon + label
       type: "AlloyLinkIcon",
       className: "nav gap-2",
       linkClass: "nav-item",
@@ -395,47 +323,35 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
   2
 );
 
-/* 6) LinkBar - icon only */
+/* 6) LinkBar - icon-only links */
 const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
   {
-    id: "cardIconLinkIconOnly01",
+    id: "cardLinkIconOnly01",
     className: "card border m-2 shadow",
-    link: "/users/101",
+    link: "/shortcuts",
 
     header: {
-      id: "cardIconLinkIconOnlyHeader",
+      id: "cardLinkIconOnlyHeader",
       className: "card-header py-2 fw-semibold",
-      name: "Resources (Links - Icon Only)"
+      name: "Shortcuts (Links - Icon Only)"
     },
 
     body: {
-      id: "cardIconLinkIconOnlyBody",
-      className: "card-body d-flex align-items-center",
-      name: "Shortcuts"
+      id: "cardLinkIconOnlyBody",
+      className: "card-body",
+      name: "Quick Actions"
     },
-
-    icon: {
-      iconClass: "fa-solid fa-bolt fa-2xl"
-    },
-    iconClass:
-      "col-4 rounded-circle bg-warning text-white mb-0 d-flex align-items-center justify-content-center",
-    textClass: "col-8",
 
     fields: [
       {
-        id: "title",
-        className: "fw-semibold",
-        name: "Quick Access"
-      },
-      {
         id: "desc",
         className: "text-muted small",
-        name: "Shortcuts"
+        name: "Common navigation shortcuts"
       }
     ],
 
     footer: {
-      id: "cardIconLinkIconOnlyFooter",
+      id: "cardLinkIconOnlyFooter",
       className:
         "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
       name: "Jump to…"
@@ -443,7 +359,6 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
 
     type: "AlloyLinkBar",
     action: {
-      // LinkBarObject hydrate: icon links only (ariaLabel/title drive a11y)
       type: "AlloyLinkIcon",
       className: "nav gap-2",
       linkClass: "nav-item",
@@ -473,10 +388,9 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
 );
 
 /* ---------------------- Tag snippet (display only) ---------------------- */
-const TAG_SNIPPET = `<AlloyCardIconAction cardIconAction={new CardIconActionObject(cardIconActionObject)} output={handleOutput} />`;
+const TAG_SNIPPET = `<AlloyCardAction cardAction={new CardActionObject(cardActionObject)} output={handleOutput} />`;
 
-export default function CardIconActionPage() {
-  // same 6 tabs style as CardActionPage
+export default function CardActionPage() {
   const TABS = [
     { key: "BtnText", label: "Button (text)" },
     { key: "BtnIconText", label: "Button (icon+text)" },
@@ -488,7 +402,7 @@ export default function CardIconActionPage() {
 
   const [active, setActive] = useState("BtnText");
 
-  // editable JSON per tab
+  // JSON per tab
   const [jsonBtnText, setJsonBtnText] = useState(DEFAULT_BTN_TEXT);
   const [jsonBtnIconText, setJsonBtnIconText] = useState(DEFAULT_BTN_ICON_TEXT);
   const [jsonBtnIcon, setJsonBtnIcon] = useState(DEFAULT_BTN_ICON_ONLY);
@@ -505,48 +419,43 @@ export default function CardIconActionPage() {
   const [errLinkIconText, setErrLinkIconText] = useState("");
   const [errLinkIcon, setErrLinkIcon] = useState("");
 
-  // emitted output (from footer bar click)
-  const [emitBtnText, setEmitBtnText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitBtnIconText, setEmitBtnIconText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitBtnIcon, setEmitBtnIcon] = useState(
-    "// click an action to see payload"
-  );
-  const [emitLinkText, setEmitLinkText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitLinkIconText, setEmitLinkIconText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitLinkIcon, setEmitLinkIcon] = useState(
-    "// click an action to see payload"
-  );
+  // Output per tab
+  const defaultOutputMsg =
+    '// click a footer action to see OutputObject:\n' +
+    '// {\n' +
+    '//   id: "<card-id>",\n' +
+    '//   type: "card-action",\n' +
+    '//   action: "<name | ariaLabel | title | id>",\n' +
+    '//   error: false,\n' +
+    '//   data: { "<field.id>": "<field.name>", ... }\n' +
+    '// }';
+
+  const [emitBtnText, setEmitBtnText] = useState(defaultOutputMsg);
+  const [emitBtnIconText, setEmitBtnIconText] = useState(defaultOutputMsg);
+  const [emitBtnIcon, setEmitBtnIcon] = useState(defaultOutputMsg);
+  const [emitLinkText, setEmitLinkText] = useState(defaultOutputMsg);
+  const [emitLinkIconText, setEmitLinkIconText] =
+    useState(defaultOutputMsg);
+  const [emitLinkIcon, setEmitLinkIcon] = useState(defaultOutputMsg);
 
   /* ---------------- model builders per tab ---------------- */
+
   const modelBtnText = useMemo(() => {
     try {
       setErrBtnText("");
-      return new CardIconActionObject(JSON.parse(jsonBtnText));
+      return new CardActionObject(JSON.parse(jsonBtnText));
     } catch (e) {
       setErrBtnText(String(e.message || e));
-      return new CardIconActionObject({
+      return new CardActionObject({
         className: "card border m-2 shadow",
-        link: "/users/101",
         header: {
           className: "card-header py-2 fw-semibold text-danger",
           name: "Invalid JSON (Button text)"
         },
         body: {
-          className: "card-body d-flex align-items-center",
+          className: "card-body",
           name: "Parse error"
         },
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass:
-          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
-        textClass: "col-8",
         fields: [
           {
             className: "text-danger",
@@ -571,24 +480,19 @@ export default function CardIconActionPage() {
   const modelBtnIconText = useMemo(() => {
     try {
       setErrBtnIconText("");
-      return new CardIconActionObject(JSON.parse(jsonBtnIconText));
+      return new CardActionObject(JSON.parse(jsonBtnIconText));
     } catch (e) {
       setErrBtnIconText(String(e.message || e));
-      return new CardIconActionObject({
+      return new CardActionObject({
         className: "card border m-2 shadow",
-        link: "/users/101",
         header: {
           className: "card-header py-2 fw-semibold text-danger",
           name: "Invalid JSON (Button icon+text)"
         },
         body: {
-          className: "card-body d-flex align-items-center",
+          className: "card-body",
           name: "Parse error"
         },
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass:
-          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
-        textClass: "col-8",
         fields: [
           {
             className: "text-danger",
@@ -613,24 +517,19 @@ export default function CardIconActionPage() {
   const modelBtnIcon = useMemo(() => {
     try {
       setErrBtnIcon("");
-      return new CardIconActionObject(JSON.parse(jsonBtnIcon));
+      return new CardActionObject(JSON.parse(jsonBtnIcon));
     } catch (e) {
       setErrBtnIcon(String(e.message || e));
-      return new CardIconActionObject({
+      return new CardActionObject({
         className: "card border m-2 shadow",
-        link: "/users/101",
         header: {
           className: "card-header py-2 fw-semibold text-danger",
           name: "Invalid JSON (Button icon only)"
         },
         body: {
-          className: "card-body d-flex align-items-center",
+          className: "card-body",
           name: "Parse error"
         },
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass:
-          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
-        textClass: "col-8",
         fields: [
           {
             className: "text-danger",
@@ -655,24 +554,19 @@ export default function CardIconActionPage() {
   const modelLinkText = useMemo(() => {
     try {
       setErrLinkText("");
-      return new CardIconActionObject(JSON.parse(jsonLinkText));
+      return new CardActionObject(JSON.parse(jsonLinkText));
     } catch (e) {
       setErrLinkText(String(e.message || e));
-      return new CardIconActionObject({
+      return new CardActionObject({
         className: "card border m-2 shadow",
-        link: "/users/101",
         header: {
           className: "card-header py-2 fw-semibold text-danger",
           name: "Invalid JSON (Link text)"
         },
         body: {
-          className: "card-body d-flex align-items-center",
+          className: "card-body",
           name: "Parse error"
         },
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass:
-          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
-        textClass: "col-8",
         fields: [
           {
             className: "text-danger",
@@ -697,24 +591,19 @@ export default function CardIconActionPage() {
   const modelLinkIconText = useMemo(() => {
     try {
       setErrLinkIconText("");
-      return new CardIconActionObject(JSON.parse(jsonLinkIconText));
+      return new CardActionObject(JSON.parse(jsonLinkIconText));
     } catch (e) {
       setErrLinkIconText(String(e.message || e));
-      return new CardIconActionObject({
+      return new CardActionObject({
         className: "card border m-2 shadow",
-        link: "/users/101",
         header: {
           className: "card-header py-2 fw-semibold text-danger",
           name: "Invalid JSON (Link icon+text)"
         },
         body: {
-          className: "card-body d-flex align-items-center",
+          className: "card-body",
           name: "Parse error"
         },
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass:
-          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
-        textClass: "col-8",
         fields: [
           {
             className: "text-danger",
@@ -739,24 +628,19 @@ export default function CardIconActionPage() {
   const modelLinkIcon = useMemo(() => {
     try {
       setErrLinkIcon("");
-      return new CardIconActionObject(JSON.parse(jsonLinkIcon));
+      return new CardActionObject(JSON.parse(jsonLinkIcon));
     } catch (e) {
       setErrLinkIcon(String(e.message || e));
-      return new CardIconActionObject({
+      return new CardActionObject({
         className: "card border m-2 shadow",
-        link: "/users/101",
         header: {
           className: "card-header py-2 fw-semibold text-danger",
           name: "Invalid JSON (Link icon only)"
         },
         body: {
-          className: "card-body d-flex align-items-center",
+          className: "card-body",
           name: "Parse error"
         },
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" },
-        iconClass:
-          "col-4 rounded-circle bg-danger text-white mb-0 d-flex align-items-center justify-content-center",
-        textClass: "col-8",
         fields: [
           {
             className: "text-danger",
@@ -778,110 +662,115 @@ export default function CardIconActionPage() {
     }
   }, [jsonLinkIcon]);
 
-  /* ---------------- tab bindings (active tab drives UI panes) ---------------- */
-  const tabBindings = {
-    BtnText: {
-      label: "Button (text)",
-      model: modelBtnText,
-      inputJson: jsonBtnText,
-      setInputJson: setJsonBtnText,
-      parseError: errBtnText,
-      setParseError: setErrBtnText,
-      outputJson: emitBtnText,
-      setOutputJson: setEmitBtnText,
-      resetJson: () => {
-        setJsonBtnText(DEFAULT_BTN_TEXT);
-        setEmitBtnText("// click an action to see payload");
-        setErrBtnText("");
-      }
-    },
-    BtnIconText: {
-      label: "Button (icon+text)",
-      model: modelBtnIconText,
-      inputJson: jsonBtnIconText,
-      setInputJson: setJsonBtnIconText,
-      parseError: errBtnIconText,
-      setParseError: setErrBtnIconText,
-      outputJson: emitBtnIconText,
-      setOutputJson: setEmitBtnIconText,
-      resetJson: () => {
-        setJsonBtnIconText(DEFAULT_BTN_ICON_TEXT);
-        setEmitBtnIconText("// click an action to see payload");
-        setErrBtnIconText("");
-      }
-    },
-    BtnIcon: {
-      label: "Button (icon only)",
-      model: modelBtnIcon,
-      inputJson: jsonBtnIcon,
-      setInputJson: setJsonBtnIcon,
-      parseError: errBtnIcon,
-      setParseError: setErrBtnIcon,
-      outputJson: emitBtnIcon,
-      setOutputJson: setEmitBtnIcon,
-      resetJson: () => {
-        setJsonBtnIcon(DEFAULT_BTN_ICON_ONLY);
-        setEmitBtnIcon("// click an action to see payload");
-        setErrBtnIcon("");
-      }
-    },
-    LinkText: {
-      label: "Link (text)",
-      model: modelLinkText,
-      inputJson: jsonLinkText,
-      setInputJson: setJsonLinkText,
-      parseError: errLinkText,
-      setParseError: setErrLinkText,
-      outputJson: emitLinkText,
-      setOutputJson: setEmitLinkText,
-      resetJson: () => {
-        setJsonLinkText(DEFAULT_LINK_TEXT);
-        setEmitLinkText("// click an action to see payload");
-        setErrLinkText("");
-      }
-    },
-    LinkIconText: {
-      label: "Link (icon+text)",
-      model: modelLinkIconText,
-      inputJson: jsonLinkIconText,
-      setInputJson: setJsonLinkIconText,
-      parseError: errLinkIconText,
-      setParseError: setErrLinkIconText,
-      outputJson: emitLinkIconText,
-      setOutputJson: setEmitLinkIconText,
-      resetJson: () => {
-        setJsonLinkIconText(DEFAULT_LINK_ICON_TEXT);
-        setEmitLinkIconText("// click an action to see payload");
-        setErrLinkIconText("");
-      }
-    },
-    LinkIcon: {
-      label: "Link (icon only)",
-      model: modelLinkIcon,
-      inputJson: jsonLinkIcon,
-      setInputJson: setJsonLinkIcon,
-      parseError: errLinkIcon,
-      setParseError: setErrLinkIcon,
-      outputJson: emitLinkIcon,
-      setOutputJson: setEmitLinkIcon,
-      resetJson: () => {
-        setJsonLinkIcon(DEFAULT_LINK_ICON_ONLY);
-        setEmitLinkIcon("// click an action to see payload");
-        setErrLinkIcon("");
-      }
-    }
-  }[active];
+  /* ---------------- active tab bindings ---------------- */
 
-  /* ---------------- footer action click -> capture payload for that tab ---------------- */
-  function handleOutput(payload) {
-    const formatted = JSON.stringify(payload, null, 2);
-    tabBindings.setOutputJson(formatted);
+  const tabBindings =
+    {
+      BtnText: {
+        label: "Button (text)",
+        model: modelBtnText,
+        inputJson: jsonBtnText,
+        setInputJson: setJsonBtnText,
+        parseError: errBtnText,
+        setParseError: setErrBtnText,
+        outputJson: emitBtnText,
+        setOutputJson: setEmitBtnText,
+        resetJson: () => {
+          setJsonBtnText(DEFAULT_BTN_TEXT);
+          setEmitBtnText(defaultOutputMsg);
+          setErrBtnText("");
+        }
+      },
+      BtnIconText: {
+        label: "Button (icon+text)",
+        model: modelBtnIconText,
+        inputJson: jsonBtnIconText,
+        setInputJson: setJsonBtnIconText,
+        parseError: errBtnIconText,
+        setParseError: setErrBtnIconText,
+        outputJson: emitBtnIconText,
+        setOutputJson: setEmitBtnIconText,
+        resetJson: () => {
+          setJsonBtnIconText(DEFAULT_BTN_ICON_TEXT);
+          setEmitBtnIconText(defaultOutputMsg);
+          setErrBtnIconText("");
+        }
+      },
+      BtnIcon: {
+        label: "Button (icon only)",
+        model: modelBtnIcon,
+        inputJson: jsonBtnIcon,
+        setInputJson: setJsonBtnIcon,
+        parseError: errBtnIcon,
+        setParseError: setErrBtnIcon,
+        outputJson: emitBtnIcon,
+        setOutputJson: setEmitBtnIcon,
+        resetJson: () => {
+          setJsonBtnIcon(DEFAULT_BTN_ICON_ONLY);
+          setEmitBtnIcon(defaultOutputMsg);
+          setErrBtnIcon("");
+        }
+      },
+      LinkText: {
+        label: "Link (text)",
+        model: modelLinkText,
+        inputJson: jsonLinkText,
+        setInputJson: setJsonLinkText,
+        parseError: errLinkText,
+        setParseError: setErrLinkText,
+        outputJson: emitLinkText,
+        setOutputJson: setEmitLinkText,
+        resetJson: () => {
+          setJsonLinkText(DEFAULT_LINK_TEXT);
+          setEmitLinkText(defaultOutputMsg);
+          setErrLinkText("");
+        }
+      },
+      LinkIconText: {
+        label: "Link (icon+text)",
+        model: modelLinkIconText,
+        inputJson: jsonLinkIconText,
+        setInputJson: setJsonLinkIconText,
+        parseError: errLinkIconText,
+        setParseError: setErrLinkIconText,
+        outputJson: emitLinkIconText,
+        setOutputJson: setEmitLinkIconText,
+        resetJson: () => {
+          setJsonLinkIconText(DEFAULT_LINK_ICON_TEXT);
+          setEmitLinkIconText(defaultOutputMsg);
+          setErrLinkIconText("");
+        }
+      },
+      LinkIcon: {
+        label: "Link (icon only)",
+        model: modelLinkIcon,
+        inputJson: jsonLinkIcon,
+        setInputJson: setJsonLinkIcon,
+        parseError: errLinkIcon,
+        setParseError: setErrLinkIcon,
+        outputJson: emitLinkIcon,
+        setOutputJson: setEmitLinkIcon,
+        resetJson: () => {
+          setJsonLinkIcon(DEFAULT_LINK_ICON_ONLY);
+          setEmitLinkIcon(defaultOutputMsg);
+          setErrLinkIcon("");
+        }
+      }
+    }[active] || {};
+
+  /* ---------------- handleOutput: normalize OutputObject ---------------- */
+
+  function handleOutput(out) {
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
+    tabBindings.setOutputJson(JSON.stringify(payload, null, 2));
   }
 
   return (
     <div className="container py-3 d-flex flex-column align-items-center">
       <div className="col-12 col-lg-10 col-xl-8">
-        <h3 className="mb-3 text-center">AlloyCardIconAction</h3>
+        <h3 className="mb-3 text-center">AlloyCardAction</h3>
 
         {/* Tabs */}
         <ul className="nav nav-tabs flex-wrap justify-content-center mb-3">
@@ -910,25 +799,28 @@ export default function CardIconActionPage() {
         {/* Preview */}
         <div className="row mb-4 justify-content-center">
           <div className="col-12 col-lg-10 col-xl-8">
-            <AlloyCardIconAction
-              cardIconAction={tabBindings.model}
-              output={handleOutput}
-            />
+            {tabBindings.model && (
+              <AlloyCardAction
+                cardAction={tabBindings.model}
+                output={handleOutput}
+              />
+            )}
             <div className="small text-secondary mt-2 text-center text-lg-start">
               <div className="mb-1">
                 <strong>Navigation behavior:</strong>{" "}
                 <code>link</code> is optional.
-                If it exists (like <code>"/users/101"</code> in these demos),
-                ONLY the <code>body</code> row (the icon + text block) becomes
-                clickable via React Router <code>&lt;Link/&gt;</code>.
+                If present (like <code>"/users/101"</code>), ONLY the{" "}
+                <code>body</code> area becomes clickable (React Router{" "}
+                <code>&lt;Link/&gt;</code>).
               </div>
               <div className="mb-1">
-                The header, footer, and the footer action bar are never part of
-                that link. Footer actions still work and still fire{" "}
+                Header, footer, and the footer action bar are never part of that
+                link. Footer actions still work and emit{" "}
                 <code>output()</code>.
               </div>
               <div className="text-muted">
-                Remove or clear <code>link</code> to make the body non-clickable.
+                Remove <code>link</code> (or set it to <code>""</code>) to make
+                the card body non-clickable.
               </div>
             </div>
           </div>
@@ -936,7 +828,7 @@ export default function CardIconActionPage() {
 
         {/* Input JSON + Output payload side by side */}
         <div className="row g-3 align-items-stretch justify-content-center mb-5">
-          {/* Left pane: JSON editor */}
+          {/* Left: JSON editor */}
           <div className="col-12 col-lg-6">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <span className="fw-semibold">
@@ -969,30 +861,30 @@ export default function CardIconActionPage() {
             <div className="form-text">
               <ul className="mb-0 ps-3">
                 <li>
-                  <code>iconClass</code> usually includes{" "}
-                  <code>d-flex align-items-center justify-content-center</code>{" "}
-                  so the avatar bubble is centered.
+                  <code>header</code>, <code>body</code>,{" "}
+                  <code>fields[]</code>, and <code>footer</code> are plain tag
+                  configs (<code>id</code>, <code>className</code>,{" "}
+                  <code>name</code>).
                 </li>
                 <li>
-                  <code>textClass</code> is the right column wrapper that
-                  renders your <code>fields[]</code> lines.
+                  <code>type</code> determines footer bar (
+                  <code>"AlloyButtonBar"</code> vs{" "}
+                  <code>"AlloyLinkBar"</code>).
                 </li>
                 <li>
-                  <code>footer</code> always renders. The left side shows{" "}
-                  <code>footer.name</code>; the right side renders either{" "}
-                  <code>AlloyButtonBar</code> or <code>AlloyLinkBar</code>{" "}
-                  depending on <code>type</code>.
+                  <code>action</code> hydrates into a ButtonBarObject or
+                  LinkBarObject (buttons/links arrays).
                 </li>
                 <li>
-                  Clicking any footer button/link emits an{" "}
-                  <code>output(payload)</code> with
-                  <code>action</code> details and the card id.
+                  When an action is clicked, <code>fields[]</code> with both{" "}
+                  <code>id</code> and <code>name</code> become a key/value map
+                  in <code>OutputObject.data</code>.
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* Right pane: emitted output */}
+          {/* Right: Output payload */}
           <div className="col-12 col-lg-6">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <span className="fw-semibold">
@@ -1001,24 +893,50 @@ export default function CardIconActionPage() {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-danger"
-                onClick={() => tabBindings.setOutputJson("// cleared")}
+                onClick={() =>
+                  tabBindings.setOutputJson(defaultOutputMsg)
+                }
               >
                 Clear
               </button>
             </div>
 
             <textarea
-              className="form-control font-monospace"
+              className="form-control font-monospace bg-light border"
               rows={18}
-              value={tabBindings.outputJson}
-              onChange={(e) => tabBindings.setOutputJson(e.target.value)}
+              value={tabBindings.outputJson || defaultOutputMsg}
+              readOnly
               spellCheck={false}
             />
             <div className="form-text">
-              This payload is what you'll use to route,
-              open dialogs, or call APIs. You’ll usually key off{" "}
-              <code>action.id</code>, <code>action.name</code>, or{" "}
-              <code>action.href</code>.
+              Standard <code>OutputObject</code> shape from{" "}
+              <code>AlloyCardAction</code>:
+              <pre className="mt-2 mb-1 small bg-light border rounded-3 p-2">
+{`{
+  id: "<card-id>",
+  type: "card-action",
+  action: "<name | ariaLabel | title | id>",
+  error: false,
+  data: {
+    "<field.id>": "<field.name>",
+    ...
+  }
+}`}
+              </pre>
+              Typical usage:
+              <ul className="mb-0 ps-3">
+                <li>
+                  Branch on <code>action</code> (e.g.{" "}
+                  <code>"Edit"</code>, <code>"Delete"</code>,{" "}
+                  <code>"Restart"</code>, <code>"Docs"</code>,{" "}
+                  <code>"Chat"</code>).
+                </li>
+                <li>
+                  Use <code>data</code> as a pre-normalized payload of the
+                  card’s field values (e.g. <code>role</code>,{" "}
+                  <code>status</code>, etc.).
+                </li>
+              </ul>
             </div>
           </div>
         </div>

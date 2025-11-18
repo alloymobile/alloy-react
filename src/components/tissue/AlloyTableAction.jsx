@@ -3,7 +3,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
 import AlloyButtonBar, { ButtonBarObject } from "./AlloyButtonBar.jsx";
-import { generateId } from "../../utils/idHelper.js";
+import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* ---------------------- helpers ---------------------- */
 function capitalize(s) {
@@ -17,6 +17,29 @@ function getHeaderKeys(rows) {
   if (!Array.isArray(rows) || rows.length === 0) return [];
   const first = rows[0] ?? {};
   return Object.keys(first).filter((k) => k !== "id");
+}
+
+// Resolve a meaningful action name for buttons/links
+function resolveActionName(self) {
+  if (!self || typeof self !== "object") return "";
+
+  const name =
+    typeof self.name === "string" ? self.name.trim() : "";
+  if (name) return name;
+
+  const aria =
+    typeof self.ariaLabel === "string" ? self.ariaLabel.trim() : "";
+  if (aria) return aria;
+
+  const title =
+    typeof self.title === "string" ? self.title.trim() : "";
+  if (title) return title;
+
+  const id =
+    typeof self.id === "string" ? self.id.trim() : "";
+  if (id) return id;
+
+  return "";
 }
 
 /* ---------------------- Model ---------------------- */
@@ -38,9 +61,6 @@ export class TableActionObject {
    * @param {Object} cfg
    */
   constructor(cfg = {}) {
-    // required? no. actions is now optional.
-    // validate nothing except shape.
-
     // unique id for this table instance
     this.id = cfg.id ?? generateId("table-action");
 
@@ -71,7 +91,6 @@ export class TableActionObject {
         : new IconObject(cfg.sort || defaultSort);
 
     // normalize actions -> ButtonBarObject (OPTIONAL)
-    // If user didn't pass actions, leave undefined.
     this.actions = cfg.actions
       ? cfg.actions instanceof ButtonBarObject
         ? cfg.actions
@@ -88,16 +107,33 @@ export class TableActionObject {
  *  - tableAction: TableActionObject (required)
  *  - output?: (payload: any) => void
  *
- * Emits to `output`:
- *  • { type: "column", name, dir }
- *      when a header is clicked. You then fetch sorted data server-side.
+ * Emits:
+ *  • Header click (sort intent):
+ *      OutputObject -> {
+ *        id: <table-id>,
+ *        type: "column",
+ *        action: "Sort",
+ *        error: false,
+ *        data: { name: <columnName>, dir: "asc" | "desc" }
+ *      }
  *
- *  • { type: "action", action, row }
- *      when an action button is clicked (if actions bar exists).
- *      `action` is a snapshot of the button model that was clicked.
+ *  • Row action click (button actions):
+ *      OutputObject -> {
+ *        id: <table-id>,
+ *        type: "table",
+ *        action: <button name / ariaLabel / title / id>,
+ *        error: false,
+ *        data: <full row object>
+ *      }
  *
- *  • { type: "navigate", to, id, row }
- *      when a data cell link is clicked (only if link is set).
+ *  • Cell click (when `link` set → navigation intent):
+ *      OutputObject -> {
+ *        id: <table-id>,
+ *        type: "row",
+ *        action: "navigate",
+ *        error: false,
+ *        data: { to: <url>, ...row }
+ *      }
  */
 export function AlloyTableAction({ tableAction, output }) {
   if (!tableAction || !(tableAction instanceof TableActionObject)) {
@@ -106,6 +142,7 @@ export function AlloyTableAction({ tableAction, output }) {
     );
   }
 
+  // Stable table id for all OutputObject.id
   const tblIdRef = useRef(tableAction.id);
 
   // derive headers (once per data change)
@@ -122,31 +159,34 @@ export function AlloyTableAction({ tableAction, output }) {
       sort.col === colName && sort.dir === "asc" ? "desc" : "asc";
     setSort({ col: colName, dir: nextDir });
 
-    output?.({
+    const out = new OutputObject({
+      id: tblIdRef.current,
       type: "column",
-      name: colName,
-      dir: nextDir,
+      action: "Sort",
+      error: false,
+      data: {
+        name: colName,
+        dir: nextDir
+      }
     });
+
+    output?.(out);
   }
 
-  // When a row's action button is clicked, we forward row data too
+  // When a row's action button is clicked, emit standardized OutputObject
   function makeRowActionEmitter(row) {
     return (self, e) => {
-      output?.({
-        type: "action",
-        action: {
-          id: self?.id,
-          name: self?.name,
-          className: self?.className,
-          active: self?.active,
-          disabled: !!self?.disabled,
-          title: self?.title,
-          ariaLabel: self?.ariaLabel,
-          tabIndex: self?.tabIndex,
-          iconClass: self?.icon?.iconClass,
-        },
-        row,
+      const actionName = resolveActionName(self);
+
+      const out = new OutputObject({
+        id: tblIdRef.current,
+        type: "table",
+        action: actionName,
+        error: false,
+        data: row
       });
+
+      output?.(out);
     };
   }
 
@@ -155,7 +195,9 @@ export function AlloyTableAction({ tableAction, output }) {
 
   return (
     <table id={tblIdRef.current} className={tableAction.className}>
-      <caption className="caption-top text-center">{tableAction.name}</caption>
+      <caption className="caption-top text-center">
+        {tableAction.name}
+      </caption>
 
       <thead>
         <tr>
@@ -171,7 +213,7 @@ export function AlloyTableAction({ tableAction, output }) {
               <th key={`h-${key}`} scope="col">
                 <span
                   onClick={() => handleHeaderClick(key)}
-                  style={{ userSelect: "none" }}
+                  style={{ userSelect: "none", cursor: "pointer" }}
                 >
                   {capitalize(key)}
                   {isActive && (
@@ -181,7 +223,7 @@ export function AlloyTableAction({ tableAction, output }) {
                       title={isDesc ? "Sorted descending" : "Sorted ascending"}
                       style={{
                         transform: isDesc ? "rotate(180deg)" : "none",
-                        transition: "transform 120ms",
+                        transition: "transform 120ms"
                       }}
                     >
                       <AlloyIcon icon={tableAction.sort} />
@@ -206,8 +248,7 @@ export function AlloyTableAction({ tableAction, output }) {
           tableAction.rows.map((row, idx) => {
             const rowId = row?.id ?? idx;
 
-            // We'll reuse the SAME actions bar instance for each row.
-            // The bar itself will emit back to us through makeRowActionEmitter.
+            // Reuse the SAME actions bar instance for each row.
             const rowBar = tableAction.actions;
 
             return (
@@ -230,14 +271,19 @@ export function AlloyTableAction({ tableAction, output }) {
                       {cleanedBase ? (
                         <Link
                           to={to}
-                          onClick={() =>
-                            output?.({
-                              type: "navigate",
-                              to,
-                              id: rowId,
-                              row,
-                            })
-                          }
+                          onClick={() => {
+                            const out = new OutputObject({
+                              id: tblIdRef.current,
+                              type: "row",
+                              action: "navigate",
+                              error: false,
+                              data: {
+                                to,
+                                ...row
+                              }
+                            });
+                            output?.(out);
+                          }}
                           className="text-decoration-none"
                         >
                           <span>{row?.[key]}</span>

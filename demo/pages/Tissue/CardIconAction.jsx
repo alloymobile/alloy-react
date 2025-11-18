@@ -475,6 +475,17 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
 /* ---------------------- Tag snippet (display only) ---------------------- */
 const TAG_SNIPPET = `<AlloyCardIconAction cardIconAction={new CardIconActionObject(cardIconActionObject)} output={handleOutput} />`;
 
+/* ---------------------- default OutputObject hint ---------------------- */
+const defaultOutputMsg =
+  '// click a footer action to see OutputObject:\n' +
+  '// {\n' +
+  '//   id: "<card-id>",\n' +
+  '//   type: "card-action",\n' +
+  '//   action: "<name | ariaLabel | title | id>",\n' +
+  '//   error: false,\n' +
+  '//   data: { "<field.id>": "<field.name>", ... }\n' +
+  '// }';
+
 export default function CardIconActionPage() {
   // same 6 tabs style as CardActionPage
   const TABS = [
@@ -505,25 +516,13 @@ export default function CardIconActionPage() {
   const [errLinkIconText, setErrLinkIconText] = useState("");
   const [errLinkIcon, setErrLinkIcon] = useState("");
 
-  // emitted output (from footer bar click)
-  const [emitBtnText, setEmitBtnText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitBtnIconText, setEmitBtnIconText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitBtnIcon, setEmitBtnIcon] = useState(
-    "// click an action to see payload"
-  );
-  const [emitLinkText, setEmitLinkText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitLinkIconText, setEmitLinkIconText] = useState(
-    "// click an action to see payload"
-  );
-  const [emitLinkIcon, setEmitLinkIcon] = useState(
-    "// click an action to see payload"
-  );
+  // emitted output (from footer bar click) – per tab
+  const [emitBtnText, setEmitBtnText] = useState(defaultOutputMsg);
+  const [emitBtnIconText, setEmitBtnIconText] = useState(defaultOutputMsg);
+  const [emitBtnIcon, setEmitBtnIcon] = useState(defaultOutputMsg);
+  const [emitLinkText, setEmitLinkText] = useState(defaultOutputMsg);
+  const [emitLinkIconText, setEmitLinkIconText] = useState(defaultOutputMsg);
+  const [emitLinkIcon, setEmitLinkIcon] = useState(defaultOutputMsg);
 
   /* ---------------- model builders per tab ---------------- */
   const modelBtnText = useMemo(() => {
@@ -779,101 +778,105 @@ export default function CardIconActionPage() {
   }, [jsonLinkIcon]);
 
   /* ---------------- tab bindings (active tab drives UI panes) ---------------- */
-  const tabBindings = {
-    BtnText: {
-      label: "Button (text)",
-      model: modelBtnText,
-      inputJson: jsonBtnText,
-      setInputJson: setJsonBtnText,
-      parseError: errBtnText,
-      setParseError: setErrBtnText,
-      outputJson: emitBtnText,
-      setOutputJson: setEmitBtnText,
-      resetJson: () => {
-        setJsonBtnText(DEFAULT_BTN_TEXT);
-        setEmitBtnText("// click an action to see payload");
-        setErrBtnText("");
+  const tabBindings =
+    {
+      BtnText: {
+        label: "Button (text)",
+        model: modelBtnText,
+        inputJson: jsonBtnText,
+        setInputJson: setJsonBtnText,
+        parseError: errBtnText,
+        setParseError: setErrBtnText,
+        outputJson: emitBtnText,
+        setOutputJson: setEmitBtnText,
+        resetJson: () => {
+          setJsonBtnText(DEFAULT_BTN_TEXT);
+          setEmitBtnText(defaultOutputMsg);
+          setErrBtnText("");
+        }
+      },
+      BtnIconText: {
+        label: "Button (icon+text)",
+        model: modelBtnIconText,
+        inputJson: jsonBtnIconText,
+        setInputJson: setJsonBtnIconText,
+        parseError: errBtnIconText,
+        setParseError: setErrBtnIconText,
+        outputJson: emitBtnIconText,
+        setOutputJson: setEmitBtnIconText,
+        resetJson: () => {
+          setJsonBtnIconText(DEFAULT_BTN_ICON_TEXT);
+          setEmitBtnIconText(defaultOutputMsg);
+          setErrBtnIconText("");
+        }
+      },
+      BtnIcon: {
+        label: "Button (icon only)",
+        model: modelBtnIcon,
+        inputJson: jsonBtnIcon,
+        setInputJson: setJsonBtnIcon,
+        parseError: errBtnIcon,
+        setParseError: setErrBtnIcon,
+        outputJson: emitBtnIcon,
+        setOutputJson: setEmitBtnIcon,
+        resetJson: () => {
+          setJsonBtnIcon(DEFAULT_BTN_ICON_ONLY);
+          setEmitBtnIcon(defaultOutputMsg);
+          setErrBtnIcon("");
+        }
+      },
+      LinkText: {
+        label: "Link (text)",
+        model: modelLinkText,
+        inputJson: jsonLinkText,
+        setInputJson: setJsonLinkText,
+        parseError: errLinkText,
+        setParseError: setErrLinkText,
+        outputJson: emitLinkText,
+        setOutputJson: setEmitLinkText,
+        resetJson: () => {
+          setJsonLinkText(DEFAULT_LINK_TEXT);
+          setEmitLinkText(defaultOutputMsg);
+          setErrLinkText("");
+        }
+      },
+      LinkIconText: {
+        label: "Link (icon+text)",
+        model: modelLinkIconText,
+        inputJson: jsonLinkIconText,
+        setInputJson: setJsonLinkIconText,
+        parseError: errLinkIconText,
+        setParseError: setErrLinkIconText,
+        outputJson: emitLinkIconText,
+        setOutputJson: setEmitLinkIconText,
+        resetJson: () => {
+          setJsonLinkIconText(DEFAULT_LINK_ICON_TEXT);
+          setEmitLinkIconText(defaultOutputMsg);
+          setErrLinkIconText("");
+        }
+      },
+      LinkIcon: {
+        label: "Link (icon only)",
+        model: modelLinkIcon,
+        inputJson: jsonLinkIcon,
+        setInputJson: setJsonLinkIcon,
+        parseError: errLinkIcon,
+        setParseError: setErrLinkIcon,
+        outputJson: emitLinkIcon,
+        setOutputJson: setEmitLinkIcon,
+        resetJson: () => {
+          setJsonLinkIcon(DEFAULT_LINK_ICON_ONLY);
+          setEmitLinkIcon(defaultOutputMsg);
+          setErrLinkIcon("");
+        }
       }
-    },
-    BtnIconText: {
-      label: "Button (icon+text)",
-      model: modelBtnIconText,
-      inputJson: jsonBtnIconText,
-      setInputJson: setJsonBtnIconText,
-      parseError: errBtnIconText,
-      setParseError: setErrBtnIconText,
-      outputJson: emitBtnIconText,
-      setOutputJson: setEmitBtnIconText,
-      resetJson: () => {
-        setJsonBtnIconText(DEFAULT_BTN_ICON_TEXT);
-        setEmitBtnIconText("// click an action to see payload");
-        setErrBtnIconText("");
-      }
-    },
-    BtnIcon: {
-      label: "Button (icon only)",
-      model: modelBtnIcon,
-      inputJson: jsonBtnIcon,
-      setInputJson: setJsonBtnIcon,
-      parseError: errBtnIcon,
-      setParseError: setErrBtnIcon,
-      outputJson: emitBtnIcon,
-      setOutputJson: setEmitBtnIcon,
-      resetJson: () => {
-        setJsonBtnIcon(DEFAULT_BTN_ICON_ONLY);
-        setEmitBtnIcon("// click an action to see payload");
-        setErrBtnIcon("");
-      }
-    },
-    LinkText: {
-      label: "Link (text)",
-      model: modelLinkText,
-      inputJson: jsonLinkText,
-      setInputJson: setJsonLinkText,
-      parseError: errLinkText,
-      setParseError: setErrLinkText,
-      outputJson: emitLinkText,
-      setOutputJson: setEmitLinkText,
-      resetJson: () => {
-        setJsonLinkText(DEFAULT_LINK_TEXT);
-        setEmitLinkText("// click an action to see payload");
-        setErrLinkText("");
-      }
-    },
-    LinkIconText: {
-      label: "Link (icon+text)",
-      model: modelLinkIconText,
-      inputJson: jsonLinkIconText,
-      setInputJson: setJsonLinkIconText,
-      parseError: errLinkIconText,
-      setParseError: setErrLinkIconText,
-      outputJson: emitLinkIconText,
-      setOutputJson: setEmitLinkIconText,
-      resetJson: () => {
-        setJsonLinkIconText(DEFAULT_LINK_ICON_TEXT);
-        setEmitLinkIconText("// click an action to see payload");
-        setErrLinkIconText("");
-      }
-    },
-    LinkIcon: {
-      label: "Link (icon only)",
-      model: modelLinkIcon,
-      inputJson: jsonLinkIcon,
-      setInputJson: setJsonLinkIcon,
-      parseError: errLinkIcon,
-      setParseError: setErrLinkIcon,
-      outputJson: emitLinkIcon,
-      setOutputJson: setEmitLinkIcon,
-      resetJson: () => {
-        setJsonLinkIcon(DEFAULT_LINK_ICON_ONLY);
-        setEmitLinkIcon("// click an action to see payload");
-        setErrLinkIcon("");
-      }
-    }
-  }[active];
+    }[active] || {};
 
   /* ---------------- footer action click -> capture payload for that tab ---------------- */
-  function handleOutput(payload) {
+  function handleOutput(out) {
+    const payload =
+      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+
     const formatted = JSON.stringify(payload, null, 2);
     tabBindings.setOutputJson(formatted);
   }
@@ -910,10 +913,12 @@ export default function CardIconActionPage() {
         {/* Preview */}
         <div className="row mb-4 justify-content-center">
           <div className="col-12 col-lg-10 col-xl-8">
-            <AlloyCardIconAction
-              cardIconAction={tabBindings.model}
-              output={handleOutput}
-            />
+            {tabBindings.model && (
+              <AlloyCardIconAction
+                cardIconAction={tabBindings.model}
+                output={handleOutput}
+              />
+            )}
             <div className="small text-secondary mt-2 text-center text-lg-start">
               <div className="mb-1">
                 <strong>Navigation behavior:</strong>{" "}
@@ -928,7 +933,8 @@ export default function CardIconActionPage() {
                 <code>output()</code>.
               </div>
               <div className="text-muted">
-                Remove or clear <code>link</code> to make the body non-clickable.
+                Remove or clear <code>link</code> to make the body
+                non-clickable.
               </div>
             </div>
           </div>
@@ -969,7 +975,7 @@ export default function CardIconActionPage() {
             <div className="form-text">
               <ul className="mb-0 ps-3">
                 <li>
-                  <code>iconClass</code> usually includes{" "}
+                  <code>iconClass</code> typically includes{" "}
                   <code>d-flex align-items-center justify-content-center</code>{" "}
                   so the avatar bubble is centered.
                 </li>
@@ -979,14 +985,28 @@ export default function CardIconActionPage() {
                 </li>
                 <li>
                   <code>footer</code> always renders. The left side shows{" "}
-                  <code>footer.name</code>; the right side renders either{" "}
+                  <code>footer.name</code>; the right side renders{" "}
                   <code>AlloyButtonBar</code> or <code>AlloyLinkBar</code>{" "}
                   depending on <code>type</code>.
                 </li>
                 <li>
-                  Clicking any footer button/link emits an{" "}
-                  <code>output(payload)</code> with
-                  <code>action</code> details and the card id.
+                  When a footer control is clicked,{" "}
+                  <code>AlloyCardIconAction</code> emits a standardized{" "}
+                  <code>OutputObject</code>:
+                  <pre className="mt-2 mb-1 small bg-light border rounded-3 p-2">
+{`{
+  id: "<card-id>",
+  type: "card-action",
+  action: "<name | ariaLabel | title | id>",
+  error: false,
+  data: {
+    "<field.id>": "<field.name>",
+    ...
+  }
+}`}
+                  </pre>
+                  This matches <code>AlloyCardAction</code>, so consumers can
+                  handle both uniformly.
                 </li>
               </ul>
             </div>
@@ -1001,24 +1021,35 @@ export default function CardIconActionPage() {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-danger"
-                onClick={() => tabBindings.setOutputJson("// cleared")}
+                onClick={() => tabBindings.setOutputJson(defaultOutputMsg)}
               >
                 Clear
               </button>
             </div>
 
             <textarea
-              className="form-control font-monospace"
+              className="form-control font-monospace bg-light border"
               rows={18}
-              value={tabBindings.outputJson}
-              onChange={(e) => tabBindings.setOutputJson(e.target.value)}
+              value={tabBindings.outputJson || defaultOutputMsg}
+              readOnly
               spellCheck={false}
             />
             <div className="form-text">
-              This payload is what you'll use to route,
-              open dialogs, or call APIs. You’ll usually key off{" "}
-              <code>action.id</code>, <code>action.name</code>, or{" "}
-              <code>action.href</code>.
+              Typical usage:
+              <ul className="mb-0 ps-3">
+                <li>
+                  Branch on <code>action</code> (e.g.{" "}
+                  <code>"Edit"</code>, <code>"Delete"</code>,{" "}
+                  <code>"Docs"</code>, <code>"Chat"</code>), which comes from
+                  <code>name → ariaLabel → title → id</code>.
+                </li>
+                <li>
+                  Use <code>data</code> as the pre-normalized field map (e.g.{" "}
+                  <code>fullName</code>, <code>role</code>,{" "}
+                  <code>title</code>, <code>desc</code>), same as{" "}
+                  <code>AlloyCardAction</code>.
+                </li>
+              </ul>
             </div>
           </div>
         </div>

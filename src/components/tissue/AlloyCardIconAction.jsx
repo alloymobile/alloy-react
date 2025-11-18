@@ -2,74 +2,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { AlloyIcon, IconObject } from "../cell/AlloyIcon.jsx";
-import { generateId, TagObject } from "../../utils/idHelper.js";
+import { generateId, TagObject, OutputObject } from "../../utils/idHelper.js";
 
 import AlloyButtonBar, { ButtonBarObject } from "./AlloyButtonBar.jsx";
 import AlloyLinkBar, { LinkBarObject } from "./AlloyLinkBar.jsx";
 
 /* ------------------------------------------------------------------
  * CardIconActionObject
- *
- * Card with:
- *   - optional header TagObject
- *   - required body TagObject
- *   - fields[] of TagObject (text rows on the right side)
- *   - required footer TagObject
- *
- *   layout in body:
- *     [icon | text-block]
- *
- *   footer includes an action bar (button bar OR link bar)
- *
- * PLUS:
- *   - link?: string
- *     If present, ONLY the body section becomes clickable (<Link>).
- *     Header and footer never become part of the link.
- *
- *   - icon:       IconObject (avatar / glyph on the left side)
- *   - iconClass:  string (classes for the left column)
- *   - textClass:  string (classes for the right column)
- *
- *   - type:   "AlloyButtonBar" | "AlloyLinkBar"
- *   - action: ButtonBarObject | LinkBarObject
  * ------------------------------------------------------------------ */
 
-/**
- * @typedef {Object} CardIconActionConfig
- * @property {string} [id]
- * @property {string} [className]
- * @property {string} [link]   // NEW: optional. If set, body becomes clickable.
- *
- * @property {TagObject|{id?:string,className?:string,name?:string}} [header]
- *           Optional. Rendered only if it has a non-empty `name`.
- *
- * @property {TagObject|{id?:string,className?:string,name?:string}} body
- *           Required. Used for the main body wrapper/div.
- *
- * @property {Array<TagObject|{id?:string,className?:string,name?:string}>} [fields]
- *           Optional. Rendered in order, in the right column of the body layout.
- *
- * @property {TagObject|{id?:string,className?:string,name?:string}} footer
- *           Required. Footer container. Its `name` renders left side text in footer.
- *
- * @property {IconObject|{iconClass?:string,id?:string}} [icon]
- *           Required-ish visual avatar on the left column. Defaults provided.
- *
- * @property {string} [iconClass]
- *           Class for the left icon column wrapper.
- *
- * @property {string} [textClass]
- *           Class for the right text column wrapper.
- *
- * @property {"AlloyButtonBar"|"AlloyLinkBar"} [type]
- *           Which bar the footer should render on the right.
- *
- * @property {ButtonBarObject|LinkBarObject|object} [action]
- *           Bar config. ButtonBarObject or LinkBarObject will be hydrated.
- */
 export class CardIconActionObject {
   /**
-   * @param {CardIconActionConfig} card = {}
+   * @param {CardIconActionConfig} card
    */
   constructor(card = {}) {
     // id / className / link
@@ -93,7 +37,7 @@ export class CardIconActionObject {
       f instanceof TagObject ? f : new TagObject(f || {})
     );
 
-    // footer: required TagObject (again we normalize to avoid undefined)
+    // footer: required TagObject (normalize to avoid undefined)
     const rawFooter = card.footer ?? {};
     this.footer =
       rawFooter instanceof TagObject ? rawFooter : new TagObject(rawFooter);
@@ -134,15 +78,23 @@ export class CardIconActionObject {
  *
  * Props:
  *   - cardIconAction: CardIconActionObject (required)
- *   - output?: (payload:any) => void
+ *   - output?: (out: OutputObject) => void
  *
- * Behavior:
- *   - Outer wrapper is ALWAYS a <div className="card ...">.
- *   - Header is never wrapped in a link.
- *   - Footer is never wrapped in a link.
- *   - ONLY the body becomes a <Link> if cardIconAction.link is set.
+ * NEW STANDARDIZED OUTPUT (same as AlloyCardAction):
  *
- * Footer still emits actions through `output`.
+ * {
+ *   id: "<card-id>",
+ *   type: "card-action",
+ *   action: "<name | ariaLabel | title | id of clicked control>",
+ *   error: false,
+ *   data: {
+ *     "<field.id>": "<field.name>",
+ *     ...
+ *   }
+ * }
+ *
+ * - Only footer actions emit this OutputObject.
+ * - Body link (if present) is purely navigation; does not emit OutputObject here.
  * ------------------------------------------------------------------ */
 export function AlloyCardIconAction({ cardIconAction, output }) {
   if (!cardIconAction || !(cardIconAction instanceof CardIconActionObject)) {
@@ -151,27 +103,62 @@ export function AlloyCardIconAction({ cardIconAction, output }) {
     );
   }
 
-  // bridge footer bar's click -> parent output
+  // Same fallback logic as AlloyCardAction: name → ariaLabel → title → id
+  function resolveActionName(self) {
+    if (!self || typeof self !== "object") return "";
+
+    const name =
+      typeof self.name === "string" ? self.name.trim() : "";
+    if (name) return name;
+
+    const aria =
+      typeof self.ariaLabel === "string" ? self.ariaLabel.trim() : "";
+    if (aria) return aria;
+
+    const title =
+      typeof self.title === "string" ? self.title.trim() : "";
+    if (title) return title;
+
+    const id =
+      typeof self.id === "string" ? self.id.trim() : "";
+    if (id) return id;
+
+    return "";
+  }
+
+  // Footer bar → OutputObject (same semantics as AlloyCardAction)
   function makeActionEmitter() {
+    // ButtonBar / LinkBar will call this as (self, event)
     return (self, e) => {
-      output?.({
-        type: "action",
-        action: {
-          id: self?.id,
-          name: self?.name,
-          title: self?.title,
-          href: self?.href,
-          className: self?.className,
-          iconClass: self?.icon?.iconClass,
-          active: self?.active,
-          disabled: !!self?.disabled,
-          ariaLabel: self?.ariaLabel,
-          tabIndex: self?.tabIndex,
-        },
-        card: {
-          id: cardIconAction.id,
-        },
+      if (typeof output !== "function") return;
+
+      // Derive the "action" string via fallback chain
+      const actionName = resolveActionName(self);
+
+      // Build data from fields[]: data[field.id] = field.name
+      const fieldMap = {};
+      if (Array.isArray(cardIconAction.fields)) {
+        cardIconAction.fields.forEach((field) => {
+          if (!field) return;
+          const key = field.id;
+          const value = field.name;
+          if (key && typeof value !== "undefined") {
+            fieldMap[key] = value;
+          }
+        });
+      }
+
+      const out = new OutputObject({
+        id: cardIconAction.id,
+        // align with AlloyCardAction
+        type: "card-action",
+        action: actionName,
+        error: false,
+        errorMessage: [],
+        data: fieldMap
       });
+
+      output(out);
     };
   }
 
@@ -270,9 +257,6 @@ export function AlloyCardIconAction({ cardIconAction, output }) {
   );
 
   /* ----- final card layout ----- */
-  // We ALWAYS return a <div className="card ...">.
-  // We NEVER wrap the whole card in <Link>.
-  // Only bodySection is link-wrapped if link is provided.
   return (
     <div
       id={cardIconAction.id}
