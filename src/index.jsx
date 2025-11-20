@@ -19,3 +19,4 @@ export { AlloyCardAction, CardActionObject } from "./components/tissue/AlloyCard
 export { AlloyCardIconAction, CardIconActionObject } from "./components/tissue/AlloyCardIconAction.jsx"
 export { AlloyCardImageAction, CardImageActionObject } from "./components/tissue/AlloyCardImageAction.jsx"
 export { AlloyForm, FormObject } from "./components/tissue/AlloyForm.jsx"
+export { AlloyTabForm, TabFormObject, TabObject } from "./components/organ/AlloyTabForm.jsx"

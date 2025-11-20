@@ -33,6 +33,7 @@ import CardActionPage from "./pages/Tissue/CardAction.jsx";
 import CardIconActionPage from "./pages/Tissue/CardIconAction.jsx";
 import CardImageActionPage from "./pages/Tissue/CardImageAction.jsx";
 import FormPage from "./pages/Tissue/Form.jsx";
+import TabFormPage from "./pages/Tissue/TabForm.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -71,6 +72,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="card-icon-action" element={<CardIconActionPage />} />                                  
           <Route path="card-image-action" element={<CardImageActionPage />} />           
           <Route path="form" element={<FormPage />} />  
+          <Route path="tab-form" element={<TabFormPage />} />  
         </Route>
         <Route path="/organ" element={<Organ />} />
       </Route>
