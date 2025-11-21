@@ -9,7 +9,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import App from "./App.jsx";
 import Cell from "./pages/Cell/Cell.jsx";           // now acts as Cell layout (with <Outlet/>)
 import Tissue from "./pages/Tissue/Tissue.jsx";
-import Organ from "./pages/Organ.jsx";
+import Organ from "./pages/Organ/Organ.jsx";
 import IconPage from "./pages/Cell/Icon.jsx";  // NEW
 import LinkPage from "./pages/Cell/Link.jsx";
 import LinkIconPage from "./pages/Cell/LinkIcon.jsx";
@@ -35,6 +35,10 @@ import CardImageActionPage from "./pages/Tissue/CardImageAction.jsx";
 import FormPage from "./pages/Tissue/Form.jsx";
 import TabFormPage from "./pages/Tissue/TabForm.jsx";
 import ModalPage from "./pages/Tissue/Modal.jsx";
+import CrudTablePage from "./pages/Tissue/CrudTable.jsx";
+import CrudCardPage from "./pages/Tissue/CrudCard.jsx";
+import EmailPage from "./pages/Organ/Email.jsx";
+import ContactPage from "./pages/Organ/Contact.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -75,8 +79,13 @@ createRoot(document.getElementById("root")).render(
           <Route path="form" element={<FormPage />} />  
           <Route path="tab-form" element={<TabFormPage />} />  
           <Route path="modal" element={<ModalPage />} />  
+          <Route path="crud-table" element={<CrudTablePage />} /> 
+          <Route path="crud-card" element={<CrudCardPage />} />   
         </Route>
-        <Route path="/organ" element={<Organ />} />
+        <Route path="/organ" element={<Organ />}> 
+          <Route path="email" element={<EmailPage />} />   
+          <Route path="contact" element={<ContactPage />} />   
+        </Route>
       </Route>
     </Routes>
   </BrowserRouter>

@@ -90,17 +90,28 @@ function hasAnyError(fieldErrors) {
 }
 
 /**
- * Dismiss a Bootstrap modal by:
- *  - finding the modal element by id
- *  - finding *any* child with data-bs-dismiss="modal"
- *  - programmatically clicking it
- *
- * This works with the Bootstrap data-api and does not require window.bootstrap.
+ * Dismiss a Bootstrap modal:
+ *  1) Prefer Bootstrap JS API (Modal.hide())
+ *  2) Fallback: click first [data-bs-dismiss="modal"] inside
  */
 function dismissModalById(id) {
+  if (!id) return;
+
   const modalEl = document.getElementById(id);
   if (!modalEl) return;
 
+  const win = typeof window !== "undefined" ? window : undefined;
+
+  // 1) Prefer Bootstrap Modal.hide() if available
+  if (win && win.bootstrap && win.bootstrap.Modal) {
+    const instance = win.bootstrap.Modal.getOrCreateInstance(modalEl);
+    if (instance) {
+      instance.hide();
+      return;
+    }
+  }
+
+  // 2) Fallback to clicking any dismiss button inside the modal
   const dismissBtn = modalEl.querySelector('[data-bs-dismiss="modal"]');
   if (dismissBtn && typeof dismissBtn.click === "function") {
     dismissBtn.click();
@@ -109,29 +120,6 @@ function dismissModalById(id) {
 
 /* -------------------------------------------
  * AlloyModal
- *
- * Props:
- *   - modal:  ModalObject (required)
- *   - output?: (out: OutputObject) => void
- *
- * Behaviour:
- *   - Renders each field via <AlloyInput>.
- *   - Collects values + errors per field from OutputObject of AlloyInput.
- *   - On submit:
- *       - error → OutputObject.errorOf(...), modal stays open
- *       - success → OutputObject.ok(...), modal auto-dismisses
- *
- *   SUCCESS payload shape:
- *     {
- *       id: "alloyModal01",
- *       type: "modal",
- *       action: "submit",
- *       error: false,
- *       data: {
- *         vendorName: "...",
- *         email: "..."
- *       }
- *     }
  * ----------------------------------------- */
 export function AlloyModal({ modal, output }) {
   if (!modal || !(modal instanceof ModalObject)) {
@@ -202,7 +190,7 @@ export function AlloyModal({ modal, output }) {
 
     output(out);
 
-    // AUTO-DISMISS via data-bs-dismiss button
+    // AUTO-DISMISS
     dismissModalById(modal.id);
   };
 

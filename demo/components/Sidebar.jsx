@@ -32,9 +32,16 @@ export default function Sidebar({ active }) {
           { label: "AlloyCardImageAction", to: "/tissue/card-image-action", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyForm", to: "/tissue/form", icon: "fa-solid fa-bars-progress" }, 
           { label: "AlloyTabForm", to: "/tissue/tab-form", icon: "fa-solid fa-bars-progress" },    
-          { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },              
+          { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },      
+          { label: "AlloyCrudTable", to: "/tissue/crud-table", icon: "fa-solid fa-bars-progress" },       
+          { label: "AlloyCrudCard", to: "/tissue/crud-card", icon: "fa-solid fa-bars-progress" },         
         ]
-      : [];
+      : active === "organ"
+      ? [
+          { label: "AlloyEmail", to: "/organ/email", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyContact", to: "/organ/contact", icon: "fa-solid fa-bars-progress" },
+      ]:
+      [];
 
   return (
     <div className="d-flex flex-column h-100">
