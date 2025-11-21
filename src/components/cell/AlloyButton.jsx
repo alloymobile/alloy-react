@@ -1,4 +1,4 @@
-// AlloyButton.jsx
+// src/components/cell/AlloyButton.jsx
 import React, {
   useMemo,
   useRef,
@@ -128,55 +128,65 @@ export const AlloyButton = forwardRef(function AlloyButton(
   );
 
   /**
-   * emitThen(handler, alsoCallInternal, action) → event listener
+   * emitThen(handler, alsoCallInternal, action, shouldEmit) → event listener
    *
    * Order:
    *  1. alsoCallInternal(e)         → hover / press / focus state
-   *  2. output(OutputObject)        → parent-level callback
+   *  2. (ONLY IF shouldEmit) output(OutputObject)
    *  3. handler(e, button)          → model's own handler
    */
-  const emitThen = (handler, alsoCallInternal, action) => (e) => {
-    // 1) internal active-class tracking
-    alsoCallInternal?.(e);
+  const emitThen =
+    (handler, alsoCallInternal, action, shouldEmit) => (e) => {
+      // 1) internal active-class tracking
+      alsoCallInternal?.(e);
 
-    // 2) normalized OutputObject for parent
-    if (typeof output === "function") {
-      // Success path only; no error here.
-      const out = OutputObject.ok({
-        id: button.id,
-        type: "button",
-        action,
-        data: {
-          // keep payload minimal; we don't duplicate id here
-          name: button.name
-        },
-      });
+      // 2) normalized OutputObject for parent (only some events)
+      if (shouldEmit && typeof output === "function") {
+        const out = OutputObject.ok({
+          id: button.id,
+          type: "button",
+          action,
+          data: {
+            // keep payload minimal; we don't duplicate id here
+            name: button.name,
+          },
+        });
 
-      output(out);
-    }
+        output(out);
+      }
 
-    // 3) per-event ButtonObject handler
-    handler?.(e, button);
-  };
+      // 3) per-event ButtonObject handler
+      handler?.(e, button);
+    };
 
   const mergedEvents = {
-    onClick: emitThen(button.onClick, undefined, "click"),
-    onKeyDown: emitThen(button.onKeyDown, events.onFocus, "keydown"),
-    onKeyUp: emitThen(button.onKeyUp, undefined, "keyup"),
-    onFocus: emitThen(button.onFocus, events.onFocus, "focus"),
-    onBlur: emitThen(button.onBlur, events.onBlur, "blur"),
+    // EMIT
+    onClick: emitThen(button.onClick, undefined, "click", true),
+    onMouseDown: emitThen(undefined, events.onMouseDown, "mousedown", true),
+
+    // NO EMIT – just state + model handler
+    onKeyDown: emitThen(
+      button.onKeyDown,
+      events.onFocus,
+      "keydown",
+      false
+    ),
+    onKeyUp: emitThen(button.onKeyUp, undefined, "keyup", false),
+    onFocus: emitThen(button.onFocus, events.onFocus, "focus", false),
+    onBlur: emitThen(button.onBlur, events.onBlur, "blur", false),
     onMouseEnter: emitThen(
       button.onMouseEnter,
       events.onMouseEnter,
-      "mouseenter"
+      "mouseenter",
+      false
     ),
     onMouseLeave: emitThen(
       button.onMouseLeave,
       events.onMouseLeave,
-      "mouseleave"
+      "mouseleave",
+      false
     ),
-    onMouseDown: emitThen(undefined, events.onMouseDown, "mousedown"),
-    onMouseUp: emitThen(undefined, events.onMouseUp, "mouseup"),
+    onMouseUp: emitThen(undefined, events.onMouseUp, "mouseup", false),
   };
 
   return (

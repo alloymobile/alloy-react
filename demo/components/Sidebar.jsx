@@ -31,7 +31,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyCardIconAction", to: "/tissue/card-icon-action", icon: "fa-solid fa-bars-progress" },                     
           { label: "AlloyCardImageAction", to: "/tissue/card-image-action", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyForm", to: "/tissue/form", icon: "fa-solid fa-bars-progress" }, 
-          { label: "AlloyTabForm", to: "/tissue/tab-form", icon: "fa-solid fa-bars-progress" },                
+          { label: "AlloyTabForm", to: "/tissue/tab-form", icon: "fa-solid fa-bars-progress" },    
+          { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },              
         ]
       : [];
 
