@@ -1,11 +1,10 @@
 {
   "name": "alloy-react",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "private": false,
   "description": "Alloy React components with demo (Bootstrap + Font Awesome).",
   "type": "module",
   "license": "MIT",
-
   "main": "./dist/alloy-react.cjs.js",
   "module": "./dist/alloy-react.es.js",
   "exports": {
@@ -14,40 +13,42 @@
       "require": "./dist/alloy-react.cjs.js"
     }
   },
-
   "files": [
     "dist/*.js",
     "dist/*.js.map",
     "src",
     "README.md"
   ],
-
-  "keywords": ["react", "components", "icons", "fontawesome", "bootstrap", "alloy"],
-
+  "keywords": [
+    "react",
+    "components",
+    "icons",
+    "fontawesome",
+    "bootstrap",
+    "alloy"
+  ],
   "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18",
     "@fortawesome/fontawesome-free": ">=6",
     "@fortawesome/free-brands-svg-icons": ">=7.1",
     "@fortawesome/free-regular-svg-icons": ">=7.1",
     "@fortawesome/free-solid-svg-icons": ">=7.1",
-    "bootstrap": ">=5"
+    "bootstrap": ">=5",
+    "react": ">=18",
+    "react-dom": ">=18"
   },
-
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "bootstrap": "^5.3.3",
-    "cross-env": "^7.0.3",
     "@fortawesome/fontawesome-free": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "bootstrap": "^5.3.3",
+    "cross-env": "^7.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
     "vite": "^5.4.10"
   },
-
   "scripts": {
     "dev": "vite",
     "build:lib": "cross-env LIB=1 vite build",
@@ -56,11 +57,11 @@
     "preview:demo": "vite preview --outDir dist/demo --port 5173",
     "clean": "rm -rf dist node_modules"
   },
-
   "engines": {
     "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^5.4.0",
+    "@stripe/stripe-js": "^8.5.2"
   }
 }
-
-
-

@@ -39,6 +39,8 @@ import CrudTablePage from "./pages/Tissue/CrudTable.jsx";
 import CrudCardPage from "./pages/Tissue/CrudCard.jsx";
 import EmailPage from "./pages/Organ/Email.jsx";
 import ContactPage from "./pages/Organ/Contact.jsx";
+import ProfilePage from "./pages/Organ/Profile.jsx";
+import PayPage from "./pages/Tissue/Pay.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -81,10 +83,12 @@ createRoot(document.getElementById("root")).render(
           <Route path="modal" element={<ModalPage />} />  
           <Route path="crud-table" element={<CrudTablePage />} /> 
           <Route path="crud-card" element={<CrudCardPage />} />   
+          <Route path="pay" element={<PayPage />} />   
         </Route>
         <Route path="/organ" element={<Organ />}> 
           <Route path="email" element={<EmailPage />} />   
           <Route path="contact" element={<ContactPage />} />   
+          <Route path="profile" element={<ProfilePage />} />   
         </Route>
       </Route>
     </Routes>

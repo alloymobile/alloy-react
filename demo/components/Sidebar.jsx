@@ -34,12 +34,14 @@ export default function Sidebar({ active }) {
           { label: "AlloyTabForm", to: "/tissue/tab-form", icon: "fa-solid fa-bars-progress" },    
           { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },      
           { label: "AlloyCrudTable", to: "/tissue/crud-table", icon: "fa-solid fa-bars-progress" },       
-          { label: "AlloyCrudCard", to: "/tissue/crud-card", icon: "fa-solid fa-bars-progress" },         
+          { label: "AlloyCrudCard", to: "/tissue/crud-card", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyPay", to: "/tissue/pay", icon: "fa-solid fa-bars-progress" },        
         ]
       : active === "organ"
       ? [
           { label: "AlloyEmail", to: "/organ/email", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyContact", to: "/organ/contact", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyProfile", to: "/organ/profile", icon: "fa-solid fa-bars-progress" },
       ]:
       [];
 
