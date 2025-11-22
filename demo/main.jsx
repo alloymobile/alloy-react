@@ -43,6 +43,9 @@ import ProfilePage from "./pages/Organ/Profile.jsx";
 import PayPage from "./pages/Tissue/Pay.jsx";
 import CheckoutPage from "./pages/Organ/Checkout.jsx";
 import DonatePage from "./pages/Organ/Donate.jsx";
+import GalleryPage from "./pages/Organ/Gallery.jsx";
+import CardCarouselPage from "./pages/Tissue/CardCarousel.jsx";
+import CardGalleryPage from "./pages/Tissue/CardGallery.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -86,6 +89,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="crud-table" element={<CrudTablePage />} /> 
           <Route path="crud-card" element={<CrudCardPage />} />   
           <Route path="pay" element={<PayPage />} />   
+          <Route path="carousel" element={<CardCarouselPage />} />   
+          <Route path="gallery" element={<CardGalleryPage />} />   
         </Route>
         <Route path="/organ" element={<Organ />}> 
           <Route path="email" element={<EmailPage />} />   
@@ -93,6 +98,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="profile" element={<ProfilePage />} />   
           <Route path="checkout" element={<CheckoutPage />} />   
           <Route path="donate" element={<DonatePage />} />  
+          <Route path="gallery" element={<GalleryPage />} />            
         </Route>
       </Route>
     </Routes>

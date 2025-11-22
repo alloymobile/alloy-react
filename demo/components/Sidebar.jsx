@@ -35,7 +35,9 @@ export default function Sidebar({ active }) {
           { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },      
           { label: "AlloyCrudTable", to: "/tissue/crud-table", icon: "fa-solid fa-bars-progress" },       
           { label: "AlloyCrudCard", to: "/tissue/crud-card", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyPay", to: "/tissue/pay", icon: "fa-solid fa-bars-progress" },        
+          { label: "AlloyPay", to: "/tissue/pay", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyCardGallery", to: "/tissue/gallery", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyCardCarousel", to: "/tissue/carousel", icon: "fa-solid fa-bars-progress" },                           
         ]
       : active === "organ"
       ? [
@@ -44,6 +46,7 @@ export default function Sidebar({ active }) {
           { label: "AlloyProfile", to: "/organ/profile", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyCheckout", to: "/organ/checkout", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyDonate", to: "/organ/donate", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyGallery", to: "/organ/gallery", icon: "fa-solid fa-bars-progress" },
       ]:
       [];
 

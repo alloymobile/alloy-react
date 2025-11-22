@@ -23,6 +23,8 @@ export { AlloyTabForm, TabFormObject, TabObject } from "./components/organ/Alloy
 export { AlloyModal, ModalObject } from "./components/tissue/AlloyModal.jsx"
 export { AlloyModalToast, ModalToastObject } from "./components/tissue/AlloyModalToast.jsx"
 export { AlloyPay, PayObject } from "./components/tissue/AlloyPay.jsx"
+export { AlloyCardGallery, CardGalleryObject } from "./components/tissue/AlloyCardGallery.jsx"
+export { AlloyCardCarousel, CardCarouselObject } from "./components/tissue/AlloyCardCarousel.jsx"
 export { AlloyCrudTable, CrudTableObject } from "./components/organ/AlloyCrudTable.jsx"
 export { AlloyCrudCard, CrudCardObject } from "./components/organ/AlloyCrudCard.jsx"
 export { AlloyEmail, EmailObject } from "./components/organ/AlloyEmail.jsx"
@@ -30,3 +32,4 @@ export { AlloyContact, ContactObject } from "./components/organ/AlloyContact.jsx
 export { AlloyProfile, ProfileObject } from "./components/organ/AlloyProfile.jsx"
 export { AlloyCheckout, CheckoutObject } from "./components/organ/AlloyCheckout.jsx"
 export { AlloyDonate, DonateObject } from "./components/organ/AlloyDonate.jsx"
+export { AlloyGallery, GalleryObject } from "./components/organ/AlloyGallery.jsx"
