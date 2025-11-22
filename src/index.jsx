@@ -28,3 +28,5 @@ export { AlloyCrudCard, CrudCardObject } from "./components/organ/AlloyCrudCard.
 export { AlloyEmail, EmailObject } from "./components/organ/AlloyEmail.jsx"
 export { AlloyContact, ContactObject } from "./components/organ/AlloyContact.jsx"
 export { AlloyProfile, ProfileObject } from "./components/organ/AlloyProfile.jsx"
+export { AlloyCheckout, CheckoutObject } from "./components/organ/AlloyCheckout.jsx"
+export { AlloyDonate, DonateObject } from "./components/organ/AlloyDonate.jsx"

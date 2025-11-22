@@ -41,6 +41,8 @@ import EmailPage from "./pages/Organ/Email.jsx";
 import ContactPage from "./pages/Organ/Contact.jsx";
 import ProfilePage from "./pages/Organ/Profile.jsx";
 import PayPage from "./pages/Tissue/Pay.jsx";
+import CheckoutPage from "./pages/Organ/Checkout.jsx";
+import DonatePage from "./pages/Organ/Donate.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -89,6 +91,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="email" element={<EmailPage />} />   
           <Route path="contact" element={<ContactPage />} />   
           <Route path="profile" element={<ProfilePage />} />   
+          <Route path="checkout" element={<CheckoutPage />} />   
+          <Route path="donate" element={<DonatePage />} />  
         </Route>
       </Route>
     </Routes>

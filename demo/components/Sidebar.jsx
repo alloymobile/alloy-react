@@ -42,6 +42,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyEmail", to: "/organ/email", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyContact", to: "/organ/contact", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyProfile", to: "/organ/profile", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyCheckout", to: "/organ/checkout", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyDonate", to: "/organ/donate", icon: "fa-solid fa-bars-progress" },
       ]:
       [];
 
