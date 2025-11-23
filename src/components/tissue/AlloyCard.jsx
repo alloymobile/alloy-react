@@ -1,150 +1,143 @@
 // src/components/tissue/AlloyCard.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { generateId, TagObject } from "../../utils/idHelper.js";
+import { generateId, BlockObject } from "../../utils/idHelper.js";
+import AlloyIcon from "../cell/AlloyIcon.jsx";
 
-/**
+/* ------------------------------------------------------------------
  * CardObject
  *
- * The base data model for AlloyCard.
- *
- * Rules:
- * - `body` is REQUIRED.
- * - `header` and `footer` are OPTIONAL.
- * - `fields` is OPTIONAL (array of TagObject to render inside body).
- * - `link` is OPTIONAL. If present, ONLY the body becomes clickable.
- *
- * This model does NOT try to interpret or mutate nested configs
- * beyond wrapping them in TagObject. If you pass a plain object for
- * header/body/footer/fields[i], we wrap it. If you pass instances,
- * we use them as-is.
- */
+ * Card semantics:
+ *  - header:  optional BlockObject
+ *  - body:    required BlockObject
+ *  - fields:  required BlockObject[] (at least 1)
+ *  - footer:  optional BlockObject
+ *  - link:    optional string (wraps ONLY the body in <Link>)
+ * ------------------------------------------------------------------ */
+
 export class CardObject {
   /**
    * @param {Object} card
-   * @param {string} [card.id]                - DOM id for the card wrapper
-   * @param {string} [card.className]         - wrapper classes (outer .card)
-   * @param {string} [card.link]              - optional href/route; used to wrap ONLY the body
-   * @param {TagObject|Object} [card.header]  - optional top section (className defaults "card-header")
-   * @param {TagObject|Object} card.body      - REQUIRED main content section (className defaults "card-body")
-   * @param {TagObject|Object} [card.footer]  - optional bottom section (className defaults "card-footer")
-   * @param {Array<TagObject|Object>} [card.fields] - optional array of content blocks inside body
    */
   constructor(card = {}) {
-    // required: body
-    if (!card.body) {
-      throw new Error("CardObject requires `body`.");
-    }
-
-    // id / wrapper classes / link
     this.id = card.id ?? generateId("card");
     this.className = card.className ?? "card border m-2 shadow";
+
+    // link: clicking body navigates here (optional)
     this.link = typeof card.link === "string" ? card.link : "";
 
-    // normalize header/body/footer to TagObject instances
-    // header is optional
-    if (card.header instanceof TagObject) {
-      this.header = card.header;
-    } else if (card.header) {
-      const tmp = new TagObject(card.header);
-      // default header class if caller didn't provide one
-      tmp.className = tmp.className || "card-header";
-      this.header = tmp;
-    } else {
-      this.header = undefined;
-    }
+    // header (optional)
+    const rawHeader = card.header ?? {};
+    this.header =
+      rawHeader instanceof BlockObject
+        ? rawHeader
+        : new BlockObject(rawHeader);
 
-    // body is required
-    if (card.body instanceof TagObject) {
-      this.body = card.body;
-    } else {
-      const tmp = new TagObject(card.body);
-      tmp.className = tmp.className || "card-body";
-      this.body = tmp;
-    }
+    // body (required)
+    const rawBody = card.body ?? {};
+    this.body =
+      rawBody instanceof BlockObject ? rawBody : new BlockObject(rawBody);
 
-    // footer is optional
-    if (card.footer instanceof TagObject) {
-      this.footer = card.footer;
-    } else if (card.footer) {
-      const tmp = new TagObject(card.footer);
-      tmp.className = tmp.className || "card-footer";
-      this.footer = tmp;
-    } else {
-      this.footer = undefined;
-    }
-
-    // fields: optional array of TagObject
+    // fields (required, at least 1)
     const rawFields = Array.isArray(card.fields) ? card.fields : [];
-    this.fields = rawFields.map((blk) => {
-      if (blk instanceof TagObject) {
-        return blk;
-      }
-      const tmp = new TagObject(blk || {});
-      // no default className here beyond empty; caller controls layout inside body
-      return tmp;
-    });
+    if (rawFields.length === 0) {
+      throw new Error(
+        "CardObject requires at least one field in `fields`."
+      );
+    }
+    this.fields = rawFields.map((f) =>
+      f instanceof BlockObject ? f : new BlockObject(f || {})
+    );
+
+    // footer (optional)
+    const rawFooter = card.footer ?? {};
+    this.footer =
+      rawFooter instanceof BlockObject
+        ? rawFooter
+        : new BlockObject(rawFooter);
   }
 }
 
-/**
- * AlloyCard
+/* ------------------------------------------------------------------
+ * AlloyCard (React component)
  *
- * Props:
- *  - card: CardObject (required)
- *
- * Behavior:
- *  - Renders optional header/footer.
- *  - Renders body, then each field inside body.
- *  - If `card.link` truthy, ONLY the body section is wrapped in <Link>.
- *    The header and footer are never clickable.
- */
+ * Layout-only:
+ *  - optional header
+ *  - required body + fields grid
+ *  - optional footer
+ *  - if card.link → body is wrapped in <Link> (header/footer not clickable)
+ * ------------------------------------------------------------------ */
+
 export function AlloyCard({ card }) {
   if (!card || !(card instanceof CardObject)) {
     throw new Error("AlloyCard requires `card` (CardObject instance).");
   }
 
-  // --- header section (render only if provided and has a name or class) ---
-  const headerSection = card.header ? (
+  /* ----- header (optional) ----- */
+  const shouldRenderHeader =
+    card.header && (card.header.hasText() || card.header.className?.trim());
+
+  const headerSection = shouldRenderHeader ? (
     <div
       id={card.header.id}
-      className={card.header.className || "card-header"}
-      aria-label={card.header.name}
+      className={card.header.className || "card-header py-2 fw-semibold"}
+      aria-label={card.header.ariaLabel}
     >
       {card.header.name}
     </div>
   ) : null;
 
-  // --- body content WITHOUT link wrapping yet ---
+  /* ----- body inner: grid of fields ----- */
   const bodyInner = (
     <div
       id={card.body.id}
       className={card.body.className || "card-body"}
-      aria-label={card.body.name}
+      aria-label={card.body.ariaLabel}
     >
-      {/* Body main label/content */}
-      {card.body.name && <div className="mb-2">{card.body.name}</div>}
+      <div className="row g-2">
+        {card.fields.map((field) => {
+          if (!field) return null;
 
-      {/* Body extra fields (if any) */}
-      {card.fields.map((field) => (
-        <div
-          key={field.id}
-          id={field.id}
-          className={field.className}
-          aria-label={field.name}
-        >
-          {field.name}
-        </div>
-      ))}
+          const key = field.id;
+          const colClass = field.colClass || "col-12";
+
+          return (
+            <div key={key} className={colClass}>
+              <div
+                id={field.id}
+                className={field.className}
+                aria-label={field.ariaLabel}
+              >
+                {field.hasLogo() ? (
+                  // Logo-only field
+                  <img
+                    src={field.logo.imageUrl}
+                    alt={field.logo.alt}
+                    width={field.logo.width}
+                    height={field.logo.height}
+                    className={field.logo.className}
+                  />
+                ) : field.hasIcon() ? (
+                  // Icon-only field
+                  <AlloyIcon icon={field.icon} />
+                ) : field.hasText() ? (
+                  // Text-only field
+                  <span>{field.name}</span>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
-  // --- bodySection (ONLY this can become a <Link>) ---
+  /* ----- body section: optionally wrapped in <Link> ----- */
   const bodySection = card.link ? (
     <Link
       to={card.link}
       className="text-decoration-none d-block"
-      aria-label={card.body?.name}
+      aria-label={card.body.ariaLabel}
     >
       {bodyInner}
     </Link>
@@ -152,22 +145,25 @@ export function AlloyCard({ card }) {
     bodyInner
   );
 
-  // --- footer section (render only if provided) ---
-  const footerSection = card.footer ? (
+  /* ----- footer (optional) ----- */
+  const shouldRenderFooter =
+    card.footer &&
+    (card.footer.hasText() || card.footer.className?.trim().length);
+
+  const footerSection = shouldRenderFooter ? (
     <div
       id={card.footer.id}
-      className={card.footer.className || "card-footer"}
-      aria-label={card.footer.name}
+      className={
+        card.footer.className ||
+        "card-footer d-flex align-items-center justify-content-between py-2"
+      }
+      aria-label={card.footer.ariaLabel}
     >
-      {card.footer.name}
+      {card.footer.name && <span>{card.footer.name}</span>}
     </div>
   ) : null;
 
-  // --- final card layout ---
-  // IMPORTANT:
-  // We NEVER wrap the whole card in <Link>.
-  // The outer shell is always a <div>.
-  // Only the bodySection is link-wrapped if link exists.
+  /* ----- final card ----- */
   return (
     <div id={card.id} className={card.className}>
       {headerSection}

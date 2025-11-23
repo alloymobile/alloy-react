@@ -12,7 +12,8 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
     id: "vendorCrudCard",
     // className here is applied to *each* card column wrapper
     className: "col-sm-6 col-md-4 col-lg-3 mb-3",
-    type: "AlloyCardAction", // "AlloyCardAction" | "AlloyCardIconAction" | "AlloyCardImageAction"
+    // Unified model: cards always use AlloyCardAction + BlockObject layout
+    type: "AlloyCardAction",
 
     modal: {
       id: "vendorCardModal",

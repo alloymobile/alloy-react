@@ -2,11 +2,24 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-import { TagObject, generateId, OutputObject } from "../../utils/idHelper.js";
+import { generateId, OutputObject, BlockObject } from "../../utils/idHelper.js";
+
 import AlloyButtonBar, { ButtonBarObject } from "./AlloyButtonBar.jsx";
 import AlloyLinkBar, { LinkBarObject } from "./AlloyLinkBar.jsx";
+import AlloyIcon from "../cell/AlloyIcon.jsx";
 
-/* ------------------ Model ------------------ */
+/* ------------------------------------------------------------------
+ * CardActionObject
+ *
+ * Card semantics (matches AlloyCard + actions):
+ *  - header:  optional BlockObject
+ *  - body:    required BlockObject
+ *  - fields:  required BlockObject[] (at least 1)
+ *  - footer:  required BlockObject (normalized, may be textless)
+ *  - link:    optional string (wraps ONLY the body in <Link>)
+ *  - type:    "AlloyButtonBar" | "AlloyLinkBar"
+ *  - action:  REQUIRED ButtonBarObject | LinkBarObject (rendered in footer)
+ * ------------------------------------------------------------------ */
 
 export class CardActionObject {
   constructor(cardAction = {}) {
@@ -14,33 +27,42 @@ export class CardActionObject {
     this.id = cardAction.id ?? generateId("card-action");
     this.className = cardAction.className ?? "card border m-2 shadow";
 
-    // NOTE: link is allowed but now ONLY applies to the BODY block
-    this.link = cardAction.link ?? "";
+    // NOTE: link applies ONLY to the BODY block
+    this.link = typeof cardAction.link === "string" ? cardAction.link : "";
 
-    // header (optional TagObject)
+    // header (optional BlockObject)
     const rawHeader = cardAction.header ?? {};
     this.header =
-      rawHeader instanceof TagObject ? rawHeader : new TagObject(rawHeader);
+      rawHeader instanceof BlockObject
+        ? rawHeader
+        : new BlockObject(rawHeader);
 
-    // body (required-ish; fallback to empty TagObject for safety)
+    // body (required BlockObject)
     const rawBody = cardAction.body ?? {};
     this.body =
-      rawBody instanceof TagObject ? rawBody : new TagObject(rawBody);
+      rawBody instanceof BlockObject ? rawBody : new BlockObject(rawBody);
 
-    // fields[]
+    // fields (required, at least one)
     const rawFields = Array.isArray(cardAction.fields)
       ? cardAction.fields
       : [];
+    if (rawFields.length === 0) {
+      throw new Error(
+        "CardActionObject requires at least one field in `fields`."
+      );
+    }
     this.fields = rawFields.map((f) =>
-      f instanceof TagObject ? f : new TagObject(f || {})
+      f instanceof BlockObject ? f : new BlockObject(f || {})
     );
 
-    // footer (required-ish; we always create one so layout is predictable)
+    // footer (required conceptually, but normalized even if empty config)
     const rawFooter = cardAction.footer ?? {};
     this.footer =
-      rawFooter instanceof TagObject ? rawFooter : new TagObject(rawFooter);
+      rawFooter instanceof BlockObject
+        ? rawFooter
+        : new BlockObject(rawFooter);
 
-    // action bar config
+    // action bar config (REQUIRED)
     this.type = cardAction.type ?? "AlloyButtonBar";
 
     const rawAction = cardAction.action;
@@ -59,10 +81,35 @@ export class CardActionObject {
           ? new ButtonBarObject(rawAction)
           : undefined;
     }
+
+    if (!this.action) {
+      throw new Error(
+        "CardActionObject requires `action` (ButtonBarObject or LinkBarObject)."
+      );
+    }
   }
 }
 
-/* ------------------ View ------------------ */
+/* ------------------------------------------------------------------
+ * AlloyCardAction (view)
+ *
+ * Layout:
+ *  - header (never linked)
+ *  - body grid (link wrapper if link != "")
+ *  - footer with:
+ *      - optional footer text
+ *      - AlloyButtonBar or AlloyLinkBar on the right
+ *
+ * Output:
+ *  - ButtonBar/LinkBar emit → wrapped into standardized OutputObject:
+ *    {
+ *      id: "<card-id>",
+ *      type: "card-action",
+ *      action: "<name | ariaLabel | title | id of clicked control>",
+ *      error: false,
+ *      data: { "<field.id>": "<field.name>", ... }
+ *    }
+ * ------------------------------------------------------------------ */
 
 export function AlloyCardAction({ cardAction, output }) {
   if (!cardAction || !(cardAction instanceof CardActionObject)) {
@@ -74,18 +121,7 @@ export function AlloyCardAction({ cardAction, output }) {
   /**
    * handleBarOutput
    *
-   * STANDARDIZED OUTPUT:
-   *
-   * {
-   *   id: "<card-id>",
-   *   type: "card-action",
-   *   action: "<name | ariaLabel | title | id of clicked control>",
-   *   error: false,
-   *   data: {
-   *     "<field.id>": "<field.name>",
-   *     ...
-   *   }
-   * }
+   * Wraps the inner ButtonBar/LinkBar output into a standardized OutputObject.
    */
   function handleBarOutput(innerOut) {
     if (typeof output !== "function") return;
@@ -176,39 +212,65 @@ export function AlloyCardAction({ cardAction, output }) {
     return pickFrom(source);
   }
 
-  /* ------- header block (NEVER link) ------- */
-  const headerBlock = cardAction.header?.name ? (
+  /* ------- header (NEVER link) ------- */
+  const shouldRenderHeader =
+    cardAction.header &&
+    (cardAction.header.hasText() || cardAction.header.className?.trim());
+
+  const headerBlock = shouldRenderHeader ? (
     <div
       id={cardAction.header.id}
       className={
         cardAction.header.className ?? "card-header py-2 fw-semibold"
       }
+      aria-label={cardAction.header.ariaLabel}
     >
       {cardAction.header.name}
     </div>
   ) : null;
 
-  /* ------- body content core ------- */
+  /* ------- body content core (grid of fields) ------- */
   const bodyInner = (
     <div
       id={cardAction.body.id}
       className={cardAction.body.className ?? "card-body"}
+      aria-label={cardAction.body.ariaLabel}
     >
-      {cardAction.body.name ? (
-        <div className="fw-semibold mb-1">{cardAction.body.name}</div>
-      ) : null}
+      <div className="row g-2">
+        {cardAction.fields.map((field) => {
+          if (!field) return null;
 
-      {cardAction.fields.map((field) =>
-        field?.name ? (
-          <div
-            key={field.id ?? generateId("card-field")}
-            id={field.id}
-            className={field.className ?? ""}
-          >
-            {field.name}
-          </div>
-        ) : null
-      )}
+          const key = field.id;
+          const colClass = field.colClass || "col-12";
+
+          return (
+            <div key={key} className={colClass}>
+              <div
+                id={field.id}
+                className={field.className}
+                aria-label={field.ariaLabel}
+              >
+                {field.hasLogo() ? (
+                  // Logo-only field
+                  <img
+                    src={field.logo.imageUrl}
+                    alt={field.logo.alt}
+                    width={field.logo.width}
+                    height={field.logo.height}
+                    className={field.logo.className}
+                  />
+                ) : field.hasIcon() ? (
+                  // Icon-only field (use AlloyIcon)
+                  <AlloyIcon icon={field.icon} />
+                ) : field.hasText() ? (
+                  // Text-only field
+                  <span>{field.name}</span>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
@@ -217,7 +279,7 @@ export function AlloyCardAction({ cardAction, output }) {
     <Link
       to={cardAction.link}
       className="text-decoration-none d-block"
-      aria-label={cardAction.body?.name}
+      aria-label={cardAction.body?.ariaLabel}
     >
       {bodyInner}
     </Link>
@@ -225,33 +287,37 @@ export function AlloyCardAction({ cardAction, output }) {
     bodyInner
   );
 
-  /* ------- footer block (NEVER link wrapper) ------- */
-  const footerBlock = (
+  /* ------- footer block (text + ButtonBar/LinkBar) ------- */
+  const hasFooterText = cardAction.footer && cardAction.footer.hasText();
+  const hasFooterAction = !!cardAction.action;
+
+  // we know action is always present (constructor enforces), but keep this guard
+  const footerBar =
+    hasFooterAction && cardAction.type === "AlloyLinkBar" ? (
+      <AlloyLinkBar linkBar={cardAction.action} output={handleBarOutput} />
+    ) : hasFooterAction ? (
+      <AlloyButtonBar buttonBar={cardAction.action} output={handleBarOutput} />
+    ) : null;
+
+  const shouldRenderFooter = hasFooterText || hasFooterAction;
+
+  const footerBlock = shouldRenderFooter ? (
     <div
       id={cardAction.footer.id}
       className={
         cardAction.footer.className ??
         "card-footer d-flex align-items-center gap-2 py-2"
       }
+      aria-label={cardAction.footer.ariaLabel}
     >
-      {cardAction.footer.name ? (
+      {hasFooterText && (
         <div className="me-auto small text-muted">
           {cardAction.footer.name}
         </div>
-      ) : null}
-
-      {cardAction.action ? (
-        cardAction.type === "AlloyLinkBar" ? (
-          <AlloyLinkBar linkBar={cardAction.action} output={handleBarOutput} />
-        ) : (
-          <AlloyButtonBar
-            buttonBar={cardAction.action}
-            output={handleBarOutput}
-          />
-        )
-      ) : null}
+      )}
+      {footerBar && <div role="group">{footerBar}</div>}
     </div>
-  );
+  ) : null;
 
   /* ------- final card layout ------- */
   return (

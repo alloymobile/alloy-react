@@ -25,19 +25,15 @@ export default function Sidebar({ active }) {
           { label: "AlloyTableLink", to: "/tissue/table-link", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyTableAction", to: "/tissue/table-action", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyCard", to: "/tissue/card", icon: "fa-solid fa-bars-progress" },
-          { label: "AlloyCardIcon", to: "/tissue/card-icon", icon: "fa-solid fa-bars-progress" },
-          { label: "AlloyCardImage", to: "/tissue/card-image", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyCardAction", to: "/tissue/card-action", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyCardIconAction", to: "/tissue/card-icon-action", icon: "fa-solid fa-bars-progress" },                     
-          { label: "AlloyCardImageAction", to: "/tissue/card-image-action", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyForm", to: "/tissue/form", icon: "fa-solid fa-bars-progress" }, 
           { label: "AlloyTabForm", to: "/tissue/tab-form", icon: "fa-solid fa-bars-progress" },    
           { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },      
           { label: "AlloyCrudTable", to: "/tissue/crud-table", icon: "fa-solid fa-bars-progress" },       
           { label: "AlloyCrudCard", to: "/tissue/crud-card", icon: "fa-solid fa-bars-progress" },   
           { label: "AlloyPay", to: "/tissue/pay", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyCardGallery", to: "/tissue/gallery", icon: "fa-solid fa-bars-progress" },
-          { label: "AlloyCardCarousel", to: "/tissue/carousel", icon: "fa-solid fa-bars-progress" },                           
+          { label: "AlloyCardCarousel", to: "/tissue/carousel", icon: "fa-solid fa-bars-progress" },    
+          { label: "AlloyCardVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },                        
         ]
       : active === "organ"
       ? [
@@ -47,6 +43,7 @@ export default function Sidebar({ active }) {
           { label: "AlloyCheckout", to: "/organ/checkout", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyDonate", to: "/organ/donate", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyGallery", to: "/organ/gallery", icon: "fa-solid fa-bars-progress" },
+          { label: "AlloyFooter", to: "/organ/footer", icon: "fa-solid fa-bars-progress" },
       ]:
       [];
 

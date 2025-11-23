@@ -1,4 +1,5 @@
 // src/utils/idHelper.js
+import { IconObject } from "../components/cell/AlloyIcon.jsx";
 
 /**
  * Generate a unique ID string with a given prefix.
@@ -176,5 +177,94 @@ export class OutputObject {
       error: this.error,
       data: { ...this.data }
     };
+  }
+}
+
+export class LogoObject {
+  constructor(logo = {}) {
+    this.id = logo.id ?? generateId("logo");
+
+    this.imageUrl =
+      logo.imageUrl ??
+      "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png";
+
+    this.alt = logo.alt ?? "Alloymobile";
+
+    // Fill available width but don't bleed
+    this.width = logo.width ?? "100%";
+    this.height = logo.height ?? "auto";
+
+    this.className =
+      logo.className ??
+      "img-fluid d-block w-100 h-auto object-fit-contain";
+  }
+}
+
+/**
+ * BlockObject
+ *
+ * A generic piece of UI inside a Bootstrap grid:
+ *  - can render:
+ *      - text (name)
+ *      - icon + text (IconObject)
+ *      - logo (LogoObject)
+ *  - layout:
+ *      - colClass → outer column width
+ *      - className → inner styling
+ */
+export class BlockObject {
+  /**
+   * @param {Object} block
+   *   - id?: string
+   *   - name?: string
+   *   - className?: string         // inner styling
+   *   - colClass?: string          // outer Bootstrap col (e.g. "col-12 col-md-6")
+   *   - icon?: IconObject|{iconClass}
+   *   - iconClass?: string         // shorthand
+   *   - logo?: LogoObject|{imageUrl, alt, ...}
+   *   - ariaLabel?: string
+   */
+  constructor(block = {}) {
+    this.id = block.id ?? generateId("block");
+
+    this.name = typeof block.name === "string" ? block.name : "";
+
+    // inner styles
+    this.className = block.className ?? "";
+
+    // outer grid width – default full width
+    this.colClass = block.colClass ?? "col-12";
+
+    this.ariaLabel =
+      typeof block.ariaLabel === "string" ? block.ariaLabel : this.name || "";
+
+    // Icon
+    const rawIcon =
+      block.icon || (block.iconClass ? { iconClass: block.iconClass } : null);
+    this.icon = rawIcon
+      ? rawIcon instanceof IconObject
+        ? rawIcon
+        : new IconObject(rawIcon)
+      : null;
+
+    // Logo
+    const rawLogo = block.logo || null;
+    this.logo = rawLogo
+      ? rawLogo instanceof LogoObject
+        ? rawLogo
+        : new LogoObject(rawLogo)
+      : null;
+  }
+
+  hasLogo() {
+    return !!this.logo;
+  }
+
+  hasIcon() {
+    return !!this.icon;
+  }
+
+  hasText() {
+    return !!(this.name && this.name.trim().length > 0);
   }
 }

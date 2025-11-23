@@ -5,16 +5,33 @@ import { AlloyCardAction, CardActionObject } from "../../../src";
 /* ------------------------------------------------------------------
    Default presets for each variant.
 
-   Layout details for CardActionObject:
+   CardActionObject layout (uses BlockObject for all content blocks):
+
    - cardAction.id, .className
    - link (optional): ONLY wraps the body in <Link>; header/footer stay normal
-   - header: TagObject (optional; renders only if header.name)
-   - body:   TagObject (main title / summary)
-   - fields: TagObject[] (extra lines under body)
-   - footer: TagObject (left side text)
-   - type + action: configure footer bar:
-        type = "AlloyButtonBar" or "AlloyLinkBar"
-        action = ButtonBarObject / LinkBarObject config
+
+   - header: BlockObject (optional; renders only if header.hasText() or className)
+   - body:   BlockObject (required container for the body area)
+             - Typically used to hold card body layout class and ariaLabel.
+             - Content comes from fields[].
+
+   - fields: BlockObject[] (REQUIRED, at least one)
+       Each field BlockObject can include:
+         id        : string
+         className : string (text styling, flex rows, etc.)
+         name      : string (text content, if any)
+         colClass  : string (Bootstrap grid size, defaults to "col-12")
+         icon      : IconConfig  (optional; renders with AlloyIcon)
+         logo      : LogoConfig  (optional; renders <img>)
+         ariaLabel : string (optional)
+
+   - footer: BlockObject (required conceptually; always normalized)
+       Used as the left text in the footer row; the footer action bar
+       renders on the right.
+
+   - type + action (REQUIRED):
+       type   = "AlloyButtonBar" | "AlloyLinkBar"
+       action = ButtonBarObject / LinkBarObject config
 ------------------------------------------------------------------- */
 
 /* 1) ButtonBar - text buttons */
@@ -33,12 +50,20 @@ const DEFAULT_BTN_TEXT = JSON.stringify(
     body: {
       id: "cardBtnTextBody",
       className: "card-body",
-      name: "Ada Lovelace"
+      ariaLabel: "User card"
     },
 
+    // fields drive the visible body layout
     fields: [
       {
+        id: "userName",
+        colClass: "col-12",
+        className: "fw-semibold mb-1",
+        name: "Ada Lovelace"
+      },
+      {
         id: "role",
+        colClass: "col-12",
         className: "text-muted small",
         name: "Admin · Active since 2020"
       }
@@ -75,7 +100,7 @@ const DEFAULT_BTN_TEXT = JSON.stringify(
   2
 );
 
-/* 2) ButtonBar - icon + text buttons */
+/* 2) ButtonBar - icon + text buttons + BlockObject colClass example */
 const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
   {
     id: "cardBtnIconText01",
@@ -91,13 +116,27 @@ const DEFAULT_BTN_ICON_TEXT = JSON.stringify(
     body: {
       id: "cardBtnIconTextBody",
       className: "card-body",
-      name: "Compiler Migration"
+      ariaLabel: "Project card"
     },
 
+    // Example: icon + text on one row using colClass
     fields: [
       {
+        id: "projIcon",
+        colClass: "col-auto",
+        className: "d-flex align-items-center justify-content-center",
+        icon: { iconClass: "fa-solid fa-diagram-project" }
+      },
+      {
+        id: "projTitle",
+        colClass: "col",
+        className: "fw-semibold",
+        name: "Compiler Migration"
+      },
+      {
         id: "status",
-        className: "text-muted small",
+        colClass: "col-12",
+        className: "text-muted small mt-1",
         name: "Status: In progress · Priority: High"
       }
     ],
@@ -153,12 +192,19 @@ const DEFAULT_BTN_ICON_ONLY = JSON.stringify(
     body: {
       id: "cardBtnIconOnlyBody",
       className: "card-body",
-      name: "prod-api-01"
+      ariaLabel: "Server card"
     },
 
     fields: [
       {
+        id: "serverName",
+        colClass: "col-12",
+        className: "fw-semibold mb-1",
+        name: "prod-api-01"
+      },
+      {
         id: "meta",
+        colClass: "col-12",
         className: "text-muted small",
         name: "Region: us-east · Status: Healthy"
       }
@@ -215,12 +261,19 @@ const DEFAULT_LINK_TEXT = JSON.stringify(
     body: {
       id: "cardLinkTextBody",
       className: "card-body",
-      name: "Alloy Documentation"
+      ariaLabel: "Docs card"
     },
 
     fields: [
       {
+        id: "docsTitle",
+        colClass: "col-12",
+        className: "fw-semibold mb-1",
+        name: "Alloy Documentation"
+      },
+      {
         id: "desc",
+        colClass: "col-12",
         className: "text-muted small",
         name: "Guides, API reference, and examples"
       }
@@ -275,12 +328,19 @@ const DEFAULT_LINK_ICON_TEXT = JSON.stringify(
     body: {
       id: "cardLinkIconTextBody",
       className: "card-body",
-      name: "Help & Support"
+      ariaLabel: "Support card"
     },
 
     fields: [
       {
+        id: "supportTitle",
+        colClass: "col-12",
+        className: "fw-semibold mb-1",
+        name: "Help & Support"
+      },
+      {
         id: "desc",
+        colClass: "col-12",
         className: "text-muted small",
         name: "Guides, help, and chat"
       }
@@ -339,12 +399,19 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
     body: {
       id: "cardLinkIconOnlyBody",
       className: "card-body",
-      name: "Quick Actions"
+      ariaLabel: "Shortcuts card"
     },
 
     fields: [
       {
+        id: "shortcutsTitle",
+        colClass: "col-12",
+        className: "fw-semibold mb-1",
+        name: "Quick Actions"
+      },
+      {
         id: "desc",
+        colClass: "col-12",
         className: "text-muted small",
         name: "Common navigation shortcuts"
       }
@@ -454,12 +521,13 @@ export default function CardActionPage() {
         },
         body: {
           className: "card-body",
-          name: "Parse error"
+          ariaLabel: "Error card"
         },
         fields: [
           {
             className: "text-danger",
-            name: "Fix JSON to preview actions"
+            name: "Fix JSON to preview actions",
+            colClass: "col-12"
           }
         ],
         footer: {
@@ -491,12 +559,13 @@ export default function CardActionPage() {
         },
         body: {
           className: "card-body",
-          name: "Parse error"
+          ariaLabel: "Error card"
         },
         fields: [
           {
             className: "text-danger",
-            name: "Fix JSON to preview actions"
+            name: "Fix JSON to preview actions",
+            colClass: "col-12"
           }
         ],
         footer: {
@@ -528,12 +597,13 @@ export default function CardActionPage() {
         },
         body: {
           className: "card-body",
-          name: "Parse error"
+          ariaLabel: "Error card"
         },
         fields: [
           {
             className: "text-danger",
-            name: "Fix JSON to preview actions"
+            name: "Fix JSON to preview actions",
+            colClass: "col-12"
           }
         ],
         footer: {
@@ -565,12 +635,13 @@ export default function CardActionPage() {
         },
         body: {
           className: "card-body",
-          name: "Parse error"
+          ariaLabel: "Error card"
         },
         fields: [
           {
             className: "text-danger",
-            name: "Fix JSON to preview actions"
+            name: "Fix JSON to preview actions",
+            colClass: "col-12"
           }
         ],
         footer: {
@@ -602,12 +673,13 @@ export default function CardActionPage() {
         },
         body: {
           className: "card-body",
-          name: "Parse error"
+          ariaLabel: "Error card"
         },
         fields: [
           {
             className: "text-danger",
-            name: "Fix JSON to preview actions"
+            name: "Fix JSON to preview actions",
+            colClass: "col-12"
           }
         ],
         footer: {
@@ -639,12 +711,13 @@ export default function CardActionPage() {
         },
         body: {
           className: "card-body",
-          name: "Parse error"
+          ariaLabel: "Error card"
         },
         fields: [
           {
             className: "text-danger",
-            name: "Fix JSON to preview actions"
+            name: "Fix JSON to preview actions",
+            colClass: "col-12"
           }
         ],
         footer: {
@@ -862,18 +935,26 @@ export default function CardActionPage() {
               <ul className="mb-0 ps-3">
                 <li>
                   <code>header</code>, <code>body</code>,{" "}
-                  <code>fields[]</code>, and <code>footer</code> are plain tag
-                  configs (<code>id</code>, <code>className</code>,{" "}
-                  <code>name</code>).
+                  <code>fields[]</code>, and <code>footer</code> are{" "}
+                  <strong>BlockObject configs</strong> (
+                  <code>id</code>, <code>className</code>,{" "}
+                  <code>name</code>, <code>colClass</code>,{" "}
+                  <code>icon</code>, <code>logo</code>,{" "}
+                  <code>ariaLabel</code>).
+                </li>
+                <li>
+                  <code>fields[]</code> drive the visible body content. Use{" "}
+                  <code>colClass</code> for Bootstrap grid sizing (e.g.{" "}
+                  <code>"col-12"</code>, <code>"col-auto"</code>,{" "}
+                  <code>"col-md-6"</code>).
                 </li>
                 <li>
                   <code>type</code> determines footer bar (
                   <code>"AlloyButtonBar"</code> vs{" "}
-                  <code>"AlloyLinkBar"</code>).
-                </li>
-                <li>
-                  <code>action</code> hydrates into a ButtonBarObject or
-                  LinkBarObject (buttons/links arrays).
+                  <code>"AlloyLinkBar"</code>).{" "}
+                  <code>action</code> is REQUIRED and is hydrated into a{" "}
+                  <code>ButtonBarObject</code> or{" "}
+                  <code>LinkBarObject</code>.
                 </li>
                 <li>
                   When an action is clicked, <code>fields[]</code> with both{" "}

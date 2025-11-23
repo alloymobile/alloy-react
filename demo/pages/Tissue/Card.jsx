@@ -2,84 +2,220 @@
 import React, { useMemo, useState } from "react";
 import { AlloyCard, CardObject } from "../../../src";
 
-/* ---------------------- Base objects ---------------------- */
-const CARD_NO_LINK_OBJ = {
-  id: "demoCard01",
+/* ---------------------- Base demo card objects ---------------------- */
+
+/** 1) Simple text-only card */
+const CARD_TEXT_ONLY = {
+  id: "demoTextCard01",
   className: "card border m-2 shadow",
 
   header: {
-    id: "demoCardHeader",
-    className: "card-header",
-    name: "Account"
+    id: "demoTextHeader",
+    className: "card-header fw-semibold",
+    name: "Simple Text Card"
   },
 
   body: {
-    id: "demoCardBody",
+    id: "demoTextBody",
     className: "card-body p-3",
-    name: "User Summary"
+    name: "Text-only body"
   },
 
   fields: [
-    { id: "f-name",   className: "fw-semibold fs-5 mb-1", name: "Ada Lovelace" },
-    { id: "f-role",   className: "text-muted mb-1",       name: "Role: Admin" },
-    { id: "f-joined", className: "",                      name: "Joined: 2023-12-01" }
+    {
+      id: "txt-title",
+      colClass: "col-12",
+      className: "fw-semibold fs-5 mb-1",
+      name: "Ada Lovelace"
+    },
+    {
+      id: "txt-role",
+      colClass: "col-12",
+      className: "text-muted mb-1",
+      name: "Pioneer of computing"
+    },
+    {
+      id: "txt-note",
+      colClass: "col-12",
+      className: "small text-secondary",
+      name: "This card demonstrates a simple layout with only text fields."
+    }
   ],
 
   footer: {
-    id: "demoCardFooter",
+    id: "demoTextFooter",
     className: "card-footer text-muted small",
-    name: "Last active: 2 hours ago"
+    name: "Footer (optional) — text only"
   }
 };
 
-const CARD_WITH_LINK_OBJ = {
-  ...CARD_NO_LINK_OBJ,
-  // only difference: we give link a route
-  link: "/users/101"
+/** 2) Card with icon + text (using separate fields) */
+const CARD_ICON_TEXT = {
+  id: "demoIconTextCard01",
+  className: "card border m-2 shadow",
+
+  header: {
+    id: "demoIconTextHeader",
+    className: "card-header fw-semibold",
+    name: "Icon + Text Card"
+  },
+
+  body: {
+    id: "demoIconTextBody",
+    className: "card-body p-3",
+    name: "Icon and text blocks"
+  },
+
+  fields: [
+    // Row 1: icon in a small column + title in remaining width
+    {
+      id: "icon-user",
+      colClass: "col-auto d-flex align-items-center",
+      className: "me-2",
+      iconClass: "fa-solid fa-user"
+    },
+    {
+      id: "icon-title",
+      colClass: "col",
+      className: "fw-semibold fs-5 mb-1",
+      name: "User Profile"
+    },
+
+    // Row 2: description text
+    {
+      id: "icon-desc",
+      colClass: "col-12",
+      className: "small text-secondary mb-1",
+      name: "This card shows how to combine an icon field and a text field in the same row using Bootstrap grid classes."
+    }
+  ],
+
+  footer: {
+    id: "demoIconTextFooter",
+    className: "card-footer text-muted small",
+    name: "Icon and text are separate fields."
+  }
+};
+
+/** 3) Card with image (logo) + text */
+const CARD_IMAGE_TEXT = {
+  id: "demoImageTextCard01",
+  className: "card border m-2 shadow",
+
+  header: {
+    id: "demoImageTextHeader",
+    className: "card-header fw-semibold",
+    name: "Image + Text Card"
+  },
+
+  body: {
+    id: "demoImageTextBody",
+    className: "card-body p-3",
+    name: "Logo and descriptive text"
+  },
+
+  fields: [
+    // Row 1: full-width logo/image
+    {
+      id: "img-logo",
+      colClass: "col-12",
+      className: "mb-2",
+      logo: {
+        imageUrl:
+          "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+        alt: "Alloymobile logo",
+        className: "img-fluid d-block w-100 h-auto object-fit-contain rounded"
+      }
+    },
+    // Row 2: title
+    {
+      id: "img-title",
+      colClass: "col-12",
+      className: "fw-semibold fs-5 mb-1",
+      name: "Alloymobile"
+    },
+    // Row 3: description
+    {
+      id: "img-desc",
+      colClass: "col-12",
+      className: "small text-secondary",
+      name: "This card demonstrates how a field with a LogoObject is rendered as a responsive, non-bleeding image above supporting text."
+    }
+  ],
+
+  footer: {
+    id: "demoImageTextFooter",
+    className: "card-footer text-muted small",
+    name: "Logo fields use LogoObject under the hood."
+  }
 };
 
 /* pretty-print defaults */
-const DEFAULT_NO_LINK_JSON = JSON.stringify(CARD_NO_LINK_OBJ, null, 2);
-const DEFAULT_WITH_LINK_JSON = JSON.stringify(CARD_WITH_LINK_OBJ, null, 2);
+const DEFAULT_TEXT_ONLY_JSON = JSON.stringify(CARD_TEXT_ONLY, null, 2);
+const DEFAULT_ICON_TEXT_JSON = JSON.stringify(CARD_ICON_TEXT, null, 2);
+const DEFAULT_IMAGE_TEXT_JSON = JSON.stringify(CARD_IMAGE_TEXT, null, 2);
 
 /* code snippet for docs */
 const TAG_SNIPPET = `<AlloyCard card={new CardObject(cardObject)} />`;
 
 export default function CardPage() {
-  // which tab are we looking at
-  const [activeTab, setActiveTab] = useState("nolink"); // "nolink" | "withlink"
+  // which tab are we looking at: "text" | "icontext" | "imagetext"
+  const [activeTab, setActiveTab] = useState("text");
 
   // each tab has its own editable JSON text
-  const [jsonNoLink, setJsonNoLink] = useState(DEFAULT_NO_LINK_JSON);
-  const [jsonWithLink, setJsonWithLink] = useState(DEFAULT_WITH_LINK_JSON);
+  const [jsonText, setJsonText] = useState(DEFAULT_TEXT_ONLY_JSON);
+  const [jsonIconText, setJsonIconText] = useState(DEFAULT_ICON_TEXT_JSON);
+  const [jsonImageText, setJsonImageText] =
+    useState(DEFAULT_IMAGE_TEXT_JSON);
 
-  // and each tab tracks its own parse error
-  const [errorNoLink, setErrorNoLink] = useState("");
-  const [errorWithLink, setErrorWithLink] = useState("");
+  // each tab tracks its own parse error
+  const [errorText, setErrorText] = useState("");
+  const [errorIconText, setErrorIconText] = useState("");
+  const [errorImageText, setErrorImageText] = useState("");
 
   // choose which JSON string + error is active right now
-  const activeJson = activeTab === "withlink" ? jsonWithLink : jsonNoLink;
-  const activeError = activeTab === "withlink" ? errorWithLink : errorNoLink;
+  const activeJson =
+    activeTab === "icontext"
+      ? jsonIconText
+      : activeTab === "imagetext"
+      ? jsonImageText
+      : jsonText;
+
+  const activeError =
+    activeTab === "icontext"
+      ? errorIconText
+      : activeTab === "imagetext"
+      ? errorImageText
+      : errorText;
 
   // parse the active JSON to build preview model
   const previewModel = useMemo(() => {
-    const rawText = activeTab === "withlink" ? jsonWithLink : jsonNoLink;
+    let rawText = jsonText;
+    if (activeTab === "icontext") rawText = jsonIconText;
+    if (activeTab === "imagetext") rawText = jsonImageText;
+
     try {
       const raw = JSON.parse(rawText);
+
       // clear the appropriate error bucket
-      if (activeTab === "withlink") {
-        setErrorWithLink("");
+      if (activeTab === "icontext") {
+        setErrorIconText("");
+      } else if (activeTab === "imagetext") {
+        setErrorImageText("");
       } else {
-        setErrorNoLink("");
+        setErrorText("");
       }
+
       return new CardObject(raw);
     } catch (e) {
-      // record parse error in the correct bucket
       const msg = String(e.message || e);
-      if (activeTab === "withlink") {
-        setErrorWithLink(msg);
+
+      if (activeTab === "icontext") {
+        setErrorIconText(msg);
+      } else if (activeTab === "imagetext") {
+        setErrorImageText(msg);
       } else {
-        setErrorNoLink(msg);
+        setErrorText(msg);
       }
 
       // fallback model so preview doesn't completely die
@@ -97,6 +233,7 @@ export default function CardPage() {
         fields: [
           {
             className: "text-danger",
+            colClass: "col-12",
             name: "Could not parse input JSON."
           }
         ],
@@ -106,7 +243,7 @@ export default function CardPage() {
         }
       });
     }
-  }, [activeTab, jsonNoLink, jsonWithLink]);
+  }, [activeTab, jsonText, jsonIconText, jsonImageText]);
 
   function handleTabClick(tab) {
     setActiveTab(tab);
@@ -114,27 +251,32 @@ export default function CardPage() {
 
   function handleTextareaChange(e) {
     const next = e.target.value;
-    if (activeTab === "withlink") {
-      setJsonWithLink(next);
+    if (activeTab === "icontext") {
+      setJsonIconText(next);
+    } else if (activeTab === "imagetext") {
+      setJsonImageText(next);
     } else {
-      setJsonNoLink(next);
+      setJsonText(next);
     }
   }
 
   function handleResetCurrent() {
-    if (activeTab === "withlink") {
-      setJsonWithLink(DEFAULT_WITH_LINK_JSON);
-      setErrorWithLink("");
+    if (activeTab === "icontext") {
+      setJsonIconText(DEFAULT_ICON_TEXT_JSON);
+      setErrorIconText("");
+    } else if (activeTab === "imagetext") {
+      setJsonImageText(DEFAULT_IMAGE_TEXT_JSON);
+      setErrorImageText("");
     } else {
-      setJsonNoLink(DEFAULT_NO_LINK_JSON);
-      setErrorNoLink("");
+      setJsonText(DEFAULT_TEXT_ONLY_JSON);
+      setErrorText("");
     }
   }
 
   function headerTitle() {
-    return activeTab === "withlink"
-      ? "With Link"
-      : "Without Link";
+    if (activeTab === "icontext") return "Icon + Text Card";
+    if (activeTab === "imagetext") return "Image + Text Card";
+    return "Text-only Card";
   }
 
   return (
@@ -153,30 +295,41 @@ export default function CardPage() {
       {/* Row 2 — Tabs + Preview */}
       <div className="row mb-4">
         <div className="col-12 col-lg-6">
-
           {/* Tabs */}
           <ul className="nav nav-tabs mb-3">
             <li className="nav-item">
               <button
                 className={
-                  "nav-link " + (activeTab === "nolink" ? "active" : "")
+                  "nav-link " + (activeTab === "text" ? "active" : "")
                 }
-                onClick={() => handleTabClick("nolink")}
+                onClick={() => handleTabClick("text")}
                 type="button"
               >
-                Without Link
+                Text Only
               </button>
             </li>
 
             <li className="nav-item">
               <button
                 className={
-                  "nav-link " + (activeTab === "withlink" ? "active" : "")
+                  "nav-link " + (activeTab === "icontext" ? "active" : "")
                 }
-                onClick={() => handleTabClick("withlink")}
+                onClick={() => handleTabClick("icontext")}
                 type="button"
               >
-                With Link
+                Icon + Text
+              </button>
+            </li>
+
+            <li className="nav-item">
+              <button
+                className={
+                  "nav-link " + (activeTab === "imagetext" ? "active" : "")
+                }
+                onClick={() => handleTabClick("imagetext")}
+                type="button"
+              >
+                Image + Text
               </button>
             </li>
           </ul>
@@ -187,25 +340,40 @@ export default function CardPage() {
           {/* Helper text */}
           <div className="small text-secondary mt-2">
             <div className="mb-1">
-              <strong>Click zone rule:</strong> Only the{" "}
-              <code>body</code> section is clickable.
-              If <code>link</code> is non-empty, we wrap ONLY{" "}
-              <code>body</code> in a React Router{" "}
-              <code>&lt;Link /&gt;</code>. Header and footer never become links.
+              <strong>Layout model:</strong> <code>header</code> (optional),{" "}
+              <code>body</code> (required), <code>fields</code> (required, at
+              least one), and <code>footer</code> (optional).
             </div>
 
             <div className="mb-1">
-              The <span className="fw-semibold">"Without Link"</span> tab uses
-              JSON where <code>"link": ""</code>.
+              <code>fields</code> is an ordered array of{" "}
+              <strong>blocks</strong> (BlockObject) rendered inside the{" "}
+              <code>body</code> as a Bootstrap grid using{" "}
+              <code>colClass</code>.
             </div>
 
             <div className="mb-1">
-              The <span className="fw-semibold">"With Link"</span> tab uses
-              JSON where <code>"link": "/users/101"</code>.
+              Each field can render as:
+              <ul className="ps-3 mb-0">
+                <li>
+                  <strong>Text</strong> — when <code>name</code> is present.
+                </li>
+                <li>
+                  <strong>Icon</strong> — when <code>icon</code> /{" "}
+                  <code>iconClass</code> is present (renders{" "}
+                  <code>&lt;AlloyIcon/&gt;</code>).
+                </li>
+                <li>
+                  <strong>Logo / Image</strong> — when <code>logo</code> is
+                  present (renders a responsive image).
+                </li>
+              </ul>
             </div>
 
-            <div className="text-muted">
-              You can edit each tab’s JSON separately below.
+            <div className="mb-1">
+              If <code>link</code> is provided on the card, only{" "}
+              <code>body</code> becomes a clickable React Router{" "}
+              <code>&lt;Link/&gt;</code>. Header and footer never become links.
             </div>
           </div>
         </div>
@@ -239,45 +407,48 @@ export default function CardPage() {
           />
 
           {activeError && (
-            <div className="invalid-feedback d-block mt-1">{activeError}</div>
+            <div className="invalid-feedback d-block mt-1">
+              {activeError}
+            </div>
           )}
 
           <div className="form-text">
             <ul className="mb-0 ps-3">
               <li>
-                <code>body</code> is required. We wrap plain objects into{" "}
-                <code>TagObject</code> and default missing classes to{" "}
-                <code>"card-body"</code>.
+                <code>body</code> is required. We wrap plain objects into
+                the internal <code>BlockObject</code> and default missing
+                classes to <code>"card-body"</code>.
               </li>
 
               <li>
-                <code>header</code> and <code>footer</code> are optional. If
-                present, we default their classes to{" "}
-                <code>"card-header"</code> / <code>"card-footer"</code> unless
-                you override.
+                <code>header</code> and <code>footer</code> are optional.
+                If present, we default their classes to{" "}
+                <code>"card-header"</code> / <code>"card-footer"</code>{" "}
+                unless you override.
               </li>
 
               <li>
                 <code>fields</code> is an ordered array of blocks rendered
-                inside <code>body</code>, after <code>body.name</code>.
+                inside <code>body</code> in a Bootstrap{" "}
+                <code>.row</code>. Each field may specify{" "}
+                <code>colClass</code> (e.g. <code>"col-12"</code>,{" "}
+                <code>"col-auto"</code>, <code>"col-md-6"</code>).
               </li>
 
               <li className="mt-2">
-                <strong>link</strong>:
+                Content rules:
                 <ul className="ps-3 mb-0">
                   <li>
-                    If <code>link</code> is <code>""</code> (empty string),
-                    the card is not navigable.
+                    If a field has <code>logo</code> → it renders only the
+                    logo.
                   </li>
                   <li>
-                    If <code>link</code> is something like{" "}
-                    <code>"/users/101"</code>, ONLY the{" "}
-                    <code>body</code> area becomes a clickable{" "}
-                    <code>&lt;Link/&gt;</code>.
+                    Else if it has <code>icon</code> /{" "}
+                    <code>iconClass</code> → it renders only the icon via{" "}
+                    <code>&lt;AlloyIcon/&gt;</code>.
                   </li>
                   <li>
-                    The header and footer remain normal text/controls and
-                    do not navigate.
+                    Else if it has <code>name</code> → it renders text.
                   </li>
                 </ul>
               </li>

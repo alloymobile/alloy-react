@@ -36,22 +36,53 @@ export class ContactObject {
         ? contactForm
         : new FormObject(contactForm || {});
 
-    // addressCard → CardObject (CardObject REQUIRES body)
-    const addrCfg =
-      addressCard && addressCard.body
-        ? addressCard
-        : {
-            id: "contactAddressFallback",
-            className: "card border-0",
-            body: {
-              id: "contactAddressFallbackBody",
-              className: "card-body text-center text-muted",
-              name: "Configure addressCard.body to show address info."
-            }
-          };
+    // addressCard → CardObject (CardObject now REQUIRES fields[])
+    // We normalize so:
+    //  - body is always present
+    //  - there is at least one field
+    //  - if no fields given, we reuse body.name as a single field line
+    if (addressCard instanceof CardObject) {
+      // Already a model, trust it (assumed valid)
+      this.addressCard = addressCard;
+    } else {
+      const raw = addressCard || {};
 
-    this.addressCard =
-      addrCfg instanceof CardObject ? addrCfg : new CardObject(addrCfg);
+      const body = raw.body || {
+        id: "contactAddressBody",
+        className: "card-body"
+      };
+
+      const hasFields = Array.isArray(raw.fields) && raw.fields.length > 0;
+
+      const fields = hasFields
+        ? raw.fields
+        : [
+            {
+              id: "addressLine",
+              className: "text-center text-muted",
+              name:
+                body.name ||
+                "Configure addressCard.fields to show address info."
+            }
+          ];
+
+      // If we synthesized fields from body.name, clear body.name to avoid duplicate text
+      const finalBody = {
+        ...body,
+        name: hasFields ? body.name || "" : ""
+      };
+
+      const addrCfg = {
+        id: raw.id || "contactAddressFallback",
+        className: raw.className || "card border-0",
+        header: raw.header,
+        body: finalBody,
+        fields,
+        footer: raw.footer
+      };
+
+      this.addressCard = new CardObject(addrCfg);
+    }
 
     this.data = data || {};
 

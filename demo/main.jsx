@@ -27,11 +27,7 @@ import TablePage from "./pages/Tissue/Table.jsx";
 import TableLinkPage from "./pages/Tissue/TableLink.jsx";
 import TableActionPage from "./pages/Tissue/TableAction.jsx";
 import CardPage from "./pages/Tissue/Card.jsx";
-import CardIconPage from "./pages/Tissue/CardIcon.jsx";
-import CardImagePage from "./pages/Tissue/CardImage.jsx"
 import CardActionPage from "./pages/Tissue/CardAction.jsx";
-import CardIconActionPage from "./pages/Tissue/CardIconAction.jsx";
-import CardImageActionPage from "./pages/Tissue/CardImageAction.jsx";
 import FormPage from "./pages/Tissue/Form.jsx";
 import TabFormPage from "./pages/Tissue/TabForm.jsx";
 import ModalPage from "./pages/Tissue/Modal.jsx";
@@ -45,7 +41,8 @@ import CheckoutPage from "./pages/Organ/Checkout.jsx";
 import DonatePage from "./pages/Organ/Donate.jsx";
 import GalleryPage from "./pages/Organ/Gallery.jsx";
 import CardCarouselPage from "./pages/Tissue/CardCarousel.jsx";
-import CardGalleryPage from "./pages/Tissue/CardGallery.jsx";
+import CardVideoPage from "./pages/Tissue/CardVideo.jsx";
+import FooterPage from "./pages/Organ/Footer.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -77,12 +74,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="table" element={<TablePage />} />
           <Route path="table-link" element={<TableLinkPage />} />
           <Route path="table-action" element={<TableActionPage />} />
-          <Route path="card" element={<CardPage />} />    
-          <Route path="card-icon" element={<CardIconPage />} />    
-          <Route path="card-image" element={<CardImagePage />} />   
-          <Route path="card-action" element={<CardActionPage />} />      
-          <Route path="card-icon-action" element={<CardIconActionPage />} />                                  
-          <Route path="card-image-action" element={<CardImageActionPage />} />           
+          <Route path="card" element={<CardPage />} />     
+          <Route path="card-action" element={<CardActionPage />} />              
           <Route path="form" element={<FormPage />} />  
           <Route path="tab-form" element={<TabFormPage />} />  
           <Route path="modal" element={<ModalPage />} />  
@@ -90,7 +83,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="crud-card" element={<CrudCardPage />} />   
           <Route path="pay" element={<PayPage />} />   
           <Route path="carousel" element={<CardCarouselPage />} />   
-          <Route path="gallery" element={<CardGalleryPage />} />   
+          <Route path="video" element={<CardVideoPage />} />   
         </Route>
         <Route path="/organ" element={<Organ />}> 
           <Route path="email" element={<EmailPage />} />   
@@ -98,7 +91,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="profile" element={<ProfilePage />} />   
           <Route path="checkout" element={<CheckoutPage />} />   
           <Route path="donate" element={<DonatePage />} />  
-          <Route path="gallery" element={<GalleryPage />} />            
+          <Route path="gallery" element={<GalleryPage />} />    
+          <Route path="footer" element={<FooterPage />} />           
         </Route>
       </Route>
     </Routes>

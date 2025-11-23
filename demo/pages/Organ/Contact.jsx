@@ -30,7 +30,7 @@ const DEFAULT_CONTACT_JSON = JSON.stringify(
       submit: {
         id: "contactSubmit",
         name: "Submit",
-        icon: { iconClass: "fa-solid fa-paper-plane" }, // IMPORTANT (required)
+        icon: { iconClass: "fa-solid fa-paper-plane" }, // REQUIRED
         className: "btn btn-primary w-100 mt-3",
         disabled: false,
         loading: false,
@@ -184,6 +184,7 @@ export default function ContactPage() {
           fields: []
         },
 
+        // NOTE: we only pass body; ContactObject will synthesize fields[]
         addressCard: {
           id: "invalidContactAddressCard",
           className: "card border-0",
@@ -322,8 +323,18 @@ export default function ContactPage() {
             <code>contactForm</code> (AlloyForm) and{" "}
             <code>addressCard</code> (AlloyCard).
             <br />
-            Make sure <code>contactForm.submit.icon</code> is present, and{" "}
-            <code>addressCard.body</code> is defined, or the model will throw.
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>contactForm.submit.icon</code> must be present (required
+                by <code>AlloyForm</code>).
+              </li>
+              <li>
+                If you omit <code>addressCard.fields</code>,{" "}
+                <code>ContactObject</code> will synthesize a single field line
+                from <code>addressCard.body.name</code> so{" "}
+                <code>AlloyCard</code> still has at least one field.
+              </li>
+            </ul>
           </div>
         </div>
 

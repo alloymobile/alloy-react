@@ -5,21 +5,20 @@ import { OutputObject } from "../../utils/idHelper.js";
 
 import AlloyForm, { FormObject } from "../tissue/AlloyForm.jsx";
 import AlloyCrudCard, { CrudCardObject } from "../organ/AlloyCrudCard.jsx";
-import AlloyCardIconAction, {
-  CardIconActionObject,
-} from "../tissue/AlloyCardIconAction.jsx";
 import { AlloyIcon, IconObject } from "../cell/AlloyIcon.jsx";
 
 /* -------------------------------------------------------
  * ProfileObject  (AlloyProfile model)
  *
- * Mirrors the Angular class:
- *   id, className, action, profileForm, data, sample, details
+ * Fields:
+ *   id, className, action, profileForm, data, details
+ *   name?: string
+ *   email?: string
+ *   icon?: IconObject | plain config
  *
- * Extras (for React demo convenience):
- *   - name?: string
- *   - email?: string
- *   - icon?: IconObject | plain config
+ * NOTE:
+ *   We removed the old `sample` CardIconActionObject to avoid
+ *   constructing any CardActionObject without fields.
  * ----------------------------------------------------- */
 export class ProfileObject {
   constructor(res = {}) {
@@ -29,7 +28,6 @@ export class ProfileObject {
       action = "",
       profileForm,
       data,
-      sample,
       details,
       name = "",
       email = "",
@@ -50,7 +48,7 @@ export class ProfileObject {
         ? icon
         : new IconObject(
             icon || {
-              iconClass: "fa-solid fa-user fa-2xl",
+              iconClass: "fa-solid fa-user fa-2xl"
             }
           );
 
@@ -62,12 +60,6 @@ export class ProfileObject {
 
     // Optional payload snapshot
     this.data = data || {};
-
-    // Sample card (not rendered in base layout but kept for parity)
-    this.sample =
-      sample instanceof CardIconActionObject
-        ? sample
-        : new CardIconActionObject(sample || {});
 
     // Address / details CRUD card
     this.details =
@@ -137,7 +129,7 @@ export function AlloyProfile({ profile, output }) {
       type: "profile",
       action: "form.submit",
       error: !!base.error,
-      data: base.data || {},
+      data: base.data || {}
     });
 
     emit(wrapped);
@@ -157,7 +149,7 @@ export function AlloyProfile({ profile, output }) {
       type: "profile",
       action: `details.${base.action || "unknown"}`,
       error: !!base.error,
-      data: base.data || {},
+      data: base.data || {}
     });
 
     emit(wrapped);

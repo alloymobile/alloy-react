@@ -1,3 +1,4 @@
+// pages/Organ/Profile.jsx
 import React, { useMemo, useState } from "react";
 import { AlloyProfile, ProfileObject } from "../../../src";
 import { OutputObject } from "../../../src/utils/idHelper.js";
@@ -179,6 +180,8 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
         ariaLabel: "Add address"
       },
 
+      // NOTE: fields[].id MUST match modal.fields[].name
+      // so CrudCard can prefill modal correctly.
       cards: [
         {
           id: "addrHome",
@@ -195,19 +198,29 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           },
           fields: [
             {
-              id: "addrHomeCity",
-              name: "City: Toronto",
-              className: "small"
+              id: "label",
+              className: "fw-semibold",
+              name: "Home"
             },
             {
-              id: "addrHomeCountry",
-              name: "Country: Canada",
-              className: "small"
+              id: "street",
+              className: "small",
+              name: "123 Main St"
             },
             {
-              id: "addrHomePostal",
-              name: "Postal: A1A 1A1",
-              className: "small"
+              id: "city",
+              className: "small",
+              name: "Toronto"
+            },
+            {
+              id: "country",
+              className: "small",
+              name: "Canada"
+            },
+            {
+              id: "postalCode",
+              className: "small",
+              name: "A1A 1A1"
             }
           ],
           footer: {
@@ -443,7 +456,14 @@ export default function ProfilePage() {
               </li>
               <li>
                 <code>details.cards[]</code> → address cards and their footer
-                buttons.
+                buttons. For Edit/Delete mapping,{" "}
+                <strong>
+                  <code>details.cards[].fields[].id</code> must match{" "}
+                  <code>details.modal.fields[].name</code>
+                </strong>{" "}
+                (e.g. <code>label</code>, <code>street</code>,{" "}
+                <code>city</code>, <code>country</code>,{" "}
+                <code>postalCode</code>).
               </li>
             </ul>
           </div>

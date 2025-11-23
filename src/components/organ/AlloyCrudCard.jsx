@@ -11,29 +11,25 @@ import AlloyButtonIcon, {
 import AlloyCardAction, {
   CardActionObject,
 } from "../tissue/AlloyCardAction.jsx";
-import AlloyCardIconAction, {
-  CardIconActionObject,
-} from "../tissue/AlloyCardIconAction.jsx";
-import AlloyCardImageAction, {
-  CardImageActionObject,
-} from "../tissue/AlloyCardImageAction.jsx";
 
 /* -------------------------------------------------------
  * CrudCardObject
  *
- * Config shape (mirrors Angular version):
+ * Unified config (only AlloyCardAction now):
  *
  * {
  *   id?: string,              // row id wrapper
  *   className?: string,       // col classes for each card, e.g. "col-sm-6 col-md-4 col-lg-3 mb-3"
  *
- *   type?: "AlloyCardAction" | "AlloyCardIconAction" | "AlloyCardImageAction",
+ *   // type is kept only for backwards compatibility in JSON,
+ *   // but we always render AlloyCardAction.
+ *   type?: "AlloyCardAction",
  *
  *   modal: ModalConfig,
  *
  *   add?: ButtonIconConfig,
  *
- *   cards: Array<CardConfig>  // configs for the chosen card type
+ *   cards: Array<CardActionConfig>  // each → CardActionObject
  * }
  * ----------------------------------------------------- */
 export class CrudCardObject {
@@ -51,7 +47,9 @@ export class CrudCardObject {
     this.id = id ?? generateId("crud-card");
     // NOTE: className here is for each card column wrapper
     this.className = className;
-    this.type = type;
+
+    // Keep the field, but it's effectively informational now.
+    this.type = type || "AlloyCardAction";
 
     // Modal
     this.modal =
@@ -65,23 +63,12 @@ export class CrudCardObject {
         ? new ButtonIconObject(add)
         : null;
 
-    // Cards → hydrate based on type
-    this.cards = cards.map((card) => {
-      if (type === "AlloyCardIconAction") {
-        return card instanceof CardIconActionObject
-          ? card
-          : new CardIconActionObject(card || {});
-      }
-      if (type === "AlloyCardImageAction") {
-        return card instanceof CardImageActionObject
-          ? card
-          : new CardImageActionObject(card || {});
-      }
-      // default AlloyCardAction
-      return card instanceof CardActionObject
+    // Cards → always hydrate to CardActionObject
+    this.cards = cards.map((card) =>
+      card instanceof CardActionObject
         ? card
-        : new CardActionObject(card || {});
-    });
+        : new CardActionObject(card || {})
+    );
 
     Object.assign(this, rest);
   }
@@ -222,10 +209,6 @@ export function AlloyCrudCard({ crudCard, output }) {
 
     const valuesMap = modalState.data || {};
 
-    // base.fields in ModalObject are already InputObject instances.
-    // We just want to ensure:
-    //   - value gets injected from modalState.data[name]
-    //   - disabled/readOnly toggled for delete mode
     const fields = Array.isArray(base.fields)
       ? base.fields.map((f) => {
           const plain = f ? { ...f } : {};
@@ -257,10 +240,6 @@ export function AlloyCrudCard({ crudCard, output }) {
 
   /* ----------------- Helpers ----------------- */
 
-  // Build a data object for modal from a "row":
-  // For CrudCard, the "row" comes from card output:
-  //   cardOut.data = { <fieldId>: <fieldName>, ... }
-  // We expect modal.fields[].name === DB column name, and fieldId === same string.
   function mapRowToModalData(row = {}) {
     const result = {};
     const modalCfg = crudCard.modal || {};
@@ -268,11 +247,10 @@ export function AlloyCrudCard({ crudCard, output }) {
     const fields = Array.isArray(modalCfg.fields) ? modalCfg.fields : [];
 
     fields.forEach((f) => {
-      const key = f?.name; // modal field name is your column name
+      const key = f?.name;
       if (!key) return;
 
       if (Object.prototype.hasOwnProperty.call(row, key)) {
-        // strict exact match: row["vendorName"] → modal "vendorName"
         result[key] = row[key];
       } else if (Object.prototype.hasOwnProperty.call(defaultData, key)) {
         result[key] = defaultData[key];
@@ -342,7 +320,6 @@ export function AlloyCrudCard({ crudCard, output }) {
   const handleModalOutput = (modalOut) => {
     if (!modalOut || modalOut.type !== "modal") return;
 
-    // If AlloyModal reported validation error → DO NOT emit
     if (modalOut.error) {
       return;
     }
@@ -359,7 +336,7 @@ export function AlloyCrudCard({ crudCard, output }) {
       type: "crud-card",
       action,
       data: {
-        ...fields, // key/value only (vendorName, email, city, status, ...)
+        ...fields,
       },
     });
 
@@ -372,12 +349,11 @@ export function AlloyCrudCard({ crudCard, output }) {
 
     setModalState((prev) => ({
       mode: "create",
-      data: { ...defaultData }, // fresh clone every time; always blank/default
+      data: { ...defaultData },
       disabled: false,
       version: prev.version + 1,
     }));
     setShouldOpen(true);
-    // No OutputObject here; final output only on modal submit
   };
 
   /* ----------------- Render ----------------- */
@@ -385,29 +361,7 @@ export function AlloyCrudCard({ crudCard, output }) {
   const renderCards = () => {
     if (!Array.isArray(crudCard.cards)) return null;
 
-    if (crudCard.type === "AlloyCardIconAction") {
-      return crudCard.cards.map((card) => (
-        <div key={card.id} className={crudCard.className}>
-          <AlloyCardIconAction
-            cardIconAction={card}
-            output={handleCardOutput}
-          />
-        </div>
-      ));
-    }
-
-    if (crudCard.type === "AlloyCardImageAction") {
-      return crudCard.cards.map((card) => (
-        <div key={card.id} className={crudCard.className}>
-          <AlloyCardImageAction
-            cardImageAction={card}
-            output={handleCardOutput}
-          />
-        </div>
-      ));
-    }
-
-    // default: AlloyCardAction
+    // Unified path: always AlloyCardAction
     return crudCard.cards.map((card) => (
       <div key={card.id} className={crudCard.className}>
         <AlloyCardAction cardAction={card} output={handleCardOutput} />
@@ -421,7 +375,10 @@ export function AlloyCrudCard({ crudCard, output }) {
       <div className="row mt-2">
         <div className="col-sm-12 text-end">
           {crudCard.add && (
-            <AlloyButtonIcon buttonIcon={crudCard.add} output={handleAddOutput} />
+            <AlloyButtonIcon
+              buttonIcon={crudCard.add}
+              output={handleAddOutput}
+            />
           )}
         </div>
       </div>
