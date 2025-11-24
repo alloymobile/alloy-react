@@ -20,16 +20,16 @@ const DEFAULT_FOOTER_JSON = JSON.stringify(
   {
     id: "footer-pexchange",
     name: "PExChange Footer",
-    className: "footer pt-5 pb-4 bg-primary text-light",
+    className: "footer pt-5 pb-4 bg-dark text-light",
 
     logo: {
       id: "footer-logo",
       imageUrl:
         "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
-      alt: "PExChange",
-      width: "64px",
+      alt: "precastXchange",
+      width: "32px",
       height: "auto",
-      className: "img-fluid d-block object-fit-contain"
+      className: "img-fluid d-block object-fit-contain bg-light"
     },
 
     details: {

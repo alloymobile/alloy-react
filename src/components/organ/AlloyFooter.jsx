@@ -1,12 +1,14 @@
 // src/lib/components/organ/AlloyFooter.jsx
 import React from "react";
 
-import { generateId, OutputObject, BlockObject, LogoObject } from "../../utils/idHelper.js";
+import {
+  generateId,
+  OutputObject,
+  BlockObject,
+  LogoObject,
+} from "../../utils/idHelper.js";
 
-import AlloyLinkBar, {
-  LinkBarObject,
-} from "../tissue/AlloyLinkBar.jsx";
-
+import AlloyLinkBar, { LinkBarObject } from "../tissue/AlloyLinkBar.jsx";
 import AlloyForm, { FormObject } from "../tissue/AlloyForm.jsx";
 
 /* ------------------------------------------------------------------
@@ -18,10 +20,10 @@ import AlloyForm, { FormObject } from "../tissue/AlloyForm.jsx";
  *     name?: string
  *     className?: string          // applied to <footer>
  *
- *     logo?: LogoObject | {...}   // company logo
+ *     logo?: LogoObject | {...}     // company logo
  *     details?: BlockObject | {...} // text block (we usually use name only)
  *     social?: LinkBarObject | {...} // AlloyLinkBar (typically AlloyLinkIcon)
- *     section?: Array<LinkBarObject|Object> // list of AlloyLinkBar sections (Explore, Company, etc.)
+ *     section?: Array<LinkBarObject|Object> // list of AlloyLinkBar sections
  *     subscribe?: FormObject | {...} // AlloyForm for email subscribe
  *   }
  * ------------------------------------------------------------------ */
@@ -62,7 +64,7 @@ export class FooterObject {
     } else {
       this.details = new BlockObject(
         details || {
-          // you told me: "details with name only ignore logo and icon"
+          // "details with name only ignore logo and icon"
           name:
             "Professional marketplace connecting precast manufacturers, engineers and buyers. New & used equipment, services and standards — in one platform.",
           className: "small opacity-75 mb-2",
@@ -149,21 +151,6 @@ export class FooterObject {
 
 /* ------------------------------------------------------------------
  * AlloyFooter
- *
- * Layout (Bootstrap row with 4 cols):
- *   - Col 1: logo + details + social (col-12 col-md-3)
- *   - Col 2..N: each entry of section[] is its own column (col-12 col-md-3)
- *   - Last: subscribe form (col-12 col-md-3)
- *
- * Props:
- *   - footer: FooterObject | plain JSON config following the schema above
- *   - output?: (out: OutputObject) => void
- *
- * Output:
- *   1) Subscribe:
- *      { id, type:"footer", action:"subscribe", error, data:{ email } }
- *   2) Link clicks (any section / social):
- *      { id, type:"footer", action:"<link label>", error:false, data:{ href } }
  * ------------------------------------------------------------------ */
 export function AlloyFooter({ footer, output }) {
   const model =
@@ -242,7 +229,7 @@ export function AlloyFooter({ footer, output }) {
     <footer id={model.id} className={model.className}>
       <div className="container">
         <div className="row g-4">
-          {/* Column 1: logo + details + social */}
+          {/* Column 1: logo + alt text + details + social */}
           <div className="col-12 col-md-3">
             {/* Logo */}
             {model.logo && (
@@ -259,7 +246,14 @@ export function AlloyFooter({ footer, output }) {
               </div>
             )}
 
-            {/* Details text (BlockObject.name only, per your spec) */}
+            {/* Alt text directly after logo */}
+            {model.logo && model.logo.alt && (
+              <h6 className="fw-semibold mb-1">
+                {model.logo.alt}
+              </h6>
+            )}
+
+            {/* Details text (BlockObject.name only) */}
             {model.details && model.details.name && (
               <p
                 className={
@@ -271,7 +265,7 @@ export function AlloyFooter({ footer, output }) {
               </p>
             )}
 
-            {/* Social icons */}
+            {/* Social icons (title + icons handled inside AlloyLinkBar) */}
             {model.social && (
               <div className="mt-2">
                 <AlloyLinkBar
@@ -288,13 +282,7 @@ export function AlloyFooter({ footer, output }) {
               key={sec.id || `footer-section-${index}`}
               className="col-12 col-md-3"
             >
-              {/* Section title from TagObject.name */}
-              {sec.title && sec.title.name && (
-                <h6 className="text-white mb-2">
-                  {sec.title.name}
-                </h6>
-              )}
-
+              {/* Let AlloyLinkBar render its own title from sec.title */}
               <AlloyLinkBar
                 linkBar={sec}
                 output={handleLinksOutput}
@@ -302,13 +290,8 @@ export function AlloyFooter({ footer, output }) {
             </div>
           ))}
 
-          {/* Last column: subscribe form */}
+          {/* Last column: subscribe form (title fully handled by AlloyForm) */}
           <div className="col-12 col-md-3">
-            {model.subscribe && model.subscribe.title && (
-              <h6 className="text-white mb-2">
-                {model.subscribe.title}
-              </h6>
-            )}
             <AlloyForm
               form={model.subscribe}
               output={handleSubscribeOutput}
