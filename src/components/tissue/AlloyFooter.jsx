@@ -3,9 +3,8 @@ import React from "react";
 
 import { generateId, OutputObject } from "../../utils/idHelper.js";
 
-import AlloyLinkLogo, {
-  LinkLogoObject,
-} from "../cell/AlloyLinkLogo.jsx";
+import { LogoObject } from "../cell/AlloyLogo.jsx";
+import { BlockObject } from "../tissue/AlloyBlock.jsx";
 
 import AlloyLinkBar, {
   LinkBarObject,
@@ -14,186 +13,161 @@ import AlloyLinkBar, {
 import AlloyForm, { FormObject } from "../tissue/AlloyForm.jsx";
 
 /* ------------------------------------------------------------------
- * FooterObject
+ * FooterObject (NEW MODEL)
  *
- * Fields:
- *   - id, className
- *   - brandName, brandLogo (LinkLogoObject), brandDetails, brandClass
- *   - exploreTitle, exploreBar (LinkBarObject)
- *   - companyTitle, companyBar (LinkBarObject)
- *   - subscribeTitle, subscribeForm (FormObject)
- *   - bottomLeft (string)
- *   - socialBar (LinkBarObject)
+ * JSON shape:
+ * {
+ *   id?: string
+ *   name?: string
+ *   className?: string
+ *
+ *   logo?: LogoObject | {...}
+ *   details?: BlockObject | {...}
+ *   social?: LinkBarObject | {...}      // usually type: "AlloyLinkIcon"
+ *   section?: Array<LinkBarObject|...>  // Explore, Company, etc.
+ *   subscribe?: FormObject | {...}
+ * }
  * ------------------------------------------------------------------ */
 export class FooterObject {
   constructor(res = {}) {
     const {
       id,
+      name,
       className = "footer pt-5 pb-4 bg-dark text-light",
 
-      brandName = "PExChange",
-      brandLogo,
-      brandDetails = "Professional marketplace connecting precast manufacturers, engineers and buyers. New & used equipment, services and standards — in one platform.",
-      brandClass = "col-md-4",
-
-      exploreTitle = "Explore",
-      exploreBar,
-
-      companyTitle = "Company",
-      companyBar,
-
-      subscribeTitle = "Stay in the loop",
-      subscribeForm,
-
-      bottomLeft,
-      socialBar,
+      logo,
+      details,
+      social,
+      section,
+      subscribe,
     } = res || {};
 
     this.id = id ?? generateId("footer");
+    this.name = name ?? "Footer";
     this.className = className;
-    this.brandName = brandName;
-    this.brandDetails = brandDetails;
-    this.brandClass = brandClass;
 
-    /* ----------------- brandLogo (LinkLogoObject) ----------------- */
-    if (brandLogo instanceof LinkLogoObject) {
-      this.brandLogo = brandLogo;
-    } else if (
-      brandLogo &&
-      typeof brandLogo.href === "string" &&
-      brandLogo.href &&
-      brandLogo.logo
-    ) {
-      // user-supplied JSON has proper href + logo
-      this.brandLogo = new LinkLogoObject(brandLogo);
+    /* ----------------- logo (LogoObject) ----------------- */
+    if (logo instanceof LogoObject) {
+      this.logo = logo;
     } else {
-      // safe default that satisfies LinkLogoObject schema
-      this.brandLogo = new LinkLogoObject({
-        id: generateId("footer-brand"),
-        name: brandName,
-        href: "#",
-        logo: {
-          iconClass: "fa-solid fa-building",
-        },
-        className: "brand-badge text-decoration-none text-light",
-      });
+      this.logo = new LogoObject(
+        logo || {
+          imageUrl:
+            "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+          alt: "Alloymobile",
+        }
+      );
     }
 
-    /* ----------------- exploreBar (LinkBarObject) ----------------- */
-    if (exploreBar instanceof LinkBarObject) {
-      this.exploreBar = exploreBar;
+    /* ----------------- details (BlockObject) ----------------- */
+    if (details instanceof BlockObject) {
+      this.details = details;
     } else {
-      const rawExplore = exploreBar || {};
-      const safeExplore = {
-        id: rawExplore.id ?? generateId("footer-explore"),
-        className: rawExplore.className ?? "list-unstyled small",
-        type: rawExplore.type ?? "AlloyLink",
-        linkClass: rawExplore.linkClass ?? "mb-1",
-        selected: rawExplore.selected ?? "active",
-        title: rawExplore.title, // LinkBarObject will wrap into TagObject
-        links: Array.isArray(rawExplore.links)
-          ? rawExplore.links
-          : [],
+      this.details = new BlockObject(
+        details || {
+          name:
+            "Professional marketplace connecting precast manufacturers, engineers and buyers. New & used equipment, services and standards — in one platform.",
+          className: "small opacity-75 mb-2",
+          colClass: "col-12 col-md-3",
+        }
+      );
+    }
+
+    /* ----------------- social (LinkBarObject) ----------------- */
+    if (social instanceof LinkBarObject) {
+      this.social = social;
+    } else {
+      const rawSocial = social || {};
+      const safeSocial = {
+        id: rawSocial.id ?? generateId("footer-social"),
+        className: rawSocial.className ?? "nav gap-3",
+        type: rawSocial.type ?? "AlloyLinkIcon",
+        linkClass: rawSocial.linkClass ?? "nav-link p-0 text-light",
+        selected: rawSocial.selected ?? "active",
+        title: rawSocial.title, // LinkBarObject will wrap this into TagObject
+        links: Array.isArray(rawSocial.links) ? rawSocial.links : [],
       };
-      this.exploreBar = new LinkBarObject(safeExplore);
+      this.social = new LinkBarObject(safeSocial);
     }
 
-    /* ----------------- companyBar (LinkBarObject) ----------------- */
-    if (companyBar instanceof LinkBarObject) {
-      this.companyBar = companyBar;
-    } else {
-      const rawCompany = companyBar || {};
-      const safeCompany = {
-        id: rawCompany.id ?? generateId("footer-company"),
-        className: rawCompany.className ?? "list-unstyled small",
-        type: rawCompany.type ?? "AlloyLink",
-        linkClass: rawCompany.linkClass ?? "mb-1",
-        selected: rawCompany.selected ?? "active",
-        title: rawCompany.title,
-        links: Array.isArray(rawCompany.links)
-          ? rawCompany.links
-          : [],
+    /* ----------------- section[] (LinkBarObject list) ----------------- */
+    const rawSection = Array.isArray(section) ? section : [];
+    this.section = rawSection.map((sec) => {
+      if (sec instanceof LinkBarObject) return sec;
+
+      const safeSection = {
+        id: sec.id ?? generateId("footer-section"),
+        className: sec.className ?? "list-unstyled small",
+        type: sec.type ?? "AlloyLink",
+        linkClass:
+          sec.linkClass ??
+          "d-block mb-1 text-decoration-none text-light",
+        selected: sec.selected ?? "active",
+        title: sec.title, // LinkBarObject will wrap into TagObject
+        links: Array.isArray(sec.links) ? sec.links : [],
       };
-      this.companyBar = new LinkBarObject(safeCompany);
-    }
 
-    /* ----------------- subscribeForm (FormObject) ----------------- */
-    if (subscribeForm instanceof FormObject) {
-      this.subscribeForm = subscribeForm;
+      return new LinkBarObject(safeSection);
+    });
+
+    /* ----------------- subscribe (FormObject) ----------------- */
+    if (subscribe instanceof FormObject) {
+      this.subscribe = subscribe;
     } else {
-      const rawForm = subscribeForm || {};
-      this.subscribeForm = new FormObject({
+      const rawForm = subscribe || {};
+      this.subscribe = new FormObject({
         id: rawForm.id ?? generateId("footer-subscribe"),
-        title: rawForm.title ?? "",
+        title: rawForm.title ?? "Stay in the loop",
         className: rawForm.className ?? "",
         message: rawForm.message ?? "",
         action: rawForm.action ?? "subscribe",
         type: rawForm.type ?? "AlloyInputTextIcon",
-        submit: rawForm.submit || {
-          name: "Subscribe",
-          icon: { iconClass: "fa-solid fa-paper-plane" },
-          className: "btn btn-primary w-100 mt-2",
-          disabled: false,
-          loading: false,
-          ariaLabel: "Subscribe to newsletter",
-          title: "Subscribe",
-        },
+        submit:
+          rawForm.submit || {
+            name: "Subscribe",
+            icon: { iconClass: "fa-solid fa-paper-plane" },
+            className: "btn btn-primary w-100 mt-2",
+            disabled: false,
+            loading: false,
+            ariaLabel: "Subscribe to newsletter",
+            title: "Subscribe",
+          },
         fields:
           Array.isArray(rawForm.fields) && rawForm.fields.length > 0
             ? rawForm.fields
             : [
                 {
                   name: "email",
-                  label: "",
+                  label: "Email",
                   type: "email",
                   layout: "text",
                   placeholder: "name@company.com",
                   required: true,
-                  className: "mb-2",
+                  className: "form-control",
                 },
               ],
         data: rawForm.data ?? {},
       });
     }
-
-    /* ----------------- bottomLeft text ----------------- */
-    const year = new Date().getFullYear();
-    this.bottomLeft =
-      typeof bottomLeft === "string" && bottomLeft.trim()
-        ? bottomLeft
-        : `© ${year} ${this.brandName}. All rights reserved.`;
-
-    /* ----------------- socialBar (LinkBarObject) ----------------- */
-    if (socialBar instanceof LinkBarObject) {
-      this.socialBar = socialBar;
-    } else {
-      const rawSocial = socialBar || {};
-      const safeSocial = {
-        id: rawSocial.id ?? generateId("footer-social"),
-        className: rawSocial.className ?? "nav gap-3",
-        type: rawSocial.type ?? "AlloyLink",
-        linkClass: rawSocial.linkClass ?? "nav-item",
-        selected: rawSocial.selected ?? "active",
-        title: rawSocial.title,
-        links: Array.isArray(rawSocial.links)
-          ? rawSocial.links
-          : [],
-      };
-      this.socialBar = new LinkBarObject(safeSocial);
-    }
-
-    /* ----------------- headings ----------------- */
-    this.exploreTitle = exploreTitle;
-    this.companyTitle = companyTitle;
-    this.subscribeTitle = subscribeTitle;
   }
 }
 
 /* ------------------------------------------------------------------
- * AlloyFooter
+ * AlloyFooter (NEW COMPONENT)
+ *
+ * Layout (Bootstrap):
+ *   <footer>
+ *     <div className="container">
+ *       <div className="row g-4">
+ *         col-3: logo + details + social
+ *         col-3..: each section[i] (Explore, Company, etc.)
+ *         last col-3: subscribe form
+ *       </div>
+ *     </div>
+ *   </footer>
  *
  * Props:
- *   - footer: FooterObject | plain config
+ *   - footer: FooterObject | plain JSON config
  *   - output?: (out: OutputObject) => void
  *
  * Output:
@@ -241,7 +215,7 @@ export function AlloyFooter({ footer, output }) {
     emit(out);
   };
 
-  /* ----------------- LinkBar handlers (Explore/Company/Social) ----------------- */
+  /* ----------------- LinkBar handlers (section + social) ----------------- */
   const handleLinksOutput = (barOut) => {
     if (!barOut) return;
 
@@ -271,57 +245,89 @@ export function AlloyFooter({ footer, output }) {
     emit(out);
   };
 
+  const sections = Array.isArray(model.section) ? model.section : [];
+
   /* ----------------- Render ----------------- */
 
   return (
     <footer id={model.id} className={model.className}>
       <div className="container">
         <div className="row g-4">
-          {/* Brand / description */}
-          <div className={model.brandClass}>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <AlloyLinkLogo linkLogo={model.brandLogo} />
+          {/* Column 1: logo + details + social */}
+          <div
+            className={
+              (model.details && model.details.colClass) ||
+              "col-12 col-md-3"
+            }
+          >
+            {/* Logo */}
+            {model.logo && (
+              <div className="mb-2">
+                <img
+                  src={model.logo.imageUrl}
+                  alt={model.logo.alt}
+                  className={model.logo.className}
+                  style={{
+                    width: model.logo.width,
+                    height: model.logo.height,
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Details text */}
+            {model.details && model.details.name && (
+              <p
+                className={
+                  model.details.className ||
+                  "small opacity-75 mb-2"
+                }
+              >
+                {model.details.name}
+              </p>
+            )}
+
+            {/* Social icons (AlloyLinkBar, usually AlloyLinkIcon) */}
+            {model.social && (
+              <div className="mt-2">
+                <AlloyLinkBar
+                  linkBar={model.social}
+                  output={handleLinksOutput}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Section columns (Explore, Company, etc.) */}
+          {sections.map((sec, index) => (
+            <div
+              key={sec.id || `footer-section-${index}`}
+              className="col-12 col-md-3"
+            >
+              {/* Optional heading from title.name */}
+              {sec.title && sec.title.name && (
+                <h6 className="text-white mb-2">
+                  {sec.title.name}
+                </h6>
+              )}
+
+              <AlloyLinkBar
+                linkBar={sec}
+                output={handleLinksOutput}
+              />
             </div>
-            <p className="small opacity-75 mb-0">
-              {model.brandDetails}
-            </p>
-          </div>
+          ))}
 
-          {/* Explore column */}
-          <div className="col-md-2">
-            <h6 className="text-white">{model.exploreTitle}</h6>
-            <AlloyLinkBar
-              linkBar={model.exploreBar}
-              output={handleLinksOutput}
-            />
-          </div>
-
-          {/* Company column */}
-          <div className="col-md-3">
-            <h6 className="text-white">{model.companyTitle}</h6>
-            <AlloyLinkBar
-              linkBar={model.companyBar}
-              output={handleLinksOutput}
-            />
-          </div>
-
-          {/* Subscribe column */}
-          <div className="col-md-3">
-            <h6 className="text-white">{model.subscribeTitle}</h6>
+          {/* Last column: subscribe form */}
+          <div className="col-12 col-md-3">
+            {model.subscribe && model.subscribe.title && (
+              <h6 className="text-white mb-2">
+                {model.subscribe.title}
+              </h6>
+            )}
             <AlloyForm
-              form={model.subscribeForm}
+              form={model.subscribe}
               output={handleSubscribeOutput}
-            />
-          </div>
-        </div>
-
-        {/* Bottom row */}
-        <div className="d-flex justify-content-between align-items-center mt-4 small opacity-75 flex-wrap gap-2">
-          <div>{model.bottomLeft}</div>
-          <div className="d-flex gap-3">
-            <AlloyLinkBar
-              linkBar={model.socialBar}
-              output={handleLinksOutput}
             />
           </div>
         </div>

@@ -5,95 +5,144 @@ import { AlloyFooter, FooterObject } from "../../../src";
 import { OutputObject } from "../../../src/utils/idHelper.js";
 
 /* ------------------------------------------------------------------
- * DEFAULT FOOTER JSON
+ * DEFAULT FOOTER JSON (new schema)
+ *
+ * {
+ *   id, name, className,
+ *   logo: LogoObject,
+ *   details: BlockObject,
+ *   social: LinkBarObject,        // usually AlloyLinkIcon
+ *   section: LinkBarObject[],     // Explore, Company, etc.
+ *   subscribe: FormObject
+ * }
  * ------------------------------------------------------------------ */
 const DEFAULT_FOOTER_JSON = JSON.stringify(
   {
-    id: "pexFooter",
-    className: "footer pt-5 pb-4 bg-dark text-light",
+    id: "footer-pexchange",
+    name: "PExChange Footer",
+    className: "footer pt-5 pb-4 bg-primary text-light",
 
-    brandName: "PExChange",
-    brandLogo: {
-      id: "pexBrand",
-      name: "PExChange",
-      href: "/",
-      logo: {
-        iconClass: "fa-solid fa-building"
+    logo: {
+      id: "footer-logo",
+      imageUrl:
+        "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+      alt: "PExChange",
+      width: "64px",
+      height: "auto",
+      className: "img-fluid d-block object-fit-contain"
+    },
+
+    details: {
+      id: "footer-details",
+      name:
+        "Professional marketplace connecting precast manufacturers, engineers and buyers. New & used equipment, services and standards — in one platform.",
+      className: "small opacity-75 mb-2",
+      colClass: "col-12 col-md-3",
+      ariaLabel: "About PExChange"
+    },
+
+    social: {
+      id: "footer-social",
+      className: "mt-2 d-flex gap-3",
+      type: "AlloyLinkIcon",
+      linkClass: "nav-link p-0 text-light",
+      selected: "active",
+      title: {
+        name: "Follow us",
+        className: "fw-semibold text-uppercase me-3"
       },
-      className: "brand-badge text-decoration-none text-light"
-    },
-    brandDetails:
-      "Professional marketplace connecting precast manufacturers, engineers and buyers. New & used equipment, services and standards — in one platform.",
-    brandClass: "col-md-4",
-
-    exploreTitle: "Explore",
-    exploreBar: {
-      id: "exploreBar",
-      className: "list-unstyled small",
-      type: "AlloyLink",
-      linkClass: "mb-1",
-      selected: "active",
       links: [
         {
-          id: "lnkProducts",
-          name: "Products",
-          href: "#products",
-          className: "d-block"
+          id: "social-linkedin",
+          name: "",
+          href: "https://www.linkedin.com/company/precastxchange",
+          ariaLabel: "LinkedIn",
+          icon: { iconClass: "fa-brands fa-linkedin" }
         },
         {
-          id: "lnkExchange",
-          name: "Exchange",
-          href: "#exchange",
-          className: "d-block"
+          id: "social-x",
+          name: "",
+          href: "https://x.com/precastxchange",
+          ariaLabel: "X (Twitter)",
+          icon: { iconClass: "fa-brands fa-x-twitter" }
         },
         {
-          id: "lnkResources",
-          name: "Resources",
-          href: "#resources",
-          className: "d-block"
-        },
-        {
-          id: "lnkAuctions",
-          name: "Auctions",
-          href: "#auctions",
-          className: "d-block"
+          id: "social-youtube",
+          name: "",
+          href: "https://www.youtube.com/@precastxchange",
+          ariaLabel: "YouTube",
+          icon: { iconClass: "fa-brands fa-youtube" }
         }
       ]
     },
 
-    companyTitle: "Company",
-    companyBar: {
-      id: "companyBar",
-      className: "list-unstyled small",
-      type: "AlloyLink",
-      linkClass: "mb-1",
-      selected: "active",
-      links: [
-        {
-          id: "lnkAbout",
-          name: "About",
-          href: "#about",
-          className: "d-block"
+    section: [
+      {
+        id: "footer-section-explore",
+        className: "list-unstyled small",
+        type: "AlloyLink",
+        linkClass: "d-block mb-1 text-decoration-none text-light",
+        selected: "active",
+        title: {
+          name: "Explore",
+          className: "fw-semibold text-uppercase mb-2"
         },
-        {
-          id: "lnkCareers",
-          name: "Careers",
-          href: "#careers",
-          className: "d-block"
+        links: [
+          {
+            id: "explore-products",
+            name: "Products",
+            href: "#products"
+          },
+          {
+            id: "explore-exchange",
+            name: "Exchange",
+            href: "#exchange"
+          },
+          {
+            id: "explore-resources",
+            name: "Resources",
+            href: "#resources"
+          },
+          {
+            id: "explore-auctions",
+            name: "Auctions",
+            href: "#auctions"
+          }
+        ]
+      },
+      {
+        id: "footer-section-company",
+        className: "list-unstyled small",
+        type: "AlloyLink",
+        linkClass: "d-block mb-1 text-decoration-none text-light",
+        selected: "active",
+        title: {
+          name: "Company",
+          className: "fw-semibold text-uppercase mb-2"
         },
-        {
-          id: "lnkContact",
-          name: "Contact",
-          href: "#contact",
-          className: "d-block"
-        }
-      ]
-    },
+        links: [
+          {
+            id: "company-about",
+            name: "About",
+            href: "#about"
+          },
+          {
+            id: "company-careers",
+            name: "Careers",
+            href: "#careers"
+          },
+          {
+            id: "company-contact",
+            name: "Contact",
+            href: "#contact"
+          }
+        ]
+      }
+    ],
 
-    subscribeTitle: "Stay in the loop",
-    subscribeForm: {
-      id: "newsletterForm",
-      title: "",
+    subscribe: {
+      id: "footer-subscribe",
+      title: "Stay in the loop",
       className: "",
       message: "",
       action: "subscribe",
@@ -110,51 +159,15 @@ const DEFAULT_FOOTER_JSON = JSON.stringify(
       fields: [
         {
           name: "email",
-          label: "",
+          label: "Email",
           type: "email",
           layout: "text",
           placeholder: "name@company.com",
           required: true,
-          className: "mb-2"
+          className: "form-control"
         }
       ],
       data: {}
-    },
-
-    bottomLeft: "© 2025 PExChange. All rights reserved.",
-
-    socialBar: {
-      id: "footerSocial",
-      className: "nav gap-3",
-      type: "AlloyLink",
-      linkClass: "nav-item",
-      selected: "active",
-      links: [
-        {
-          id: "lnkLinkedIn",
-          name: "",
-          href: "#",
-          icon: { iconClass: "fa-brands fa-linkedin" },
-          ariaLabel: "LinkedIn",
-          className: "nav-link p-0 text-light"
-        },
-        {
-          id: "lnkTwitter",
-          name: "",
-          href: "#",
-          icon: { iconClass: "fa-brands fa-x-twitter" },
-          ariaLabel: "X / Twitter",
-          className: "nav-link p-0 text-light"
-        },
-        {
-          id: "lnkYouTube",
-          name: "",
-          href: "#",
-          icon: { iconClass: "fa-brands fa-youtube" },
-          ariaLabel: "YouTube",
-          className: "nav-link p-0 text-light"
-        }
-      ]
     }
   },
   null,
@@ -180,28 +193,27 @@ export default function FooterPage() {
     } catch (e) {
       setFooterParseError(String(e.message || e));
 
-      // fallback minimal, but still valid according to schema
+      // fallback minimal, but still valid for new FooterObject schema
       return new FooterObject({
-        brandName: "AlloyFooter",
-        brandDetails: "Invalid JSON. Please fix the config on the left.",
-        exploreBar: {
-          id: "fallback-explore",
-          className: "list-unstyled small",
-          type: "AlloyLink",
+        name: "AlloyFooter",
+        details: {
+          name: "Invalid JSON. Please fix the config on the left.",
+          className: "small text-danger mb-2"
+        },
+        social: {
+          id: "fallback-social",
+          className: "nav gap-3",
+          type: "AlloyLinkIcon",
           links: []
         },
-        companyBar: {
-          id: "fallback-company",
-          className: "list-unstyled small",
-          type: "AlloyLink",
-          links: []
-        },
-        subscribeForm: {
+        section: [],
+        subscribe: {
           id: "fallback-subscribe",
-          title: "",
+          title: "Stay in the loop",
           className: "",
           message: "JSON parse error above.",
           action: "subscribe",
+          type: "AlloyInputTextIcon",
           fields: [],
           submit: {
             name: "Subscribe",
@@ -213,12 +225,6 @@ export default function FooterPage() {
             title: "Subscribe (disabled)"
           },
           data: {}
-        },
-        socialBar: {
-          id: "fallback-social",
-          className: "nav gap-3",
-          type: "AlloyLink",
-          links: []
         }
       });
     }
@@ -259,7 +265,12 @@ export default function FooterPage() {
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
             <code>
-              {`<AlloyFooter footer={new FooterObject(footerObject)} output={handleOutput} />`}
+{`const footerObject = {
+  // id, name, className,
+  // logo, details, social, section[], subscribe
+};
+
+<AlloyFooter footer={new FooterObject(footerObject)} output={handleOutput} />`}
             </code>
           </pre>
         </div>
@@ -317,12 +328,11 @@ export default function FooterPage() {
           )}
 
           <div className="form-text">
-            Required pieces:{" "}
-            <code>brandLogo.href</code>, <code>brandLogo.logo</code>,{" "}
-            <code>exploreBar.links[].href</code>,{" "}
-            <code>companyBar.links[].href</code>,{" "}
-            <code>subscribeForm.submit.icon.iconClass</code>,{" "}
-            <code>socialBar.links[].href</code>.
+            Useful pieces for a nice footer:{" "}
+            <code>logo.imageUrl</code>,{" "}
+            <code>social.links[].href</code>,{" "}
+            <code>section[].links[].href</code>,{" "}
+            <code>subscribe.submit.icon.iconClass</code>.
           </div>
         </div>
 
@@ -353,7 +363,7 @@ export default function FooterPage() {
             Example (Subscribe event):
             <pre className="mb-0 mt-1 small">
 {`{
-  "id": "pexFooter",
+  "id": "footer-pexchange",
   "type": "footer",
   "action": "subscribe",
   "error": false,
@@ -366,7 +376,7 @@ export default function FooterPage() {
             Example (Link click):
             <pre className="mb-0 mt-1 small">
 {`{
-  "id": "pexFooter",
+  "id": "footer-pexchange",
   "type": "footer",
   "action": "Products",
   "error": false,
