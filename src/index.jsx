@@ -6,6 +6,8 @@ export { AlloyButton, ButtonObject } from "./components/cell/AlloyButton.jsx";
 export { AlloyButtonIcon, ButtonIconObject } from "./components/cell/AlloyButtonIcon.jsx";
 export { AlloyButtonSubmit, ButtonSubmitObject } from "./components/cell/AlloyButtonSubmit.jsx";
 export { AlloyInput, InputObject } from "./components/cell/AlloyInput.jsx";
+export { AlloySearch, SearchObject } from "./components/cell/AlloySearch.jsx";
+
 export { AlloyLinkBar, LinkBarObject } from "./components/tissue/AlloyLinkBar.jsx"
 export { AlloyButtonBar, ButtonBarObject } from "./components/tissue/AlloyButtonBar.jsx"
 export { AlloyNavBar, NavBarObject } from "./components/tissue/AlloyNavBar.jsx"
@@ -15,6 +17,7 @@ export { AlloyTableAction, TableActionObject } from "./components/tissue/AlloyTa
 export { AlloyCard, CardObject } from "./components/tissue/AlloyCard.jsx"
 export { AlloyCardAction, CardActionObject } from "./components/tissue/AlloyCardAction.jsx"
 export { AlloyForm, FormObject } from "./components/tissue/AlloyForm.jsx"
+
 export { AlloyTabForm, TabFormObject, TabObject } from "./components/organ/AlloyTabForm.jsx"
 export { AlloyModal, ModalObject } from "./components/tissue/AlloyModal.jsx"
 export { AlloyModalToast, ModalToastObject } from "./components/tissue/AlloyModalToast.jsx"

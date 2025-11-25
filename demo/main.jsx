@@ -43,6 +43,7 @@ import GalleryPage from "./pages/Organ/Gallery.jsx";
 import CardCarouselPage from "./pages/Tissue/CardCarousel.jsx";
 import CardVideoPage from "./pages/Tissue/CardVideo.jsx";
 import FooterPage from "./pages/Organ/Footer.jsx";
+import SearchPage from "./pages/Cell/Search.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -62,7 +63,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="button-submit" element={<ButtonSubmitPage />} /> 
           <Route path="input" element={<InputPage />} /> 
           <Route path="input-icon" element={<InputIconPage />} /> 
-          <Route path="input-floating" element={<InputFloatingPage />} />                     
+          <Route path="input-floating" element={<InputFloatingPage />} />         
+          <Route path="search" element={<SearchPage />} />              
         </Route>
 
         {/* Others (blank for now) */}
