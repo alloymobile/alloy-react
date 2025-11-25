@@ -12,7 +12,7 @@ import AlloySignup from "./AlloySignup.jsx";
  *  - id:        string
  *  - name:      string            // kicker text ("Empowering Precast & Concrete")
  *  - className: string            // section classes
- *  - title:     string            // H1 text
+ *  - title:     string            // H1 text, with optional [[highlight]] markers
  *  - subTitle:  string            // lead paragraph
  *
  *  - action:  LinkBarObject|null  // CTA row (e.g. Explore / Add Foundry)
@@ -43,6 +43,7 @@ export class HeroSignupObject {
         ? className
         : "hero py-2 py-lg-2 position-relative overflow-hidden";
 
+    // Supports [[highlight]] markers in the string
     this.title = typeof title === "string" ? title : "";
     this.subTitle = typeof subTitle === "string" ? subTitle : "";
 
@@ -73,6 +74,59 @@ export class HeroSignupObject {
 
     Object.assign(this, rest);
   }
+}
+
+/* -------------------------------------------------------
+ * Helper: renderHighlightedText
+ *
+ * Input string can contain [[...]] which will be wrapped
+ * in <span class="text-primary">...</span>.
+ *
+ * Example:
+ *   "A [[bold]] title"
+ * → ["A ", <span class="text-primary">bold</span>, " title"]
+ * ----------------------------------------------------- */
+function renderHighlightedText(text) {
+  if (!text || typeof text !== "string") return text;
+
+  const parts = [];
+  let cursor = 0;
+  let index = 0;
+
+  while (cursor < text.length) {
+    const start = text.indexOf("[[", cursor);
+
+    // no more markers → push the rest and break
+    if (start === -1) {
+      parts.push(text.slice(cursor));
+      break;
+    }
+
+    // push any plain text before [[
+    if (start > cursor) {
+      parts.push(text.slice(cursor, start));
+    }
+
+    const end = text.indexOf("]]", start + 2);
+
+    // unmatched [[ → treat as plain text
+    if (end === -1) {
+      parts.push(text.slice(start));
+      break;
+    }
+
+    const highlighted = text.slice(start + 2, end);
+
+    parts.push(
+      <span key={`hero-h-${index}`} className="text-primary">
+        {highlighted}
+      </span>
+    );
+    index += 1;
+    cursor = end + 2;
+  }
+
+  return parts;
 }
 
 /* -------------------------------------------------------
@@ -111,9 +165,11 @@ export function AlloyHeroSignup({ hero, output }) {
               </span>
             )}
 
-            {/* Title */}
+            {/* Title with [[highlight]] support */}
             {hero.title && (
-              <h1 className="display-5 fw-bold mt-2">{hero.title}</h1>
+              <h1 className="display-5 fw-bold mt-2">
+                {renderHighlightedText(hero.title)}
+              </h1>
             )}
 
             {/* Sub-title / lead */}

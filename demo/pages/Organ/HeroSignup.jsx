@@ -20,7 +20,7 @@ const DEFAULT_HERO_JSON = JSON.stringify(
     name: "Empowering Precast & Concrete",
     className: "hero py-2 py-lg-2 position-relative overflow-hidden",
 
-    title: "A marketplace built for precast manufacturers, engineers & buyers",
+    title: "A marketplace built for [[precast]] manufacturers, engineers & buyers",
     subTitle:
       "Discover new & used equipment, trade inventory, request appraisals, and browse standards — all in one professional platform.",
 
