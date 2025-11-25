@@ -10,6 +10,10 @@ import { AlloyInput, InputObject } from "../../../src";
  * Every preset now includes `className: "form-control"`.
  * You can override that in the editor to apply custom classes to the actual
  * rendered control (<input>, <textarea>, etc.).
+ *
+ * NOTE:
+ * - `iconGroupClass` is used only for layout: "icon" (to style the icon span).
+ *   It is not used in "floating" layout.
  */
 const DEFAULTS = {
   name: {
@@ -235,6 +239,11 @@ export default function InputFloatingPage() {
               <li>
                 <code>className</code> customizes the control’s classes. We
                 default to <code>"form-control"</code>.
+              </li>
+              <li>
+                For <code>layout: "icon"</code> (separate demo), you can also
+                use <code>iconGroupClass</code> to style the icon span inside
+                the input group.
               </li>
               <li>
                 Add validation knobs like{" "}

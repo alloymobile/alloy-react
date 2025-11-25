@@ -33,3 +33,5 @@ export { AlloyCheckout, CheckoutObject } from "./components/organ/AlloyCheckout.
 export { AlloyDonate, DonateObject } from "./components/organ/AlloyDonate.jsx"
 export { AlloyGallery, GalleryObject } from "./components/organ/AlloyGallery.jsx"
 export { AlloyFooter, FooterObject } from "./components/organ/AlloyFooter.jsx"
+export { AlloyHeroSignup, HeroSignupObject } from "./components/organ/AlloyHeroSignup.jsx"
+export { AlloySignup, SignupObject } from "./components/organ/AlloySignup.jsx"

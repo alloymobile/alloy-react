@@ -65,6 +65,9 @@ import { generateId, OutputObject } from "../../utils/idHelper.js";
  * @property {InputOption[]} [options]       - For select, radio, checkbox group.
  * @property {Array<Function>} [validators]  - (reserved for custom validators)
  *
+ * @property {string} [iconGroupClass]       - Extra classes for the icon span in
+ *                                            "icon" layout. Defaults to "input-group-text".
+ *
  * @property {any} [rest]                    - Any other props the user wants to stash.
  */
 export class InputObject {
@@ -92,6 +95,7 @@ export class InputObject {
       className,
       options = [],
       validators = [],
+      iconGroupClass,
       ...rest
     } = config;
 
@@ -132,6 +136,15 @@ export class InputObject {
     this.layout = layout;
     this.icon = normalizedIcon;
     this.placeholder = placeholder;
+
+    // icon group class (span around icon in "icon" layout)
+    const baseIconGroupClass = "input-group-text";
+    if (typeof iconGroupClass === "string" && iconGroupClass.trim() !== "") {
+      this.iconGroupClass =
+        baseIconGroupClass + " " + iconGroupClass.trim();
+    } else {
+      this.iconGroupClass = baseIconGroupClass; // backward compatible default
+    }
 
     // validation config
     this.required = !!required;
@@ -467,7 +480,7 @@ export function AlloyInput({ input, output }) {
 
   if (input.layout === "icon") {
     return (
-      <div className="mb-3">
+      <div className="m-2">
         {input.label && (
           <label htmlFor={input.id} className="form-label">
             {input.label}
@@ -475,7 +488,7 @@ export function AlloyInput({ input, output }) {
         )}
 
         <div className="input-group">
-          <span className="input-group-text">
+          <span className={input.iconGroupClass}>
             <AlloyIcon icon={input.icon} />
           </span>
 

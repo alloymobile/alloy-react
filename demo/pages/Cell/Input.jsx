@@ -115,6 +115,20 @@ const DEFAULT_INPUTS = {
       { value: "female", label: "Female" },
       { value: "other", label: "Other" }
     ]
+  },
+
+  // NEW: icon layout demo using iconGroupClass
+  icon: {
+    name: "username",
+    label: "Username (icon layout)",
+    type: "text",
+    layout: "icon",
+    placeholder: "Enter your username",
+    required: true,
+    className: "form-control",
+    icon: { iconClass: "fa-solid fa-user" },
+    // This styles the <span> wrapping the icon in the input-group
+    iconGroupClass: "bg-light border-0"
   }
 };
 
@@ -284,7 +298,10 @@ export default function InputPage() {
               <li>
                 Layout <code>"icon"</code> or <code>"floating"</code> also
                 requires an <code>icon</code>, for example{" "}
-                <code>{`{ iconClass: "fa-solid fa-user" }`}</code>.
+                <code>{`{ iconClass: "fa-solid fa-user" }`}</code>. For
+                <code>"icon"</code> layout, you can additionally use{" "}
+                <code>iconGroupClass</code> to style the icon span (e.g.{" "}
+                <code>"bg-light border-0"</code>).
               </li>
             </ul>
           </div>

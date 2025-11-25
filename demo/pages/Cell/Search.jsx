@@ -56,6 +56,8 @@ const DEFAULT_SEARCH_CONFIG = {
     label: "Search Emails",
     placeholder: "Search by recipient, subject, tags…",
     className: "form-control",
+    // NEW: styles the <span> that wraps the icon (merged with "input-group-text")
+    iconGroupClass: "bg-light border-0"
   },
   minChars: 2,
   debounceMs: 400,
@@ -270,7 +272,8 @@ export default function SearchPage() {
     "icon": { "iconClass": "fa-solid fa-magnifying-glass" },
     "label": "Search Emails",
     "placeholder": "Search by recipient, subject, tags…",
-    "className": "form-control"
+    "className": "form-control",
+    "iconGroupClass": "bg-light border-0"
   },
   "minChars": 2,
   "debounceMs": 400,
@@ -286,6 +289,11 @@ export default function SearchPage() {
                 <code>search</code> is passed into <code>new InputObject</code>, so it
                 must follow the Input schema (requires <code>name</code>;{" "}
                 <code>layout: "icon"</code> also requires <code>icon</code>).
+              </li>
+              <li>
+                For <code>layout: "icon"</code>,{" "}
+                <code>iconGroupClass</code> customizes the span wrapping the icon
+                (its classes are appended to <code>"input-group-text"</code>).
               </li>
               <li>
                 <code>minChars</code> controls when debounce starts;{" "}

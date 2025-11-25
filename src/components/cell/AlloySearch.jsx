@@ -259,7 +259,7 @@ export function AlloySearch({ search, output }) {
 
   return (
     <div id={search.id} className={search.className}>
-      <div className="col-12 col-md-8">
+      <div className="col-12">
         {/* Search input */}
         <AlloyInput input={search.search} output={handleSearchOutput} />
 

@@ -44,6 +44,7 @@ import CardCarouselPage from "./pages/Tissue/CardCarousel.jsx";
 import CardVideoPage from "./pages/Tissue/CardVideo.jsx";
 import FooterPage from "./pages/Organ/Footer.jsx";
 import SearchPage from "./pages/Cell/Search.jsx";
+import HeroSignupPage from "./pages/Organ/HeroSignup.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -94,7 +95,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="checkout" element={<CheckoutPage />} />   
           <Route path="donate" element={<DonatePage />} />  
           <Route path="gallery" element={<GalleryPage />} />    
-          <Route path="footer" element={<FooterPage />} />           
+          <Route path="footer" element={<FooterPage />} />   
+          <Route path="hero-signup" element={<HeroSignupPage />} />          
         </Route>
       </Route>
     </Routes>

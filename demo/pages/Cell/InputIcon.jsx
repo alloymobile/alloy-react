@@ -23,7 +23,9 @@ const DEFAULTS = {
     placeholder: "Enter username",
     required: true,
     icon: { iconClass: "fa-solid fa-user" },
-    className: "form-control"
+    className: "form-control",
+    // NEW: styles the <span> that wraps the icon (in addition to "input-group-text")
+    iconGroupClass: "bg-light border-0"
   },
 
   email: {
@@ -189,6 +191,12 @@ export default function InputIconPage() {
               and see it live.
             </div>
             <div>
+              You can style the icon wrapper span using{" "}
+              <code>iconGroupClass</code> (it is merged with{" "}
+              <code>"input-group-text"</code>), e.g.{" "}
+              <code>"bg-light border-0"</code>.
+            </div>
+            <div>
               Required / pattern / passwordStrength validate on blur and speak
               errors with <code>aria-live="polite"</code>.
             </div>
@@ -242,6 +250,11 @@ export default function InputIconPage() {
                 <code>className</code> controls styling for the actual{" "}
                 {"<input />"} (or {"<input type='date' />"}, etc.). Default is{" "}
                 <code>"form-control"</code>.
+              </li>
+              <li>
+                <code>iconGroupClass</code> controls classes on the icon span
+                inside the input group. It is appended to{" "}
+                <code>"input-group-text"</code>.
               </li>
               <li>
                 You can customize validation:{" "}
