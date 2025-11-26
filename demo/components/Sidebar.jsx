@@ -29,12 +29,12 @@ export default function Sidebar({ active }) {
           { label: "AlloyCardAction", to: "/tissue/card-action", icon: "fa-solid fa-bars-progress" },   
           { label: "AlloyForm", to: "/tissue/form", icon: "fa-solid fa-bars-progress" }, 
           { label: "AlloyTabForm", to: "/tissue/tab-form", icon: "fa-solid fa-bars-progress" },    
-          { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },            
-          { label: "AlloyCrudCard", to: "/tissue/crud-card", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },             
           { label: "AlloyPay", to: "/tissue/pay", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyCardCarousel", to: "/tissue/carousel", icon: "fa-solid fa-bars-progress" },    
-          { label: "AlloyCardVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyPagination", to: "/tissue/pagination", icon: "fa-solid fa-bars-progress" },                       
+          { label: "AlloyCarousel", to: "/tissue/carousel", icon: "fa-solid fa-bars-progress" },      
+          { label: "AlloyPagination", to: "/tissue/pagination", icon: "fa-solid fa-bars-progress" },      
+          { label: "AlloyImage", to: "/tissue/image", icon: "fa-solid fa-bars-progress" },    
+          { label: "AlloyVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },                                     
         ]
       : active === "organ"
       ? [

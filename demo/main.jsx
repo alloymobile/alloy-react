@@ -31,8 +31,6 @@ import CardActionPage from "./pages/Tissue/CardAction.jsx";
 import FormPage from "./pages/Tissue/Form.jsx";
 import TabFormPage from "./pages/Tissue/TabForm.jsx";
 import ModalPage from "./pages/Tissue/Modal.jsx";
-import CrudTablePage from "./pages/Organ/Crud.jsx";
-import CrudCardPage from "./pages/Tissue/CrudCard.jsx";
 import EmailPage from "./pages/Organ/Email.jsx";
 import ContactPage from "./pages/Organ/Contact.jsx";
 import ProfilePage from "./pages/Organ/Profile.jsx";
@@ -40,14 +38,15 @@ import PayPage from "./pages/Tissue/Pay.jsx";
 import CheckoutPage from "./pages/Organ/Checkout.jsx";
 import DonatePage from "./pages/Organ/Donate.jsx";
 import GalleryPage from "./pages/Organ/Gallery.jsx";
-import CardCarouselPage from "./pages/Tissue/CardCarousel.jsx";
-import CardVideoPage from "./pages/Tissue/CardVideo.jsx";
 import FooterPage from "./pages/Organ/Footer.jsx";
 import SearchPage from "./pages/Cell/Search.jsx";
 import HeroSignupPage from "./pages/Organ/HeroSignup.jsx";
 import CrudFormPage from "./pages/Organ/CrudForm.jsx";
 import PaginationPage from "./pages/Tissue/Pagination.jsx";
 import CrudPage from "./pages/Organ/Crud.jsx";
+import CarouselPage from "./pages/Tissue/Carousel.jsx";
+import ImagePage from "./pages/Tissue/Image.jsx";
+import VideoPage from "./pages/Tissue/Video.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -84,12 +83,12 @@ createRoot(document.getElementById("root")).render(
           <Route path="card-action" element={<CardActionPage />} />              
           <Route path="form" element={<FormPage />} />  
           <Route path="tab-form" element={<TabFormPage />} />  
-          <Route path="modal" element={<ModalPage />} />  
-          <Route path="crud-card" element={<CrudCardPage />} />   
+          <Route path="modal" element={<ModalPage />} />   
           <Route path="pay" element={<PayPage />} />   
-          <Route path="carousel" element={<CardCarouselPage />} />   
-          <Route path="video" element={<CardVideoPage />} />   
-          <Route path="pagination" element={<PaginationPage />} />   
+          <Route path="carousel" element={<CarouselPage />} />   
+          <Route path="video" element={<VideoPage />} />   
+          <Route path="pagination" element={<PaginationPage />} />      
+          <Route path="image" element={<ImagePage />} />            
         </Route>
         <Route path="/organ" element={<Organ />}> 
           <Route path="email" element={<EmailPage />} />   
