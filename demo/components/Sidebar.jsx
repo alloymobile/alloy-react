@@ -29,12 +29,12 @@ export default function Sidebar({ active }) {
           { label: "AlloyCardAction", to: "/tissue/card-action", icon: "fa-solid fa-bars-progress" },   
           { label: "AlloyForm", to: "/tissue/form", icon: "fa-solid fa-bars-progress" }, 
           { label: "AlloyTabForm", to: "/tissue/tab-form", icon: "fa-solid fa-bars-progress" },    
-          { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },      
-          { label: "AlloyCrudTable", to: "/tissue/crud-table", icon: "fa-solid fa-bars-progress" },       
+          { label: "AlloyModal", to: "/tissue/modal", icon: "fa-solid fa-bars-progress" },            
           { label: "AlloyCrudCard", to: "/tissue/crud-card", icon: "fa-solid fa-bars-progress" },   
           { label: "AlloyPay", to: "/tissue/pay", icon: "fa-solid fa-bars-progress" },   
           { label: "AlloyCardCarousel", to: "/tissue/carousel", icon: "fa-solid fa-bars-progress" },    
-          { label: "AlloyCardVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },                        
+          { label: "AlloyCardVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyPagination", to: "/tissue/pagination", icon: "fa-solid fa-bars-progress" },                       
         ]
       : active === "organ"
       ? [
@@ -45,7 +45,9 @@ export default function Sidebar({ active }) {
           { label: "AlloyDonate", to: "/organ/donate", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyGallery", to: "/organ/gallery", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyFooter", to: "/organ/footer", icon: "fa-solid fa-bars-progress" },
-          { label: "AlloyHeroSignup", to: "/organ/hero-signup", icon: "fa-solid fa-bars-progress" },          
+          { label: "AlloyHeroSignup", to: "/organ/hero-signup", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyCrudForm", to: "/organ/crud-form", icon: "fa-solid fa-bars-progress" },  
+          { label: "AlloyCrud", to: "/organ/crud", icon: "fa-solid fa-bars-progress" },          
       ]:
       [];
 

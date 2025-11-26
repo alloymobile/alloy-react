@@ -4,22 +4,38 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { OutputObject, generateId } from "../../utils/idHelper.js";
 
 import AlloyModal, { ModalObject } from "../tissue/AlloyModal.jsx";
-import AlloyInput, { InputObject } from "../cell/AlloyInput.jsx";
-import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
+import AlloySearch, { SearchObject } from "../cell/AlloySearch.jsx";
+import AlloyButtonIcon, {
+  ButtonIconObject,
+} from "../cell/AlloyButtonIcon.jsx";
 import AlloyTableAction, {
   TableActionObject,
 } from "../tissue/AlloyTableAction.jsx";
+import AlloyPagination, {
+  PaginationObject,
+} from "../tissue/AlloyPagination.jsx";
 
 /* -------------------------------------------------------
  * EmailObject (model)
  *
- * export class AlloyEmail {
- *   id: string;
- *   className: string;
- *   modal: AlloyModal;
- *   search: AlloyInputTextIcon;
- *   send: AlloyButtonIcon;
- *   table: TableAction;
+ * {
+ *   id?: string;
+ *   className?: string;
+ *
+ *   modal: ModalConfig | ModalObject;
+ *
+ *   // Search: SearchObject wrapper around inner InputObject config
+ *   // We accept either:
+ *   //   - SearchObject
+ *   //   - plain inner InputConfig → wrapped as new SearchObject({ search: cfg })
+ *   search?: SearchObject | InputConfig;
+ *
+ *   send?: ButtonIconConfig | ButtonIconObject;
+ *
+ *   table: TableActionConfig | TableActionObject;
+ *
+ *   // Optional pagination (Spring-style page info)
+ *   page?: PaginationConfig | PaginationObject;
  * }
  * ----------------------------------------------------- */
 export class EmailObject {
@@ -31,22 +47,27 @@ export class EmailObject {
       search,
       send,
       table,
+      page,
       ...rest
     } = cfg || {};
 
     this.id = id ?? generateId("email");
     this.className = className;
 
+    // Modal
     this.modal =
       modal instanceof ModalObject ? modal : new ModalObject(modal || {});
 
-    this.search =
-      search instanceof InputObject
-        ? search
-        : search
-        ? new InputObject(search)
-        : null;
+    // Search: normalize to SearchObject (inner input lives in search.search)
+    if (search instanceof SearchObject) {
+      this.search = search;
+    } else if (search) {
+      this.search = new SearchObject({ search });
+    } else {
+      this.search = null;
+    }
 
+    // Send button
     this.send =
       send instanceof ButtonIconObject
         ? send
@@ -54,10 +75,19 @@ export class EmailObject {
         ? new ButtonIconObject(send)
         : null;
 
+    // Table
     this.table =
       table instanceof TableActionObject
         ? table
         : new TableActionObject(table || {});
+
+    // Pagination (optional)
+    this.page =
+      page instanceof PaginationObject
+        ? page
+        : page
+        ? new PaginationObject(page)
+        : null;
 
     Object.assign(this, rest);
   }
@@ -89,33 +119,6 @@ function openModalById(id) {
 
 /* -------------------------------------------------------
  * AlloyEmail (view)
- *
- * Props:
- *   - email: EmailObject
- *   - output?: (out: OutputObject) => void
- *
- * Behaviour:
- *   - Search input → { [searchName]: value }
- *   - Send button → "compose" mode (blank/default modal.data)
- *   - Table:
- *       - column Sort       → { [columnName]: "asc" | "desc" }
- *       - Open row button   → "open"  mode (read-only modal with row data)
- *       - Reply row button  → "reply" mode (editable modal with row data)
- *       - Delete row button → "delete" mode (read-only modal with row data)
- *   - Modal submit:
- *       - open   → action "Open"
- *       - reply  → action "Reply"
- *       - delete → action "Delete"
- *       - compose(default) → action = modal.submit.name || "submit"
- *
- * All wrapped in:
- * {
- *   id: email.id,
- *   type: "email",
- *   action: "<action-name>",
- *   error: false,
- *   data: { ...fieldValues }
- * }
  * ----------------------------------------------------- */
 export function AlloyEmail({ email, output }) {
   if (!email || !(email instanceof EmailObject)) {
@@ -199,7 +202,7 @@ export function AlloyEmail({ email, output }) {
 
     const fields = Array.isArray(base.fields)
       ? base.fields.map((f) => {
-          const plain = f instanceof InputObject ? { ...f } : { ...f };
+          const plain = f ? { ...f } : {};
 
           // Inject current values from modalState.data
           const key = plain.name;
@@ -225,8 +228,6 @@ export function AlloyEmail({ email, output }) {
 
   /* ----------------- Helpers ----------------- */
 
-  // Map a table row → modal.data
-  // Strict: field names must match row keys (except you can ignore id in modal).
   function mapRowToModalData(row = {}) {
     const result = {};
     const modalCfg = email.modal || {};
@@ -251,18 +252,24 @@ export function AlloyEmail({ email, output }) {
 
   /* ----------------- Handlers ----------------- */
 
-  // SEARCH → { [fieldName]: value }
-  const handleSearchOutput = (inputOut) => {
-    const field = inputOut?.data?.name ?? email.search?.name ?? "";
-    const value = inputOut?.data?.value;
+  // SEARCH (AlloySearch) → "search" / "search-select"
+  const handleSearchOutput = (searchOut) => {
+    if (!searchOut) return;
 
-    const data =
-      field && typeof field === "string" ? { [field]: value } : {};
+    const base =
+      searchOut instanceof OutputObject && typeof searchOut.toJSON === "function"
+        ? searchOut.toJSON()
+        : searchOut;
+
+    const action =
+      base.action === "select" ? "search-select" : "search";
+
+    const data = base.data || {};
 
     const out = OutputObject.ok({
       id: email.id,
       type: "email",
-      action: "search",
+      action,
       data,
     });
 
@@ -326,7 +333,6 @@ export function AlloyEmail({ email, output }) {
           version: prev.version + 1,
         }));
         setShouldOpen(true);
-        // NO OUTPUT HERE – wait for modal submit (if you want an explicit "Open" confirm)
         return;
       }
 
@@ -383,6 +389,27 @@ export function AlloyEmail({ email, output }) {
     emit(out);
   };
 
+  // PAGINATION (AlloyPagination) → forward page data
+  const handlePageOutput = (pageOut) => {
+    if (!pageOut) return;
+
+    const base =
+      pageOut instanceof OutputObject && typeof pageOut.toJSON === "function"
+        ? pageOut.toJSON()
+        : pageOut;
+
+    const data = base.data || {};
+
+    const out = OutputObject.ok({
+      id: email.id,
+      type: "email",
+      action: "page",
+      data,
+    });
+
+    emit(out);
+  };
+
   // MODAL SUBMIT → final payload (only when validation passes)
   const handleModalOutput = (modalOut) => {
     if (!modalOut || modalOut.type !== "modal") return;
@@ -435,7 +462,10 @@ export function AlloyEmail({ email, output }) {
         <div className="row input-group mt-2">
           <div className="col-sm-8">
             {email.search && (
-              <AlloyInput input={email.search} output={handleSearchOutput} />
+              <AlloySearch
+                search={email.search}
+                output={handleSearchOutput}
+              />
             )}
           </div>
 
@@ -454,6 +484,16 @@ export function AlloyEmail({ email, output }) {
           tableAction={email.table}
           output={handleTableOutput}
         />
+
+        {/* Pagination (optional) */}
+        {email.page && (
+          <div className="mt-2">
+            <AlloyPagination
+              pagination={email.page}
+              output={handlePageOutput}
+            />
+          </div>
+        )}
       </div>
 
       {/* Hidden trigger so Bootstrap data-api always has something to click */}

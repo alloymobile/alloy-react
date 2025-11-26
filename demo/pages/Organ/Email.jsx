@@ -69,6 +69,8 @@ const DEFAULT_EMAIL_JSON = JSON.stringify(
     },
 
     // Search bar (top-left)
+    // NOTE: This is the inner InputObject config.
+    // EmailObject wraps it as: new SearchObject({ search: <this> })
     search: {
       name: "emailSearch",
       id: "emailSearch",
@@ -123,7 +125,7 @@ const DEFAULT_EMAIL_JSON = JSON.stringify(
           tags: "invoice,billing"
         }
       ],
-      // Column-level actions (e.g. Open / Resend / Delete)
+      // Row actions (Open / Resend / Delete)
       actions: {
         id: "emailRowActions",
         className: "btn-group btn-group-sm",
@@ -155,6 +157,26 @@ const DEFAULT_EMAIL_JSON = JSON.stringify(
           }
         ]
       }
+    },
+
+    // Optional pagination (bottom-right)
+    page: {
+      id: "emailPage",
+      name: "Emails",
+      className: "d-flex justify-content-end align-items-center mt-3",
+      listClassName: "pagination justify-content-end mb-0",
+      itemClassName: "page-item",
+      activeClassName: "active",
+      disabledClassName: "disabled",
+
+      totalPages: 5,
+      totalElements: 240,
+      last: false,
+      numberOfElements: 50,
+      size: 50,
+      number: 0, // current page (0-based)
+      first: true,
+      empty: false
     }
   },
   null,
@@ -169,7 +191,7 @@ export default function EmailPage() {
   const [emailJson, setEmailJson] = useState(DEFAULT_EMAIL_JSON);
   const [emailParseError, setEmailParseError] = useState("");
   const [emailOutputJson, setEmailOutputJson] = useState(
-    "// Interact with search, Compose, table rows and modal to see OutputObject here…"
+    "// Interact with search, Compose, table rows, pagination and modal to see OutputObject here…"
   );
 
   /* -------------------------------------------
@@ -215,6 +237,7 @@ export default function EmailPage() {
           name: "Emails",
           rows: []
         }
+        // page omitted in fallback
       });
     }
   }, [emailJson]);
@@ -239,7 +262,7 @@ export default function EmailPage() {
   function resetEmail() {
     setEmailJson(DEFAULT_EMAIL_JSON);
     setEmailOutputJson(
-      "// Interact with search, Compose, table rows and modal to see OutputObject here…"
+      "// Interact with search, Compose, table rows, pagination and modal to see OutputObject here…"
     );
     setEmailParseError("");
   }
@@ -278,8 +301,10 @@ export default function EmailPage() {
           <AlloyEmail email={emailModel} output={handleEmailOutput} />
 
           <div className="small text-secondary mt-2 text-center">
-            <strong>Search</strong> emits <code>type="email"</code>,{" "}
-            <code>action="search"</code> with <code>data</code> like{" "}
+            <strong>Search</strong> uses <code>AlloySearch</code> and emits{" "}
+            <code>type="email"</code>, <code>action="search"</code> (and{" "}
+            <code>"search-select"</code> when you hook up results) with{" "}
+            <code>data</code> like{" "}
             <code>{`{ "emailSearch": "invoice" }`}</code>.
             <br />
             <strong>Sort</strong> on a column (e.g. Subject ASC) emits{" "}
@@ -287,17 +312,23 @@ export default function EmailPage() {
             <code>{`{ "subject": "asc" }`}</code>.
             <br />
             <strong>Compose</strong> opens the modal with fresh{" "}
-            <code>modal.data</code> every time (blank form). Only when you click{" "}
-            <code>Send email</code> and validation passes do you get one output
-            where <code>action="Send email"</code> and{" "}
+            <code>modal.data</code> every time (blank form). Only when you
+            click <code>Send email</code> and validation passes do you get one
+            output where <code>action="Send email"</code> and{" "}
             <code>data</code> is flat key/value for all fields (e.g.{" "}
             <code>to</code>, <code>subject</code>, <code>body</code>,{" "}
             <code>tags</code>).
             <br />
             Row buttons like <strong>Open</strong>, <strong>Resend</strong>,{" "}
-            <strong>Delete</strong> emit immediate events with{" "}
-            <code>action</code> equal to the button name and{" "}
-            <code>data</code> containing the flat row payload.
+            <strong>Delete</strong> either open the modal in the right mode
+            (Open/Reply/Delete) or emit immediate events depending on your
+            configuration.
+            <br />
+            <strong>Pagination</strong> uses <code>AlloyPagination</code>{" "}
+            internally and emits <code>action="page"</code> with{" "}
+            <code>data</code> containing <code>nav</code>,{" "}
+            <code>pageNumber</code>, and the Spring-style page metadata so you
+            can fetch the next page from the server.
           </div>
         </div>
       </div>
@@ -347,12 +378,26 @@ export default function EmailPage() {
           )}
 
           <div className="form-text">
-            Required pieces: <code>modal.submit.name</code>,{" "}
-            <code>modal.fields[].name</code>, <code>search.name</code>,{" "}
-            <code>table.rows[].id</code>. Column names in{" "}
-            <code>table.rows[]</code> should match your domain model (e.g.{" "}
-            <code>to</code>, <code>subject</code>, <code>status</code>) so row
-            actions can emit a clean, flat payload.
+            Required pieces:
+            <ul className="mb-0 ps-3">
+              <li>
+                <code>modal.submit.name</code>,{" "}
+                <code>modal.fields[].name</code>
+              </li>
+              <li>
+                <code>search.name</code> (inner input name used by{" "}
+                <code>AlloySearch</code>)
+              </li>
+              <li>
+                <code>table.rows[].id</code>
+              </li>
+              <li>
+                Optional pagination:{" "}
+                <code>page.totalPages</code>, <code>page.size</code>,{" "}
+                <code>page.number</code>, <code>page.first</code>,{" "}
+                <code>page.last</code>, <code>page.empty</code>, etc.
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -436,6 +481,25 @@ export default function EmailPage() {
     "status": "Failed",
     "sentAt": "2025-11-19 17:42",
     "tags": "invoice,billing"
+  }
+}`}
+            </pre>
+
+            Example (pagination: click Next from page 0):
+            <pre className="mb-0 mt-1 small">
+{`{
+  "id": "emailComponent",
+  "type": "email",
+  "action": "page",
+  "error": false,
+  "data": {
+    "nav": "next",
+    "pageNumber": 1,
+    "size": 50,
+    "totalPages": 5,
+    "totalElements": 240,
+    "first": false,
+    "last": false
   }
 }`}
             </pre>

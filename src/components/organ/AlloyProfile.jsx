@@ -4,21 +4,20 @@ import React from "react";
 import { OutputObject } from "../../utils/idHelper.js";
 
 import AlloyForm, { FormObject } from "../tissue/AlloyForm.jsx";
-import AlloyCrudCard, { CrudCardObject } from "../organ/AlloyCrudCard.jsx";
+// NOTE: adjust path if your AlloyCrud lives elsewhere
+import AlloyCrud, { CrudObject } from "../organ/AlloyCrud.jsx";
 import { AlloyIcon, IconObject } from "../cell/AlloyIcon.jsx";
 
 /* -------------------------------------------------------
  * ProfileObject  (AlloyProfile model)
  *
  * Fields:
- *   id, className, action, profileForm, data, details
+ *   id, className, action, profileForm, data, address
  *   name?: string
  *   email?: string
  *   icon?: IconObject | plain config
  *
- * NOTE:
- *   We removed the old `sample` CardIconActionObject to avoid
- *   constructing any CardActionObject without fields.
+ * address is a CrudObject (used by AlloyCrud)
  * ----------------------------------------------------- */
 export class ProfileObject {
   constructor(res = {}) {
@@ -28,7 +27,7 @@ export class ProfileObject {
       action = "",
       profileForm,
       data,
-      details,
+      address,
       name = "",
       email = "",
       icon,
@@ -48,7 +47,7 @@ export class ProfileObject {
         ? icon
         : new IconObject(
             icon || {
-              iconClass: "fa-solid fa-user fa-2xl"
+              iconClass: "fa-solid fa-user fa-2xl",
             }
           );
 
@@ -61,11 +60,11 @@ export class ProfileObject {
     // Optional payload snapshot
     this.data = data || {};
 
-    // Address / details CRUD card
-    this.details =
-      details instanceof CrudCardObject
-        ? details
-        : new CrudCardObject(details || {});
+    // Address CRUD (AlloyCrud)
+    this.address =
+      address instanceof CrudObject
+        ? address
+        : new CrudObject(address || {});
 
     Object.assign(this, rest);
   }
@@ -81,7 +80,7 @@ export class ProfileObject {
  * Layout:
  *   - Left: profile avatar + name + email (3 cols on lg)
  *   - Right: AlloyForm (profileForm)
- *   - Below: "Address:" heading + AlloyCrudCard (details)
+ *   - Below: "Address:" heading + AlloyCrud (address)
  *
  * Output semantics:
  *   - Form submit:
@@ -93,11 +92,11 @@ export class ProfileObject {
  *         data: <AlloyForm data payload>
  *       }
  *
- *   - Details (CrudCard) events:
+ *   - Address (AlloyCrud) events:
  *       {
  *         id: "<profile.id>",
  *         type: "profile",
- *         action: "details.<innerAction>",
+ *         action: "address.<innerAction>",
  *         error: <boolean>,
  *         data: <inner data>
  *       }
@@ -129,14 +128,14 @@ export function AlloyProfile({ profile, output }) {
       type: "profile",
       action: "form.submit",
       error: !!base.error,
-      data: base.data || {}
+      data: base.data || {},
     });
 
     emit(wrapped);
   };
 
-  // From AlloyCrudCard (details)
-  const handleDetailsOutput = (innerOut) => {
+  // From AlloyCrud (address)
+  const handleAddressOutput = (innerOut) => {
     if (!innerOut) return;
 
     const base =
@@ -147,9 +146,9 @@ export function AlloyProfile({ profile, output }) {
     const wrapped = new OutputObject({
       id: profile.id,
       type: "profile",
-      action: `details.${base.action || "unknown"}`,
+      action: `address.${base.action || "unknown"}`,
       error: !!base.error,
-      data: base.data || {}
+      data: base.data || {},
     });
 
     emit(wrapped);
@@ -186,9 +185,9 @@ export function AlloyProfile({ profile, output }) {
 
       <hr />
 
-      {/* Details / address via CrudCard */}
+      {/* Address via AlloyCrud */}
       <h4>Address:</h4>
-      <AlloyCrudCard crudCard={profile.details} output={handleDetailsOutput} />
+      <AlloyCrud crud={profile.address} output={handleAddressOutput} />
     </div>
   );
 }

@@ -12,18 +12,34 @@ import AlloyCardAction, {
   CardActionObject,
 } from "../tissue/AlloyCardAction.jsx";
 
+import AlloySearch, { SearchObject } from "../cell/AlloySearch.jsx";
+
 /* -------------------------------------------------------
  * CrudCardObject
  *
  * Unified config (only AlloyCardAction now):
  *
  * {
- *   id?: string,              // row id wrapper
+ *   id?: string,              // wrapper row id
  *   className?: string,       // col classes for each card, e.g. "col-sm-6 col-md-4 col-lg-3 mb-3"
  *
  *   // type is kept only for backwards compatibility in JSON,
  *   // but we always render AlloyCardAction.
  *   type?: "AlloyCardAction",
+ *
+ *   // Optional search bar (AlloySearch)
+ *   // If you pass a plain input config, it will be wrapped as:
+ *   //   new SearchObject({ search: <yourInputConfig> })
+ *   // Example:
+ *   //   search: {
+ *   //     name: "vendorSearch",
+ *   //     label: "Search Vendors",
+ *   //     placeholder: "Search by name, email…",
+ *   //     type: "text",
+ *   //     layout: "icon",
+ *   //     icon: { iconClass: "fa-solid fa-magnifying-glass" }
+ *   //   }
+ *   search?: SearchObject | InputConfig,
  *
  *   modal: ModalConfig,
  *
@@ -40,6 +56,7 @@ export class CrudCardObject {
       type = "AlloyCardAction",
       modal,
       add,
+      search,
       cards = [],
       ...rest
     } = cfg || {};
@@ -61,6 +78,16 @@ export class CrudCardObject {
         ? add
         : add
         ? new ButtonIconObject(add)
+        : null;
+
+    // Search (AlloySearch) – backward compatible:
+    // - If caller passes SearchObject, keep it.
+    // - If caller passes a plain input config, wrap as SearchObject({ search: cfg }).
+    this.search =
+      search instanceof SearchObject
+        ? search
+        : search
+        ? new SearchObject({ search })
         : null;
 
     // Cards → always hydrate to CardActionObject
@@ -103,7 +130,28 @@ function openModalById(id) {
  *
  * Output schema (same pattern as CrudTable, but type="crud-card"):
  *
- * 1) Add (on modal submit):
+ * 1) Search (via AlloySearch, debounced)
+ * {
+ *   id: "<crudCard.id>",
+ *   type: "crud-card",
+ *   action: "search",
+ *   error: false,
+ *   data: { [fieldName]: "query text" }
+ * }
+ *
+ * 2) Search result select (if parent provides search.results)
+ * {
+ *   id: "<crudCard.id>",
+ *   type: "crud-card",
+ *   action: "search-select",
+ *   error: false,
+ *   data: {
+ *     [fieldName]: "current query text",
+ *     result: <raw result object or string>
+ *   }
+ * }
+ *
+ * 3) Add (on modal submit):
  * {
  *   id: "<crudCard.id>",
  *   type: "crud-card",
@@ -112,7 +160,7 @@ function openModalById(id) {
  *   data: { vendorName: "...", email: "...", city: "...", status: "..." }
  * }
  *
- * 2) Edit/Delete (on modal submit):
+ * 4) Edit/Delete (on modal submit):
  * {
  *   id: "<crudCard.id>",
  *   type: "crud-card",
@@ -121,7 +169,7 @@ function openModalById(id) {
  *   data: { ...fieldsFromModal }
  * }
  *
- * 3) Other card footer buttons (custom actions):
+ * 5) Other card footer buttons (custom actions):
  * {
  *   id: "<crudCard.id>",
  *   type: "crud-card",
@@ -264,6 +312,29 @@ export function AlloyCrudCard({ crudCard, output }) {
 
   /* ----------------- Handlers ----------------- */
 
+  // SEARCH (via AlloySearch) → re-emit as CRUD-card level events
+  const handleSearchOutput = (searchOut) => {
+    if (!searchOut) return;
+
+    const base =
+      searchOut instanceof OutputObject && typeof searchOut.toJSON === "function"
+        ? searchOut.toJSON()
+        : searchOut;
+
+    const action = base?.action || "search";
+    const data = base?.data || {};
+
+    if (action === "search" || action === "select") {
+      const out = OutputObject.ok({
+        id: crudCard.id,
+        type: "crud-card",
+        action: action === "select" ? "search-select" : "search",
+        data,
+      });
+      emit(out);
+    }
+  };
+
   // CARD → Edit / Delete / custom actions
   const handleCardOutput = (cardOut) => {
     if (!cardOut || cardOut.type !== "card-action") {
@@ -371,9 +442,14 @@ export function AlloyCrudCard({ crudCard, output }) {
 
   return (
     <>
-      {/* Add button row (top-right) */}
+      {/* Search + Add button row */}
       <div className="row mt-2">
-        <div className="col-sm-12 text-end">
+        <div className="col-sm-8">
+          {crudCard.search && (
+            <AlloySearch search={crudCard.search} output={handleSearchOutput} />
+          )}
+        </div>
+        <div className="col-sm-4 d-flex align-items-center justify-content-end">
           {crudCard.add && (
             <AlloyButtonIcon
               buttonIcon={crudCard.add}

@@ -72,6 +72,22 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
       }
     },
 
+    // Search bar (AlloySearch):
+    // - This is the INNER InputObject config.
+    // - CrudCardObject wraps this as new SearchObject({ search: <this> }).
+    search: {
+      name: "vendorSearch",
+      id: "vendorSearch",
+      type: "text",
+      layout: "icon",
+      icon: { iconClass: "fa-solid fa-magnifying-glass" },
+      label: "Search Vendors",
+      placeholder: "Search by name, email, city…",
+      className: "form-control"
+      // You can also tune behavior via CrudCardObject:
+      //   minChars, debounceMs, results, resultConfig (see SearchObject).
+    },
+
     add: {
       id: "addVendorCardButton",
       name: "Add vendor",
@@ -234,7 +250,7 @@ export default function CrudCardPage() {
   const [crudJson, setCrudJson] = useState(DEFAULT_CRUD_CARD_JSON);
   const [crudParseError, setCrudParseError] = useState("");
   const [crudOutputJson, setCrudOutputJson] = useState(
-    "// Interact with Add vendor (card), Edit/Delete buttons and the modal to see OutputObject here…"
+    "// Interact with the search bar, Add vendor (card), Edit/Delete buttons and the modal to see OutputObject here…"
   );
 
   /* -------------------------------------------
@@ -263,6 +279,14 @@ export default function CrudCardPage() {
             disabled: true
           },
           fields: []
+        },
+        // Fallback search (optional)
+        search: {
+          name: "search",
+          label: "Search (JSON invalid)",
+          type: "text",
+          layout: "text",
+          placeholder: "Fix JSON on the left to preview real CRUD cards…"
         },
         add: {
           name: "Add (disabled)",
@@ -295,7 +319,7 @@ export default function CrudCardPage() {
   function resetCrud() {
     setCrudJson(DEFAULT_CRUD_CARD_JSON);
     setCrudOutputJson(
-      "// Interact with Add vendor (card), Edit/Delete buttons and the modal to see OutputObject here…"
+      "// Interact with the search bar, Add vendor (card), Edit/Delete buttons and the modal to see OutputObject here…"
     );
     setCrudParseError("");
   }
@@ -334,6 +358,14 @@ export default function CrudCardPage() {
           <AlloyCrudCard crudCard={crudModel} output={handleCrudOutput} />
 
           <div className="small text-secondary mt-2 text-center">
+            <strong>Search bar</strong> uses <code>AlloySearch</code> with
+            debounced input. It emits <code>action="search"</code> with{" "}
+            <code>data</code> like{" "}
+            <code>{`{ "vendorSearch": "alpha" }`}</code> after you pause typing.
+            If you populate <code>search.results</code> from the parent, clicking
+            a result will emit <code>action="search-select"</code> with the raw
+            result object.
+            <br />
             <strong>Add vendor</strong> opens the modal with empty/default
             values from <code>modal.data</code>. Every click gives a fresh,
             blank form. Only when you click <code>Save vendor</code> (and
@@ -400,8 +432,9 @@ export default function CrudCardPage() {
 
           <div className="form-text">
             Required pieces: <code>modal.submit.name</code>,{" "}
-            <code>modal.fields[].name</code>, and <code>cards[].id</code>. For
-            Edit/Delete mapping,{" "}
+            <code>modal.fields[].name</code>,{" "}
+            <code>search.name</code> (inner input field name used by
+            AlloySearch), and <code>cards[].id</code>. For Edit/Delete mapping,{" "}
             <strong>
               <code>cards[].fields[].id</code> must match{" "}
               <code>modal.fields[].name</code>
@@ -436,6 +469,35 @@ export default function CrudCardPage() {
           />
 
           <div className="form-text">
+            Example (search event from AlloySearch):
+            <pre className="mb-0 mt-1 small">
+{`{
+  "id": "vendorCrudCard",
+  "type": "crud-card",
+  "action": "search",
+  "error": false,
+  "data": {
+    "vendorSearch": "alpha"
+  }
+}`}
+            </pre>
+
+            Example (search result selected – if you provide results to AlloySearch):
+            <pre className="mb-0 mt-1 small">
+{`{
+  "id": "vendorCrudCard",
+  "type": "crud-card",
+  "action": "search-select",
+  "error": false,
+  "data": {
+    "vendorSearch": "alpha",
+    "result": {
+      "...": "raw result object from parent"
+    }
+  }
+}`}
+            </pre>
+
             Example (Add → Save vendor, after successful submit):
             <pre className="mb-0 mt-1 small">
 {`{

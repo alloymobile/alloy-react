@@ -159,7 +159,7 @@ function cloneWithActiveAndWrapOutput(
       onFocus: btnModel.onFocus,
       onBlur: btnModel.onBlur,
       onMouseEnter: btnModel.onMouseEnter,
-      onMouseLeave: btnModel.onMouseLeave
+      onMouseLeave: btnModel.onMouseLeave,
     });
 
     return { model: cloned, onAnyEvent: passUp };
@@ -182,7 +182,7 @@ function cloneWithActiveAndWrapOutput(
       onFocus: btnModel.onFocus,
       onBlur: btnModel.onBlur,
       onMouseEnter: btnModel.onMouseEnter,
-      onMouseLeave: btnModel.onMouseLeave
+      onMouseLeave: btnModel.onMouseLeave,
     });
 
     return { model: cloned, onAnyEvent: passUp };
@@ -239,7 +239,11 @@ export function AlloyButtonBar({ buttonBar, output }) {
   // Render helpers for the 2 variants.
   function renderAlloyButtonList() {
     return (
-      <ul id={ulIdRef.current} className={buttonBar.className}>
+      <ul
+        id={ulIdRef.current}
+        className={`${buttonBar.className} list-unstyled`}
+        style={{ listStyle: "none", paddingLeft: 0, marginBottom: 0 }}
+      >
         {buttonBar.buttons.map((btnModel, idx) => {
           if (!(btnModel instanceof ButtonObject)) {
             throw new Error(
@@ -273,7 +277,11 @@ export function AlloyButtonBar({ buttonBar, output }) {
 
   function renderAlloyButtonIconList() {
     return (
-      <ul id={ulIdRef.current} className={buttonBar.className}>
+      <ul
+        id={ulIdRef.current}
+        className={`${buttonBar.className} list-unstyled`}
+        style={{ listStyle: "none", paddingLeft: 0, marginBottom: 0 }}
+      >
         {buttonBar.buttons.map((btnModel, idx) => {
           if (!(btnModel instanceof ButtonIconObject)) {
             throw new Error(

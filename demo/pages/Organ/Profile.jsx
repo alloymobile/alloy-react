@@ -14,7 +14,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
     name: "John Doe",
     email: "john.doe@example.com",
     icon: {
-      iconClass: "fa-solid fa-user fa-2xl"
+      iconClass: "fa-solid fa-user fa-2xl",
     },
     action: "updateProfile",
 
@@ -33,7 +33,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
         disabled: false,
         loading: false,
         ariaLabel: "Update profile",
-        title: "Update profile"
+        title: "Update profile",
       },
       fields: [
         {
@@ -44,7 +44,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           layout: "text",
           placeholder: "John",
           required: true,
-          minLength: 2
+          minLength: 2,
         },
         {
           id: "lastName",
@@ -54,7 +54,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           layout: "text",
           placeholder: "Doe",
           required: true,
-          minLength: 2
+          minLength: 2,
         },
         {
           id: "email",
@@ -63,7 +63,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           type: "email",
           layout: "text",
           placeholder: "john.doe@example.com",
-          required: true
+          required: true,
         },
         {
           id: "phone",
@@ -71,7 +71,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           label: "Phone",
           type: "tel",
           layout: "text",
-          placeholder: "+1 (555) 123-4567"
+          placeholder: "+1 (555) 123-4567",
         },
         {
           id: "company",
@@ -79,7 +79,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           label: "Company",
           type: "text",
           layout: "text",
-          placeholder: "PrecastXchange Inc."
+          placeholder: "PrecastXchange Inc.",
         },
         {
           id: "city",
@@ -87,8 +87,8 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           label: "City",
           type: "text",
           layout: "text",
-          placeholder: "Toronto"
-        }
+          placeholder: "Toronto",
+        },
       ],
       data: {
         firstName: "John",
@@ -96,14 +96,24 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
         email: "john.doe@example.com",
         phone: "",
         company: "PrecastXchange Inc.",
-        city: "Toronto"
-      }
+        city: "Toronto",
+      },
     },
 
-    details: {
+    /* ---------------------------------------
+     * Address (AlloyCrud / CrudObject config)
+     *
+     * CrudObject will:
+     *  - respect type: "card"
+     *  - hydrate modal/add
+     *  - treat `document` as an array of CardAction configs
+     * ------------------------------------- */
+    address: {
       id: "profileAddressCrud",
+      name: "Address",
       className: "container-fluid mt-3",
-      type: "AlloyCardAction",
+      type: "card",              // CrudObject → card mode
+      documentClass: "col-12",   // wrapper for the card row/grid
 
       modal: {
         id: "addressModal",
@@ -117,7 +127,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
           icon: { iconClass: "fa-solid fa-circle-notch fa-spin" },
           active: "active",
           ariaLabel: "Save address",
-          title: "Save address"
+          title: "Save address",
         },
         fields: [
           {
@@ -127,7 +137,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
             layout: "text",
             placeholder: "Home / Office / Billing",
             required: true,
-            minLength: 3
+            minLength: 3,
           },
           {
             name: "street",
@@ -135,7 +145,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
             type: "text",
             layout: "text",
             placeholder: "123 Main St",
-            required: true
+            required: true,
           },
           {
             name: "city",
@@ -143,7 +153,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
             type: "text",
             layout: "text",
             placeholder: "Toronto",
-            required: true
+            required: true,
           },
           {
             name: "country",
@@ -151,7 +161,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
             type: "text",
             layout: "text",
             placeholder: "Canada",
-            required: true
+            required: true,
           },
           {
             name: "postalCode",
@@ -159,16 +169,16 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
             type: "text",
             layout: "text",
             placeholder: "A1A 1A1",
-            required: true
-          }
+            required: true,
+          },
         ],
         data: {
           label: "",
           street: "",
           city: "",
           country: "",
-          postalCode: ""
-        }
+          postalCode: "",
+        },
       },
 
       add: {
@@ -177,57 +187,57 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
         icon: { iconClass: "fa-solid fa-plus" },
         className: "btn btn-primary",
         title: "Add address",
-        ariaLabel: "Add address"
+        ariaLabel: "Add address",
       },
 
       // NOTE: fields[].id MUST match modal.fields[].name
-      // so CrudCard can prefill modal correctly.
-      cards: [
+      // so Crud pipeline can prefill modal correctly if you later
+      // map row → modal fields.
+      document: [
         {
           id: "addrHome",
-          className: "col-12 col-md-6 col-lg-4",
           header: {
             id: "addrHomeHeader",
             name: "Home",
-            className: "card-header py-2 fw-semibold"
+            className: "card-header py-2 fw-semibold",
           },
           body: {
             id: "addrHomeBody",
             name: "123 Main St",
-            className: "card-body"
+            className: "card-body",
           },
           fields: [
             {
               id: "label",
               className: "fw-semibold",
-              name: "Home"
+              name: "Home",
             },
             {
               id: "street",
               className: "small",
-              name: "123 Main St"
+              name: "123 Main St",
             },
             {
               id: "city",
               className: "small",
-              name: "Toronto"
+              name: "Toronto",
             },
             {
               id: "country",
               className: "small",
-              name: "Canada"
+              name: "Canada",
             },
             {
               id: "postalCode",
               className: "small",
-              name: "A1A 1A1"
-            }
+              name: "A1A 1A1",
+            },
           ],
           footer: {
             id: "addrHomeFooter",
             name: "Primary address",
             className:
-              "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2"
+              "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
           },
           type: "AlloyButtonBar",
           action: {
@@ -242,7 +252,7 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
                 icon: { iconClass: "fa-solid fa-pen" },
                 className: "btn btn-outline-primary btn-sm",
                 title: "Edit address",
-                ariaLabel: "Edit address"
+                ariaLabel: "Edit address",
               },
               {
                 id: "deleteAddressBtn",
@@ -250,13 +260,13 @@ const DEFAULT_PROFILE_JSON = JSON.stringify(
                 icon: { iconClass: "fa-solid fa-trash" },
                 className: "btn btn-outline-danger btn-sm",
                 title: "Delete address",
-                ariaLabel: "Delete address"
-              }
-            ]
-          }
-        }
-      ]
-    }
+                ariaLabel: "Delete address",
+              },
+            ],
+          },
+        },
+      ],
+    },
   },
   null,
   2
@@ -300,14 +310,16 @@ export default function ProfilePage() {
             disabled: true,
             loading: false,
             ariaLabel: "Submit (disabled)",
-            title: "Submit (disabled)"
+            title: "Submit (disabled)",
           },
-          fields: []
+          fields: [],
         },
-        details: {
-          id: "invalidProfileDetails",
+        address: {
+          id: "invalidProfileAddress",
+          name: "Invalid Address JSON",
           className: "container-fluid mt-3",
-          type: "AlloyCardAction",
+          type: "card",
+          documentClass: "col-12",
           modal: {
             id: "invalidProfileModal",
             title: "Invalid Address JSON",
@@ -315,10 +327,10 @@ export default function ProfilePage() {
               name: "Submit (disabled)",
               className: "btn btn-secondary",
               icon: { iconClass: "fa-solid fa-circle-notch fa-spin" },
-              disabled: true
+              disabled: true,
             },
             fields: [],
-            data: {}
+            data: {},
           },
           add: {
             id: "addAddressDisabled",
@@ -327,10 +339,10 @@ export default function ProfilePage() {
             className: "btn btn-secondary",
             disabled: true,
             ariaLabel: "Add address (disabled)",
-            title: "Add address (disabled)"
+            title: "Add address (disabled)",
           },
-          cards: []
-        }
+          document: [],
+        },
       });
     }
   }, [profileJson]);
@@ -391,9 +403,10 @@ export default function ProfilePage() {
             a flat data map with your values.
             <br />
             <strong>Address section</strong> uses{" "}
-            <code>AlloyCrudCard</code>. Add/Edit/Delete addresses open a modal
-            and emit <code>type="profile"</code> with{" "}
-            <code>action="details.&lt;innerAction&gt;"</code> plus the flat
+            <code>AlloyCrud</code> with a <code>CrudObject</code> in{" "}
+            <code>address</code>. Add/Edit/Delete addresses open a modal and
+            emit <code>type="profile"</code> with{" "}
+            <code>action="address.&lt;innerAction&gt;"</code> plus the flat
             address data.
           </div>
         </div>
@@ -404,9 +417,7 @@ export default function ProfilePage() {
         {/* Left: Input JSON */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">
-              Profile Input JSON (editable)
-            </span>
+            <span className="fw-semibold">Profile Input JSON (editable)</span>
             <div className="d-flex gap-2">
               <button
                 type="button"
@@ -452,14 +463,14 @@ export default function ProfilePage() {
                 <code>profileForm</code> → fields and submit button.
               </li>
               <li>
-                <code>details.modal</code> → address modal fields.
+                <code>address.modal</code> → address modal fields.
               </li>
               <li>
-                <code>details.cards[]</code> → address cards and their footer
-                buttons. For Edit/Delete mapping,{" "}
+                <code>address.document[]</code> → address cards and their footer
+                buttons. For Edit/Delete mapping, you’ll typically keep{" "}
                 <strong>
-                  <code>details.cards[].fields[].id</code> must match{" "}
-                  <code>details.modal.fields[].name</code>
+                  <code>address.document[].fields[].id</code> matching{" "}
+                  <code>address.modal.fields[].name</code>
                 </strong>{" "}
                 (e.g. <code>label</code>, <code>street</code>,{" "}
                 <code>city</code>, <code>country</code>,{" "}
@@ -511,12 +522,12 @@ export default function ProfilePage() {
 }`}
             </pre>
 
-            Example (Edit address → Save address):
+            Example (Edit address → Save address via AlloyCrud):
             <pre className="mb-0 mt-1 small">
 {`{
   "id": "profile",
   "type": "profile",
-  "action": "details.Edit",
+  "action": "address.Edit",
   "error": false,
   "data": {
     "label": "Home",

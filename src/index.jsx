@@ -17,6 +17,7 @@ export { AlloyTableAction, TableActionObject } from "./components/tissue/AlloyTa
 export { AlloyCard, CardObject } from "./components/tissue/AlloyCard.jsx"
 export { AlloyCardAction, CardActionObject } from "./components/tissue/AlloyCardAction.jsx"
 export { AlloyForm, FormObject } from "./components/tissue/AlloyForm.jsx"
+export { AlloyPagination, PaginationObject } from "./components/tissue/AlloyPagination.jsx"
 
 export { AlloyTabForm, TabFormObject, TabObject } from "./components/organ/AlloyTabForm.jsx"
 export { AlloyModal, ModalObject } from "./components/tissue/AlloyModal.jsx"
@@ -24,7 +25,7 @@ export { AlloyModalToast, ModalToastObject } from "./components/tissue/AlloyModa
 export { AlloyPay, PayObject } from "./components/tissue/AlloyPay.jsx"
 export { AlloyCardVideo, CardVideoObject } from "./components/tissue/AlloyCardVideo.jsx"
 export { AlloyCardCarousel, CardCarouselObject } from "./components/tissue/AlloyCardCarousel.jsx"
-export { AlloyCrudTable, CrudTableObject } from "./components/organ/AlloyCrudTable.jsx"
+export { AlloyCrud, CrudObject } from "./components/organ/AlloyCrud.jsx"
 export { AlloyCrudCard, CrudCardObject } from "./components/organ/AlloyCrudCard.jsx"
 export { AlloyEmail, EmailObject } from "./components/organ/AlloyEmail.jsx"
 export { AlloyContact, ContactObject } from "./components/organ/AlloyContact.jsx"
@@ -35,3 +36,4 @@ export { AlloyGallery, GalleryObject } from "./components/organ/AlloyGallery.jsx
 export { AlloyFooter, FooterObject } from "./components/organ/AlloyFooter.jsx"
 export { AlloyHeroSignup, HeroSignupObject } from "./components/organ/AlloyHeroSignup.jsx"
 export { AlloySignup, SignupObject } from "./components/organ/AlloySignup.jsx"
+export { AlloyCrudForm, CrudFormObject } from "./components/organ/AlloyCrudForm.jsx"

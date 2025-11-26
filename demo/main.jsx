@@ -31,7 +31,7 @@ import CardActionPage from "./pages/Tissue/CardAction.jsx";
 import FormPage from "./pages/Tissue/Form.jsx";
 import TabFormPage from "./pages/Tissue/TabForm.jsx";
 import ModalPage from "./pages/Tissue/Modal.jsx";
-import CrudTablePage from "./pages/Tissue/CrudTable.jsx";
+import CrudTablePage from "./pages/Organ/Crud.jsx";
 import CrudCardPage from "./pages/Tissue/CrudCard.jsx";
 import EmailPage from "./pages/Organ/Email.jsx";
 import ContactPage from "./pages/Organ/Contact.jsx";
@@ -45,6 +45,9 @@ import CardVideoPage from "./pages/Tissue/CardVideo.jsx";
 import FooterPage from "./pages/Organ/Footer.jsx";
 import SearchPage from "./pages/Cell/Search.jsx";
 import HeroSignupPage from "./pages/Organ/HeroSignup.jsx";
+import CrudFormPage from "./pages/Organ/CrudForm.jsx";
+import PaginationPage from "./pages/Tissue/Pagination.jsx";
+import CrudPage from "./pages/Organ/Crud.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -82,11 +85,11 @@ createRoot(document.getElementById("root")).render(
           <Route path="form" element={<FormPage />} />  
           <Route path="tab-form" element={<TabFormPage />} />  
           <Route path="modal" element={<ModalPage />} />  
-          <Route path="crud-table" element={<CrudTablePage />} /> 
           <Route path="crud-card" element={<CrudCardPage />} />   
           <Route path="pay" element={<PayPage />} />   
           <Route path="carousel" element={<CardCarouselPage />} />   
           <Route path="video" element={<CardVideoPage />} />   
+          <Route path="pagination" element={<PaginationPage />} />   
         </Route>
         <Route path="/organ" element={<Organ />}> 
           <Route path="email" element={<EmailPage />} />   
@@ -96,7 +99,9 @@ createRoot(document.getElementById("root")).render(
           <Route path="donate" element={<DonatePage />} />  
           <Route path="gallery" element={<GalleryPage />} />    
           <Route path="footer" element={<FooterPage />} />   
-          <Route path="hero-signup" element={<HeroSignupPage />} />          
+          <Route path="hero-signup" element={<HeroSignupPage />} />    
+          <Route path="crud-form" element={<CrudFormPage />} />   
+          <Route path="crud" element={<CrudPage />} />                  
         </Route>
       </Route>
     </Routes>
