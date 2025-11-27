@@ -23,7 +23,6 @@ export default function Sidebar({ active }) {
           { label: "AlloyButtonBar", to: "/tissue/button-bar", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyNavBar", to: "/tissue/nav-bar", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyTable", to: "/tissue/table", icon: "fa-solid fa-bars-progress" },
-          { label: "AlloyTableLink", to: "/tissue/table-link", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyTableAction", to: "/tissue/table-action", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyCard", to: "/tissue/card", icon: "fa-solid fa-bars-progress" },
           { label: "AlloyCardAction", to: "/tissue/card-action", icon: "fa-solid fa-bars-progress" },   

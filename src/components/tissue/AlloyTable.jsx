@@ -1,7 +1,7 @@
 // src/components/tissue/AlloyTable.jsx
 import React, { useMemo, useRef, useState } from "react";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
-import { generateId } from "../../utils/idHelper.js";
+import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* -------------------------------------------
  * Small util: capitalize column header labels
@@ -9,6 +9,15 @@ import { generateId } from "../../utils/idHelper.js";
 function capitalize(s) {
   if (typeof s !== "string") return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Prettify column labels: camelCase / snake_case → "Camel Case"
+function prettifyColumnLabel(key = "") {
+  if (typeof key !== "string") return "";
+  const withSpaces = key
+    .replace(/_/g, " ") // snake_case → "snake case"
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2"); // camelCase → "camel Case"
+  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
 }
 
 /* -------------------------------------------
@@ -127,21 +136,25 @@ function getHeaderKeys(rows) {
  *
  * Props:
  *  - table: TableObject (required)
- *  - output?: (payload: {
- *        type: "column",
- *        name: string,   // column key clicked
- *        dir: "asc"|"desc"
- *     } | {
- *        type: "row",
- *        id: string|number|undefined
- *     }) => void
+ *  - output?: (OutputObject) => void
  *
  * Behavior:
- *  - Clicking a header toggles local sort state {col,dir} and emits {type:"column"...}
- *    so parent/server can fetch real sorted data.
- *  - Clicking a row emits {type:"row", id: row.id}
- *  - We do NOT mutate table.rows or reorder them ourselves.
- *  - We do NOT transform table.icon / table.sort here. That's the model's job.
+ *  - Clicking a header toggles local sort state {col,dir} and emits:
+ *      new OutputObject({
+ *        id: table.id,
+ *        type: "column",
+ *        action: "Sort",
+ *        error: false,
+ *        data: { name: colName, dir: "asc" | "desc" }
+ *      })
+ *  - Clicking a row emits:
+ *      new OutputObject({
+ *        id: table.id,
+ *        type: "row",
+ *        action: "Row",
+ *        error: false,
+ *        data: { id: rowId }
+ *      })
  * ----------------------------------------- */
 export function AlloyTable({ table, output }) {
   if (!table || !(table instanceof TableObject)) {
@@ -169,20 +182,34 @@ export function AlloyTable({ table, output }) {
 
     setSort({ col: colName, dir: nextDir });
 
-    // tell parent so it can (re)fetch or sort externally
-    output?.({
+    // Emit OutputObject (consistent with AlloyTableAction)
+    const out = new OutputObject({
+      id: tableIdRef.current,
       type: "column",
-      name: colName,
-      dir: nextDir,
+      action: "Sort",
+      error: false,
+      data: {
+        name: colName,
+        dir: nextDir,
+      },
     });
+
+    output?.(out);
   };
 
   // user clicked a row
   const handleRowClick = (rowId) => {
-    output?.({
+    const out = new OutputObject({
+      id: tableIdRef.current,
       type: "row",
-      id: rowId,
+      action: "Row",
+      error: false,
+      data: {
+        id: rowId,
+      },
     });
+
+    output?.(out);
   };
 
   return (
@@ -205,8 +232,9 @@ export function AlloyTable({ table, output }) {
                 <span
                   onClick={() => handleHeaderClick(key)}
                   style={{ userSelect: "none", cursor: "pointer" }}
+                  className="text-dark text-decoration-none"
                 >
-                  {capitalize(key)}
+                  {prettifyColumnLabel(key)}
 
                   {isActive && (
                     <span

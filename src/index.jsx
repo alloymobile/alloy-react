@@ -12,7 +12,6 @@ export { AlloyLinkBar, LinkBarObject } from "./components/tissue/AlloyLinkBar.js
 export { AlloyButtonBar, ButtonBarObject } from "./components/tissue/AlloyButtonBar.jsx"
 export { AlloyNavBar, NavBarObject } from "./components/tissue/AlloyNavBar.jsx"
 export { AlloyTable, TableObject } from "./components/tissue/AlloyTable.jsx"
-export { AlloyTableLink, TableLinkObject } from "./components/tissue/AlloyTableLink.jsx"
 export { AlloyTableAction, TableActionObject } from "./components/tissue/AlloyTableAction.jsx"
 export { AlloyCard, CardObject } from "./components/tissue/AlloyCard.jsx"
 export { AlloyCardAction, CardActionObject } from "./components/tissue/AlloyCardAction.jsx"

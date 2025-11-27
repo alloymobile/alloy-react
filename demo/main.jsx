@@ -24,7 +24,6 @@ import LinkBarPage from "./pages/Tissue/LinkBar.jsx";
 import ButtonBarPage from "./pages/Tissue/ButtonBar.jsx";
 import NavBarPage from "./pages/Tissue/NavBar.jsx";
 import TablePage from "./pages/Tissue/Table.jsx";
-import TableLinkPage from "./pages/Tissue/TableLink.jsx";
 import TableActionPage from "./pages/Tissue/TableAction.jsx";
 import CardPage from "./pages/Tissue/Card.jsx";
 import CardActionPage from "./pages/Tissue/CardAction.jsx";
@@ -78,7 +77,6 @@ createRoot(document.getElementById("root")).render(
           <Route path="button-bar" element={<ButtonBarPage />} />
           <Route path="nav-bar" element={<NavBarPage />} />
           <Route path="table" element={<TablePage />} />
-          <Route path="table-link" element={<TableLinkPage />} />
           <Route path="table-action" element={<TableActionPage />} />
           <Route path="card" element={<CardPage />} />     
           <Route path="card-action" element={<CardActionPage />} />              

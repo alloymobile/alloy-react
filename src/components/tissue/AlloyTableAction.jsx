@@ -11,6 +11,15 @@ function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// Prettify column labels: camelCase / snake_case → "Camel Case"
+function prettifyColumnLabel(key = "") {
+  if (typeof key !== "string") return "";
+  const withSpaces = key
+    .replace(/_/g, " ") // snake_case → "snake case"
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2"); // camelCase → "camel Case"
+  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+}
+
 // Preserve original object-key order from the first row,
 // but always exclude "id" from headers and cells.
 function getHeaderKeys(rows) {
@@ -214,8 +223,9 @@ export function AlloyTableAction({ tableAction, output }) {
                 <span
                   onClick={() => handleHeaderClick(key)}
                   style={{ userSelect: "none", cursor: "pointer" }}
+                  className="text-dark text-decoration-none"
                 >
-                  {capitalize(key)}
+                  {prettifyColumnLabel(key)}
                   {isActive && (
                     <span
                       className="ms-1 d-inline-flex align-middle"
@@ -284,12 +294,12 @@ export function AlloyTableAction({ tableAction, output }) {
                             });
                             output?.(out);
                           }}
-                          className="text-decoration-none"
+                          className="text-dark text-decoration-none"
                         >
                           <span>{row?.[key]}</span>
                         </Link>
                       ) : (
-                        <span>{row?.[key]}</span>
+                        <span className="text-dark">{row?.[key]}</span>
                       )}
                     </td>
                   );

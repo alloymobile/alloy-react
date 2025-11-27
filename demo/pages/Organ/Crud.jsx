@@ -24,7 +24,7 @@ const DEFAULT_CRUD_TABLE_JSON = JSON.stringify(
       className: "modal fade",
       action: "Create",
       submit: {
-        name: "Save vendor",
+        name: "Create",
         className: "btn btn-primary",
         active: "active",
       },
@@ -73,6 +73,20 @@ const DEFAULT_CRUD_TABLE_JSON = JSON.stringify(
         city: "",
         status: "active",
       },
+    },
+
+    // Toast modal for delete confirmation
+    toast: {
+      id: "vendorDeleteToast",
+      title: "Delete Vendor",
+      className: "modal fade",
+      action: "deleteVendorConfirmed",
+      submit: {
+        name: "Delete",
+        className: "btn btn-danger",
+        active: "active",
+      },
+      message: "Are you sure you want to delete this vendor? This action cannot be undone.",
     },
 
     // NOTE: This config is treated as the inner InputObject of SearchObject.
@@ -185,7 +199,7 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
       className: "modal fade",
       action: "Create",
       submit: {
-        name: "Save vendor",
+        name: "Create",
         className: "btn btn-primary",
         active: "active",
       },
@@ -234,6 +248,20 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
         city: "",
         status: "active",
       },
+    },
+
+    // Toast modal for delete confirmation (cards)
+    toast: {
+      id: "vendorCardDeleteToast",
+      title: "Delete Vendor",
+      className: "modal fade",
+      action: "deleteVendorConfirmed",
+      submit: {
+        name: "Delete",
+        className: "btn btn-danger",
+        active: "active",
+      },
+      message: "Are you sure you want to delete this vendor card? This action cannot be undone.",
     },
 
     // Search bar (same pattern)
@@ -533,9 +561,10 @@ function CrudSection({
             input and emits <code>type="crud"</code>,{" "}
             <code>action="search"</code> or <code>"search-select"</code>.
             <br />
-            <strong>Add</strong>, <strong>Edit</strong>,{" "}
-            <strong>Delete</strong> are handled via the shared modal and emit
-            flat key/value <code>data</code> payloads.
+            <strong>Add</strong> and <strong>Edit</strong> use the shared form
+            modal; <strong>Delete</strong> can use the toast confirmation modal
+            (when <code>toast</code> is configured) and emits only the{" "}
+            <code>id</code> of the row to delete.
             <br />
             <strong>Pagination</strong> emits{" "}
             <code>action="page"</code> with <code>nav</code>,{" "}
@@ -612,6 +641,10 @@ function CrudSection({
                 <code>CardActionConfig</code> (same schema as{" "}
                 <code>AlloyCardAction</code>).
               </li>
+              <li>
+                Optional <code>toast</code> for delete confirmation using{" "}
+                <code>AlloyModalToast</code>.
+              </li>
             </ul>
           </div>
         </div>
@@ -671,18 +704,32 @@ function CrudSection({
                 </pre>
               </li>
               <li className="mt-2">
-                Save vendor:
+                Create vendor:
                 <pre className="mb-0 mt-1 small">
 {`{
   "id": "...",
   "type": "crud",
-  "action": "Save vendor",
+  "action": "Create",
   "error": false,
   "data": {
     "vendorName": "New Vendor Inc.",
     "email": "new@vendor.com",
     "city": "Toronto",
     "status": "active"
+  }
+}`}
+                </pre>
+              </li>
+              <li className="mt-2">
+                Delete vendor (via toast confirm):
+                <pre className="mb-0 mt-1 small">
+{`{
+  "id": "...",
+  "type": "crud",
+  "action": "Delete",
+  "error": false,
+  "data": {
+    "id": "v001"
   }
 }`}
                 </pre>
