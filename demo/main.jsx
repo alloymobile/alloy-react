@@ -47,6 +47,7 @@ import CrudPage from "./pages/Organ/Crud.jsx";
 import CarouselPage from "./pages/Tissue/Carousel.jsx";
 import ImagePage from "./pages/Tissue/Image.jsx";
 import VideoPage from "./pages/Tissue/Video.jsx";
+import PostPage from "./pages/Organ/Post.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -101,6 +102,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="hero-signup" element={<HeroSignupPage />} />    
           <Route path="crud-form" element={<CrudFormPage />} />   
           <Route path="crud" element={<CrudPage />} />                  
+          <Route path="post" element={<PostPage />} />   
         </Route>
       </Route>
     </Routes>

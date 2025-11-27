@@ -39,3 +39,4 @@ export { AlloyHeroSignup, HeroSignupObject } from "./components/organ/AlloyHeroS
 export { AlloySignup, SignupObject } from "./components/organ/AlloySignup.jsx"
 export { AlloyCrudForm, CrudFormObject } from "./components/organ/AlloyCrudForm.jsx"
 export { AlloyForget, ForgetObject } from "./components/organ/AlloyForget.jsx"
+export { AlloyPost, PostObject } from "./components/organ/AlloyPost.jsx"
