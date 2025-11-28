@@ -19,7 +19,42 @@ import AlloyIcon from "../cell/AlloyIcon.jsx";
  *  - link:    optional string (wraps ONLY the body in <Link>)
  *  - type:    "AlloyButtonBar" | "AlloyLinkBar"
  *  - action:  REQUIRED ButtonBarObject | LinkBarObject (rendered in footer)
+ *
+ *  link supports:
+ *    - plain:    "/private/admin/category"
+ *    - template: "/private/admin/category/{id}/subcategory"
  * ------------------------------------------------------------------ */
+
+/**
+ * Resolve a link for a given CardActionObject.
+ *
+ * Supports:
+ *  - plain: "/private/admin/category"
+ *  - template: "/private/admin/category/{id}/subcategory" → {id} = cardAction.id
+ *  - template: "/foo/{slug}" → {slug} = cardAction.slug (if present)
+ *
+ * If template has no `{...}` placeholders, returns it as-is.
+ * If no usable value for a placeholder, replaces with empty string.
+ */
+function resolveCardActionLink(template, cardAction) {
+  if (!template || typeof template !== "string") return "";
+
+  const trimmed = template.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.includes("{")) {
+    return trimmed.replace(/{(\w+)}/g, (_match, key) => {
+      if (key === "id") {
+        return cardAction?.id != null ? String(cardAction.id) : "";
+      }
+      const val = cardAction && cardAction[key] != null ? cardAction[key] : "";
+      return val != null ? String(val) : "";
+    });
+  }
+
+  // No placeholders → just return as-is
+  return trimmed;
+}
 
 export class CardActionObject {
   constructor(cardAction = {}) {
@@ -27,7 +62,7 @@ export class CardActionObject {
     this.id = cardAction.id ?? generateId("card-action");
     this.className = cardAction.className ?? "card border m-2 shadow";
 
-    // NOTE: link applies ONLY to the BODY block
+    // NOTE: link applies ONLY to the BODY block (may be template)
     this.link = typeof cardAction.link === "string" ? cardAction.link : "";
 
     // header (optional BlockObject)
@@ -155,7 +190,7 @@ export function AlloyCardAction({ cardAction, output }) {
       action: actionName,
       error: !!error,
       errorMessage: errorMessage || [],
-      data: fieldMap
+      data: fieldMap,
     });
 
     output(wrapped);
@@ -275,9 +310,11 @@ export function AlloyCardAction({ cardAction, output }) {
   );
 
   /* ------- bodyBlock (ONLY this can be <Link>) ------- */
-  const bodyBlock = cardAction.link ? (
+  const resolvedLink = resolveCardActionLink(cardAction.link, cardAction);
+
+  const bodyBlock = resolvedLink ? (
     <Link
-      to={cardAction.link}
+      to={resolvedLink}
       className="text-decoration-none d-block"
       aria-label={cardAction.body?.ariaLabel}
     >
@@ -291,7 +328,6 @@ export function AlloyCardAction({ cardAction, output }) {
   const hasFooterText = cardAction.footer && cardAction.footer.hasText();
   const hasFooterAction = !!cardAction.action;
 
-  // we know action is always present (constructor enforces), but keep this guard
   const footerBar =
     hasFooterAction && cardAction.type === "AlloyLinkBar" ? (
       <AlloyLinkBar linkBar={cardAction.action} output={handleBarOutput} />

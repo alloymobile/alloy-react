@@ -51,6 +51,47 @@ function resolveActionName(self) {
   return "";
 }
 
+/**
+ * Resolve a link for a given row.
+ *
+ * Supports:
+ *  - base path: "/private/admin/category" → "/private/admin/category/<row.id>"
+ *  - template:  "/private/admin/category/{id}/subcategory" → {id} replaced by row.id
+ *  - template:  "/foo/{slug}" → {slug} replaced by row.slug
+ *
+ * If template has no `{...}` placeholders, it behaves as base + "/<id>".
+ * If there is no usable id, returns the base path unchanged.
+ */
+function resolveLink(template, row, rowId) {
+  if (!template || typeof template !== "string") return "";
+
+  const trimmed = template.trim();
+  if (!trimmed) return "";
+
+  // If we detect "{...}" placeholders → treat as template
+  if (trimmed.includes("{")) {
+    return trimmed.replace(/{(\w+)}/g, (_match, key) => {
+      if (key === "index" || key === "rowIndex") {
+        return rowId != null ? String(rowId) : "";
+      }
+      const value = row && row[key] != null ? row[key] : "";
+      return value != null ? String(value) : "";
+    });
+  }
+
+  // Legacy/base behaviour: "/path" + "/<id>"
+  const base = trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
+  const id =
+    (row && row.id != null && row.id !== "") ? row.id : rowId;
+
+  // If we don't have an id, just return the base path
+  if (id == null || id === "") {
+    return base;
+  }
+
+  return `${base}/${id}`;
+}
+
 /* ---------------------- Model ---------------------- */
 /**
  * TableActionObject
@@ -63,7 +104,11 @@ function resolveActionName(self) {
  *  - icon?: IconObject|object          (left "Type" column icon)
  *  - sort?: IconObject|object          (column-sort indicator arrow icon)
  *  - actions?: ButtonBarObject|object  (OPTIONAL; if present, rendered in last column)
- *  - link?: string                     (OPTIONAL base route; if set, cells become <Link> to `${link}/${row.id}`)
+ *  - link?: string                     (OPTIONAL)
+ *        • If plain: "/private/admin/category" →
+ *            "/private/admin/category/<row.id>"
+ *        • If template: "/private/admin/category/{id}/subcategory" →
+ *            {id} replaced with row.id
  */
 export class TableActionObject {
   /**
@@ -80,7 +125,7 @@ export class TableActionObject {
     // rows
     this.rows = Array.isArray(cfg.rows) ? cfg.rows.slice() : [];
 
-    // base route for navigation links
+    // base route / template for navigation links
     this.link = typeof cfg.link === "string" ? cfg.link : "";
 
     // default icons for icon/sort
@@ -175,8 +220,8 @@ export function AlloyTableAction({ tableAction, output }) {
       error: false,
       data: {
         name: colName,
-        dir: nextDir
-      }
+        dir: nextDir,
+      },
     });
 
     output?.(out);
@@ -192,7 +237,7 @@ export function AlloyTableAction({ tableAction, output }) {
         type: "table",
         action: actionName,
         error: false,
-        data: row
+        data: row,
       });
 
       output?.(out);
@@ -233,7 +278,7 @@ export function AlloyTableAction({ tableAction, output }) {
                       title={isDesc ? "Sorted descending" : "Sorted ascending"}
                       style={{
                         transform: isDesc ? "rotate(180deg)" : "none",
-                        transition: "transform 120ms"
+                        transition: "transform 120ms",
                       }}
                     >
                       <AlloyIcon icon={tableAction.sort} />
@@ -270,15 +315,11 @@ export function AlloyTableAction({ tableAction, output }) {
 
                 {/* data cells */}
                 {headerKeys.map((key) => {
-                  const base = tableAction.link || "";
-                  const cleanedBase = base.endsWith("/")
-                    ? base.slice(0, -1)
-                    : base;
-                  const to = cleanedBase ? `${cleanedBase}/${rowId}` : "";
+                  const to = resolveLink(tableAction.link, row, rowId);
 
                   return (
                     <td key={`${rowId}-${key}`}>
-                      {cleanedBase ? (
+                      {to ? (
                         <Link
                           to={to}
                           onClick={() => {
@@ -289,8 +330,8 @@ export function AlloyTableAction({ tableAction, output }) {
                               error: false,
                               data: {
                                 to,
-                                ...row
-                              }
+                                ...row,
+                              },
                             });
                             output?.(out);
                           }}

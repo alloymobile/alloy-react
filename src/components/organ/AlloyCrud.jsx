@@ -186,14 +186,6 @@ function openModalById(id) {
  *   error: false,
  *   data: { ...payload }
  * }
- *
- * Where action can be:
- *   - "search" | "search-select"
- *   - "Sort"
- *   - "<modalSubmitName>" (e.g. "Create", "Edit", "Delete")
- *   - "navigate"
- *   - "page" (from AlloyPagination)
- *   - custom button names from table/card actions
  * ----------------------------------------------------- */
 export function AlloyCrud({ crud, output }) {
   if (!crud || !(crud instanceof CrudObject)) {
@@ -227,7 +219,6 @@ export function AlloyCrud({ crud, output }) {
 
   // Optional: open toast modal (if configured)
   const doOpenToastModal = () => {
-    // Prefer hidden trigger click (works with Bootstrap data-api)
     if (
       hiddenToastTriggerRef.current &&
       typeof hiddenToastTriggerRef.current.click === "function"
@@ -236,7 +227,6 @@ export function AlloyCrud({ crud, output }) {
       return;
     }
 
-    // Fallback: direct by id
     if (crud.toast?.id) {
       openModalById(crud.toast.id);
     }
@@ -309,11 +299,10 @@ export function AlloyCrud({ crud, output }) {
         })
       : [];
 
-    // Force the submit button label to match the current action
     const submit = base.submit
       ? {
           ...base.submit,
-          name: actionLabel, // "Create" / "Edit" / "Delete"
+          name: actionLabel,
         }
       : null;
 
@@ -363,7 +352,8 @@ export function AlloyCrud({ crud, output }) {
     if (!searchOut) return;
 
     const base =
-      searchOut instanceof OutputObject && typeof searchOut.toJSON === "function"
+      searchOut instanceof OutputObject &&
+      typeof searchOut.toJSON === "function"
         ? searchOut.toJSON()
         : searchOut;
 
@@ -433,7 +423,8 @@ export function AlloyCrud({ crud, output }) {
 
         setModalState((prev) => ({
           mode: "edit",
-          data: mappedData,
+          // keep full row (with id) plus mapped form fields
+          data: { ...row, ...mappedData },
           disabled: false,
           version: prev.version + 1,
         }));
@@ -443,7 +434,6 @@ export function AlloyCrud({ crud, output }) {
 
       // DELETE
       if (lower.includes("delete")) {
-        // If a toast is configured, use it instead of the full form modal
         if (crud.toast) {
           setDeleteRow(row);
           doOpenToastModal();
@@ -452,7 +442,8 @@ export function AlloyCrud({ crud, output }) {
 
           setModalState((prev) => ({
             mode: "delete",
-            data: mappedData,
+            // keep full row (with id) plus mapped form fields
+            data: { ...row, ...mappedData },
             disabled: true,
             version: prev.version + 1,
           }));
@@ -502,7 +493,7 @@ export function AlloyCrud({ crud, output }) {
 
       setModalState((prev) => ({
         mode: "edit",
-        data: mappedData,
+        data: { ...row, ...mappedData },
         disabled: false,
         version: prev.version + 1,
       }));
@@ -520,7 +511,7 @@ export function AlloyCrud({ crud, output }) {
 
         setModalState((prev) => ({
           mode: "delete",
-          data: mappedData,
+          data: { ...row, ...mappedData },
           disabled: true,
           version: prev.version + 1,
         }));
@@ -546,25 +537,33 @@ export function AlloyCrud({ crud, output }) {
   // MODAL SUBMIT → only here we emit for create/edit/delete via full form
   const handleModalOutput = (modalOut) => {
     if (!modalOut || modalOut.type !== "modal") return;
-
-    if (modalOut.error) {
-      return;
-    }
+    if (modalOut.error) return;
 
     const fields = modalOut.data || {};
+    const baseData = modalState.data || {};
 
     let action;
     if (modalState.mode === "edit") action = "Edit";
     else if (modalState.mode === "delete") action = "Delete";
     else action = crud.modal?.submit?.name || "Create";
 
+    // Merge stored row data + current form values
+    const merged = {
+      ...baseData,
+      ...fields,
+    };
+
+    // Ensure `id` field is always present (Create / Edit / Delete)
+    if (!Object.prototype.hasOwnProperty.call(merged, "id")) {
+      // If backend insists on `id` but modal doesn't have it, send empty string
+      merged.id = baseData.id ?? fields.id ?? "";
+    }
+
     const out = OutputObject.ok({
       id: crud.id,
       type: "crud",
       action,
-      data: {
-        ...fields,
-      },
+      data: merged,
     });
 
     emit(out);
@@ -581,7 +580,13 @@ export function AlloyCrud({ crud, output }) {
     }
 
     const payload =
-      deleteRow && typeof deleteRow === "object" ? { ...deleteRow } : {};
+      deleteRow && typeof deleteRow === "object" ? { ...deleteRow } : null;
+
+    // Avoid emitting an empty Delete event (prevents "blip" with empty data)
+    if (!payload || payload.id === undefined) {
+      setDeleteRow(null);
+      return;
+    }
 
     const out = OutputObject.ok({
       id: crud.id,
@@ -612,7 +617,8 @@ export function AlloyCrud({ crud, output }) {
     if (!pageOut) return;
 
     const base =
-      pageOut instanceof OutputObject && typeof pageOut.toJSON === "function"
+      pageOut instanceof OutputObject &&
+      typeof pageOut.toJSON === "function"
         ? pageOut.toJSON()
         : pageOut;
 
@@ -632,7 +638,6 @@ export function AlloyCrud({ crud, output }) {
 
   const renderDocument = () => {
     if (crud.type === "table") {
-      // Single table
       return (
         <div className="row mt-3">
           <div className={crud.documentClass}>
@@ -645,7 +650,6 @@ export function AlloyCrud({ crud, output }) {
       );
     }
 
-    // Cards
     if (!Array.isArray(crud.document)) return null;
 
     return (
@@ -697,7 +701,7 @@ export function AlloyCrud({ crud, output }) {
         )}
       </div>
 
-      {/* Hidden trigger so Bootstrap data-api always has something to click (form modal) */}
+      {/* Hidden trigger for form modal */}
       <button
         type="button"
         ref={hiddenTriggerRef}
@@ -706,7 +710,7 @@ export function AlloyCrud({ crud, output }) {
         data-bs-target={`#${crud.modal.id}`}
       />
 
-      {/* Hidden trigger for toast modal (confirm delete) */}
+      {/* Hidden trigger for toast modal */}
       {crud.toast && (
         <button
           type="button"
@@ -717,7 +721,7 @@ export function AlloyCrud({ crud, output }) {
         />
       )}
 
-      {/* Modal (closes itself via dismissModalById inside AlloyModal) */}
+      {/* Main form modal */}
       <AlloyModal modal={modalModel} output={handleModalOutput} />
 
       {/* Optional Toast Modal for confirm-delete */}

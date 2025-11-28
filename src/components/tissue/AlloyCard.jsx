@@ -13,7 +13,43 @@ import AlloyIcon from "../cell/AlloyIcon.jsx";
  *  - fields:  required BlockObject[] (at least 1)
  *  - footer:  optional BlockObject
  *  - link:    optional string (wraps ONLY the body in <Link>)
+ *
+ *  link supports:
+ *    - plain:    "/private/admin/category"
+ *    - template: "/private/admin/category/{id}/subcategory"
  * ------------------------------------------------------------------ */
+
+/**
+ * Resolve a link for a given card.
+ *
+ * Supports:
+ *  - plain: "/private/admin/category"
+ *  - template: "/private/admin/category/{id}/subcategory" → {id} = card.id
+ *  - template: "/foo/{slug}" → {slug} = card.slug (if present)
+ *
+ * If template has no `{...}` placeholders, returns it as-is.
+ * If no usable value for a placeholder, replaces with empty string.
+ */
+function resolveCardLink(template, card) {
+  if (!template || typeof template !== "string") return "";
+
+  const trimmed = template.trim();
+  if (!trimmed) return "";
+
+  if (trimmed.includes("{")) {
+    return trimmed.replace(/{(\w+)}/g, (_match, key) => {
+      if (key === "id") {
+        return card?.id != null ? String(card.id) : "";
+      }
+      // Try direct property on card for other keys (e.g. slug)
+      const val = card && card[key] != null ? card[key] : "";
+      return val != null ? String(val) : "";
+    });
+  }
+
+  // No placeholders → just return as-is
+  return trimmed;
+}
 
 export class CardObject {
   /**
@@ -23,7 +59,7 @@ export class CardObject {
     this.id = card.id ?? generateId("card");
     this.className = card.className ?? "card border m-2 shadow";
 
-    // link: clicking body navigates here (optional)
+    // link: clicking body navigates here (optional; may be template)
     this.link = typeof card.link === "string" ? card.link : "";
 
     // header (optional)
@@ -133,9 +169,11 @@ export function AlloyCard({ card }) {
   );
 
   /* ----- body section: optionally wrapped in <Link> ----- */
-  const bodySection = card.link ? (
+  const resolvedLink = resolveCardLink(card.link, card);
+
+  const bodySection = resolvedLink ? (
     <Link
-      to={card.link}
+      to={resolvedLink}
       className="text-decoration-none d-block"
       aria-label={card.body.ariaLabel}
     >
