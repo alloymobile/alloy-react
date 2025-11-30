@@ -121,6 +121,10 @@ export class CrudFormObject {
 // Uses crudForm.form as the BASE TabFormObject, converts it to a plain
 // config, deep clones it, injects row values into tab.inputs[].value,
 // and for delete mode marks fields readOnly/disabled.
+//
+// For "edit" mode we ONLY prefill the *first* tab from the row.
+// Other tabs are left with their base/default values so they can be
+// repopulated later from a full API response.
 function buildTabFormModel(crudForm, mode = "create", row = null) {
   const base =
     crudForm.form instanceof TabFormObject
@@ -142,13 +146,20 @@ function buildTabFormModel(crudForm, mode = "create", row = null) {
 
   const tabs = Array.isArray(clone.tabs) ? clone.tabs : [];
 
-  tabs.forEach((tab) => {
+  tabs.forEach((tab, tabIndex) => {
     if (!Array.isArray(tab.inputs)) return;
     tab.inputs.forEach((input) => {
       const fieldName = input?.name;
       if (!fieldName) return;
 
-      if (row && Object.prototype.hasOwnProperty.call(row, fieldName)) {
+      // For "edit" mode, ONLY prefill the FIRST tab from the row.
+      // For "create" / "delete", keep original behaviour (any tab).
+      const shouldPrefillFromRow =
+        row &&
+        Object.prototype.hasOwnProperty.call(row, fieldName) &&
+        (mode !== "edit" || tabIndex === 0);
+
+      if (shouldPrefillFromRow) {
         input.value = row[fieldName];
       }
 
@@ -303,7 +314,19 @@ export function AlloyCrudForm({ crudForm, output }) {
       const lower = (btnName || "").toLowerCase();
 
       if (lower.includes("edit")) {
+        // Open form in "edit" mode with initial row data
         openForm("edit", row);
+
+        // Emit an initial editInit event so the parent can fetch
+        // the FULL entity and repopulate all tabs.
+        const out = OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: "editInit",
+          data: { ...row },
+        });
+        emit(out);
+
         return;
       }
 
@@ -364,7 +387,19 @@ export function AlloyCrudForm({ crudForm, output }) {
     const lower = (btnName || "").toLowerCase();
 
     if (lower.includes("edit")) {
+      // Open form in "edit" mode with initial row data
       openForm("edit", row);
+
+      // Emit an initial editInit event so the parent can fetch
+      // the FULL entity and repopulate all tabs.
+      const out = OutputObject.ok({
+        id: crudForm.id,
+        type: "crud-form",
+        action: "editInit",
+        data: { ...row },
+      });
+      emit(out);
+
       return;
     }
 
