@@ -14,7 +14,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyInput", to: "/cell/input", icon: "fa-solid fa-arrows-down-to-line" },
           { label: "AlloyInputIcon", to: "/cell/input-icon", icon: "fa-solid fa-box-open" },
           { label: "AlloyInputFloating", to: "/cell/input-floating", icon: "fa-solid fa-calendar-days" },
-          { label: "AlloySearch", to: "/cell/search", icon: "fa-solid fa-calendar-days" },          
+          { label: "AlloySearch", to: "/cell/search", icon: "fa-solid fa-calendar-days" },   
+          { label: "AlloyLoading", to: "/cell/loading", icon: "fa-solid fa-calendar-days" },         
         ]
       : active === "tissue"
       ? [
