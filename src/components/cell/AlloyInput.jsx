@@ -187,7 +187,7 @@ export class InputObject {
  * Props:
  *   - input: InputObject (required)
  *   - output?: (out: OutputObject) => void
- *   - fileUploader?: (file: File, context?: any) => Promise<string>
+ *   - fileUploader?: (fieldName: string, file: File, context?: any) => Promise<string>
  */
 export function AlloyInput({ input, output, fileUploader }) {
   const [val, setVal] = useState(input.value);
@@ -322,7 +322,7 @@ export function AlloyInput({ input, output, fileUploader }) {
     }
   };
 
-  // file-specific change handler (Option 1: upload here, emit URL)
+  // file-specific change handler
   const handleFileChange = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -339,7 +339,8 @@ export function AlloyInput({ input, output, fileUploader }) {
     try {
       setUploading(true);
       setUploadError("");
-      const url = await fileUploader(file, { input });
+      // 🔴 Fixed: pass fieldName + file + context
+      const url = await fileUploader(input.name, file, { input });
       setVal(url);          // store URL as field value
       emit(url, "change");  // propagate URL upward
     } catch (err) {

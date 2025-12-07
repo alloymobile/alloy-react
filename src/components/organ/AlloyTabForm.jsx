@@ -1,5 +1,5 @@
 // src/components/tissue/AlloyTabForm.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import AlloyInput, { InputObject } from "../cell/AlloyInput.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
@@ -89,7 +89,7 @@ function buildInitialValues(tabForm) {
       if (typeof input.value !== "undefined") {
         tabValues[name] = input.value;
       } else if (input.type === "checkbox") {
-        tabValues[name] = false; // single checkbox as boolean (for now)
+        tabValues[name] = false;
       } else {
         tabValues[name] = "";
       }
@@ -162,6 +162,14 @@ export function AlloyTabForm({ tabForm, output, fileUploader }) {
   const currentTabKey = currentTab ? currentTab.key : "";
   const navButtons = tabForm.navButtons || {};
 
+  // 🔑 KEY FIX: when a *new* TabFormObject comes in (e.g. after /lookup),
+  // reset internal values + errors so fields use the new `input.value`.
+  useEffect(() => {
+    setCurrentIndex(tabForm.currentIndex);
+    setValues(buildInitialValues(tabForm));
+    setErrors({});
+  }, [tabForm]);
+
   // value getter
   function getValue(tabKey, name, fallback, type) {
     const tabVals = values[tabKey] || {};
@@ -172,7 +180,6 @@ export function AlloyTabForm({ tabForm, output, fileUploader }) {
     return type === "checkbox" ? false : "";
   }
 
-  // *** KEY FIX ***
   // Consume AlloyInput's OutputObject to update values + field-level errors.
   function handleFieldOutput(tabKey, out) {
     const payload =
@@ -193,7 +200,7 @@ export function AlloyTabForm({ tabForm, output, fileUploader }) {
       return clone;
     });
 
-    // live-sync field errors (optional but nice)
+    // live-sync field errors
     setErrors((prev) => {
       const clone = { ...prev };
       const perTab = { ...(clone[tabKey] || {}) };
