@@ -4,51 +4,45 @@ import { AlloyCrudForm, CrudFormObject } from "../../../src";
 import { OutputObject } from "../../../src/utils/idHelper.js";
 
 /* -------------------------------------------
- * DEFAULT JSON CONFIG (AlloyCrudForm)
- *
- * Layout:
- *  - Top: Search (AlloySearch) + Add vendor button
- *  - List: Vendors table (AlloyTableAction) + Pagination (AlloyPagination)
- *  - Form: Multi-step TabForm (AlloyTabForm) for Create/Edit/Delete
+ * DEFAULT JSON CONFIGS (AlloyCrudForm)
  * ----------------------------------------- */
 
-const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
+// TABLE DEMO CONFIG
+const DEFAULT_TABLE_CRUD_FORM_JSON = JSON.stringify(
   {
-    id: "vendorCrudForm",
-    name: "Vendor",
+    id: "vendorCrudFormTable",
+    name: "Vendor (Table Demo)",
     className: "container-fluid",
 
-    // Wrapper for the whole document area (table or cards)
+    // Wrapper for the whole document area (table)
     documentClass: "col-12",
 
-    // List type → use "table" for this demo
+    // List type → table
     type: "table",
 
-    // NOTE: Search config is the INNER InputObject config.
-    // CrudFormObject wraps it as: new SearchObject({ search: <this> })
+    // Search config (inner InputObject)
     search: {
-      name: "vendorSearch",
-      id: "vendorSearch",
+      name: "vendorSearchTable",
+      id: "vendorSearchTable",
       type: "text",
       layout: "icon",
       icon: { iconClass: "fa-solid fa-magnifying-glass" },
       label: "Search Vendors",
       placeholder: "Search by name, email, city…",
-      className: "form-control"
+      className: "form-control",
     },
 
     // Add button
     add: {
-      id: "addVendorButton",
+      id: "addVendorButtonTable",
       name: "Add vendor",
       icon: { iconClass: "fa-solid fa-plus" },
       className: "btn btn-primary",
       title: "Add Vendor",
-      ariaLabel: "Add Vendor"
+      ariaLabel: "Add Vendor",
     },
 
     // DOCUMENT (table variant)
-    // This object will be hydrated into a TableActionObject
     document: {
       id: "vendorTable",
       className: "table table-striped align-middle",
@@ -62,44 +56,44 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
           vendorName: "Alpha Precast Ltd.",
           email: "info@alphaprecast.com",
           city: "Toronto",
-          status: "Active"
+          status: "Active",
         },
         {
           id: "v002",
           vendorName: "Beta Concrete Inc.",
           email: "contact@betaconcrete.com",
           city: "Hamilton",
-          status: "Pending"
-        }
+          status: "Pending",
+        },
       ],
       actions: {
-        id: "vendorRowActions",
+        id: "vendorRowActionsTable",
         className: "btn-group btn-group-sm",
         name: "Row Actions",
         buttons: [
           {
-            id: "editVendorBtn",
+            id: "editVendorBtnTable",
             name: "Edit",
             icon: { iconClass: "fa-solid fa-pen" },
             className: "btn btn-outline-primary",
             title: "Edit vendor",
-            ariaLabel: "Edit vendor"
+            ariaLabel: "Edit vendor",
           },
           {
-            id: "deleteVendorBtn",
+            id: "deleteVendorBtnTable",
             name: "Delete",
             icon: { iconClass: "fa-solid fa-trash" },
             className: "btn btn-outline-danger",
             title: "Delete vendor",
-            ariaLabel: "Delete vendor"
-          }
-        ]
-      }
+            ariaLabel: "Delete vendor",
+          },
+        ],
+      },
     },
 
-    // PAGINATION (AlloyPagination config)
+    // PAGINATION
     pagination: {
-      id: "vendorCrudPagination",
+      id: "vendorCrudPaginationTable",
       name: "Vendors",
       className: "d-flex justify-content-end align-items-center mt-3",
       listClassName: "pagination justify-content-end mb-0",
@@ -107,25 +101,33 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
       activeClassName: "active",
       disabledClassName: "disabled",
 
-      // Server-side page info (Spring-style)
       totalPages: 10,
       totalElements: 480,
       last: false,
       numberOfElements: 50,
       size: 50,
-      number: 0,   // current page index (0-based)
+      number: 0,
       first: true,
-      empty: false
+      empty: false,
     },
 
-    /* ---------------------------------------
-     * FORM (AlloyTabForm config)
-     *
-     * This is plain TabFormObject config.
-     * CrudFormObject will hydrate it to TabFormObject.
-     * ------------------------------------- */
+    // DELETE TOAST MODAL
+    modalToast: {
+      id: "vendorDeleteToastTable",
+      title: "Delete vendor?",
+      message:
+        "Are you sure you want to delete this vendor? This action cannot be undone.",
+      action: "vendorDeleteConfirmedTable",
+      submit: {
+        name: "Yes, delete",
+        className: "btn btn-danger",
+        icon: { iconClass: "fa-solid fa-trash" },
+      },
+    },
+
+    // FORM (AlloyTabForm config)
     form: {
-      id: "vendorTabForm",
+      id: "vendorTabFormTable",
       name: "Vendor Registration",
       status: "draft",
       currentIndex: 0,
@@ -133,22 +135,22 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
         previous: {
           name: "Previous",
           icon: { iconClass: "fa-solid fa-arrow-left" },
-          className: "btn btn-outline-secondary"
+          className: "btn btn-outline-secondary",
         },
         next: {
           name: "Next",
           icon: { iconClass: "fa-solid fa-arrow-right" },
-          className: "btn btn-primary"
+          className: "btn btn-primary",
         },
         finish: {
           name: "Finish",
           icon: { iconClass: "fa-solid fa-paper-plane" },
-          className: "btn btn-success"
-        }
+          className: "btn btn-success",
+        },
       },
       tabs: [
         {
-          id: "vendorStep1",
+          id: "vendorStep1Table",
           key: "basic",
           order: 1,
           title: "Basic Details",
@@ -162,7 +164,7 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
               layout: "text",
               placeholder: "Enter vendor name",
               required: true,
-              minLength: 3
+              minLength: 3,
             },
             {
               name: "email",
@@ -170,12 +172,12 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
               type: "email",
               layout: "text",
               placeholder: "name@example.com",
-              required: true
-            }
-          ]
+              required: true,
+            },
+          ],
         },
         {
-          id: "vendorStep2",
+          id: "vendorStep2Table",
           key: "location",
           order: 2,
           title: "Location & Status",
@@ -187,7 +189,7 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
               label: "City",
               type: "text",
               layout: "text",
-              placeholder: "Toronto"
+              placeholder: "Toronto",
             },
             {
               name: "status",
@@ -197,15 +199,15 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
               options: [
                 { value: "active", label: "Active" },
                 { value: "pending", label: "Pending" },
-                { value: "inactive", label: "Inactive" }
+                { value: "inactive", label: "Inactive" },
               ],
               value: "active",
-              required: true
-            }
-          ]
+              required: true,
+            },
+          ],
         },
         {
-          id: "vendorStep3",
+          id: "vendorStep3Table",
           key: "review",
           order: 3,
           title: "Review & Confirm",
@@ -217,45 +219,389 @@ const DEFAULT_CRUD_FORM_JSON = JSON.stringify(
               label: "I confirm the above vendor details are accurate.",
               type: "checkbox",
               layout: "checkbox",
-              required: true
-            }
-          ]
-        }
-      ]
-    }
+              required: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  null,
+  2
+);
+
+// CARD DEMO CONFIG – fixed to emit the same row shape as the table
+const DEFAULT_CARD_CRUD_FORM_JSON = JSON.stringify(
+  {
+    id: "vendorCrudFormCard",
+    name: "Vendor (Card Demo)",
+    className: "container-fluid",
+    documentClass: "col-12",
+
+    // List type → card
+    type: "card",
+
+    // Search config
+    search: {
+      name: "vendorSearchCard",
+      id: "vendorSearchCard",
+      type: "text",
+      layout: "icon",
+      icon: { iconClass: "fa-solid fa-magnifying-glass" },
+      label: "Search Vendors",
+      placeholder: "Search by name, email, city…",
+      className: "form-control",
+    },
+
+    // Add button
+    add: {
+      id: "addVendorButtonCard",
+      name: "Add vendor",
+      icon: { iconClass: "fa-solid fa-plus" },
+      className: "btn btn-primary",
+      title: "Add Vendor",
+      ariaLabel: "Add Vendor",
+    },
+
+    // DOCUMENT (card variant) – all visible content in fields[];
+    // payload comes from fields[id] → name mapping.
+    document: [
+      {
+        id: "vendorCard01",
+        className: "card border m-2 shadow",
+        link: "/vendors/v001",
+        body: {
+          id: "vendorCard01Body",
+          className: "card-body",
+          ariaLabel: "Vendor card Alpha Precast Ltd.",
+        },
+        fields: [
+          // Hidden ID field → provides data.id
+          {
+            id: "id",
+            colClass: "col-12",
+            className: "d-none",
+            name: "v001",
+          },
+          {
+            id: "vendorName",
+            colClass: "col-12",
+            className: "fw-semibold",
+            name: "Alpha Precast Ltd.",
+          },
+          {
+            id: "email",
+            colClass: "col-12",
+            className: "text-muted small",
+            name: "info@alphaprecast.com",
+          },
+          {
+            id: "city",
+            colClass: "col-6",
+            className: "text-muted small",
+            name: "Toronto",
+          },
+          {
+            id: "status",
+            colClass: "col-6",
+            className: "text-muted small",
+            name: "Active",
+          },
+        ],
+        footer: {
+          id: "vendorCard01Footer",
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Actions",
+        },
+        type: "AlloyButtonBar",
+        action: {
+          type: "AlloyButtonIcon",
+          className: "nav gap-2",
+          buttonClass: "nav-item",
+          barName: {
+            show: false,
+          },
+          buttons: [
+            {
+              id: "vendor01EditBtn",
+              name: "Edit",
+              className:
+                "btn btn-sm btn-outline-primary d-flex align-items-center gap-1",
+              icon: {
+                iconClass: "fa-solid fa-pen",
+              },
+            },
+            {
+              id: "vendor01DeleteBtn",
+              name: "Delete",
+              className:
+                "btn btn-sm btn-outline-danger d-flex align-items-center gap-1",
+              icon: {
+                iconClass: "fa-solid fa-trash",
+              },
+            },
+          ],
+        },
+      },
+      {
+        id: "vendorCard02",
+        className: "card border m-2 shadow",
+        link: "/vendors/v002",
+        body: {
+          id: "vendorCard02Body",
+          className: "card-body",
+          ariaLabel: "Vendor card Beta Concrete Inc.",
+        },
+        fields: [
+          {
+            id: "id",
+            colClass: "col-12",
+            className: "d-none",
+            name: "v002",
+          },
+          {
+            id: "vendorName",
+            colClass: "col-12",
+            className: "fw-semibold",
+            name: "Beta Concrete Inc.",
+          },
+          {
+            id: "email",
+            colClass: "col-12",
+            className: "text-muted small",
+            name: "contact@betaconcrete.com",
+          },
+          {
+            id: "city",
+            colClass: "col-6",
+            className: "text-muted small",
+            name: "Hamilton",
+          },
+          {
+            id: "status",
+            colClass: "col-6",
+            className: "text-muted small",
+            name: "Pending",
+          },
+        ],
+        footer: {
+          id: "vendorCard02Footer",
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Actions",
+        },
+        type: "AlloyButtonBar",
+        action: {
+          type: "AlloyButtonIcon",
+          className: "nav gap-2",
+          buttonClass: "nav-item",
+          barName: {
+            show: false,
+          },
+          buttons: [
+            {
+              id: "vendor02EditBtn",
+              name: "Edit",
+              className:
+                "btn btn-sm btn-outline-primary d-flex align-items-center gap-1",
+              icon: {
+                iconClass: "fa-solid fa-pen",
+              },
+            },
+            {
+              id: "vendor02DeleteBtn",
+              name: "Delete",
+              className:
+                "btn btn-sm btn-outline-danger d-flex align-items-center gap-1",
+              icon: {
+                iconClass: "fa-solid fa-trash",
+              },
+            },
+          ],
+        },
+      },
+    ],
+
+    pagination: {
+      id: "vendorCrudPaginationCard",
+      name: "Vendors",
+      className: "d-flex justify-content-end align-items-center mt-3",
+      listClassName: "pagination justify-content-end mb-0",
+      itemClassName: "page-item",
+      activeClassName: "active",
+      disabledClassName: "disabled",
+
+      totalPages: 1,
+      totalElements: 2,
+      last: true,
+      numberOfElements: 2,
+      size: 2,
+      number: 0,
+      first: true,
+      empty: false,
+    },
+
+    // DELETE TOAST MODAL (card demo)
+    modalToast: {
+      id: "vendorDeleteToastCard",
+      title: "Delete vendor card?",
+      message:
+        "Are you sure you want to delete this vendor card? This action cannot be undone.",
+      action: "vendorDeleteConfirmedCard",
+      submit: {
+        name: "Yes, delete",
+        className: "btn btn-danger",
+        icon: { iconClass: "fa-solid fa-trash" },
+      },
+    },
+
+    // Same form as table demo for re-use
+    form: {
+      id: "vendorTabFormCard",
+      name: "Vendor Registration",
+      status: "draft",
+      currentIndex: 0,
+      navButtons: {
+        previous: {
+          name: "Previous",
+          icon: { iconClass: "fa-solid fa-arrow-left" },
+          className: "btn btn-outline-secondary",
+        },
+        next: {
+          name: "Next",
+          icon: { iconClass: "fa-solid fa-arrow-right" },
+          className: "btn btn-primary",
+        },
+        finish: {
+          name: "Finish",
+          icon: { iconClass: "fa-solid fa-paper-plane" },
+          className: "btn btn-success",
+        },
+      },
+      tabs: [
+        {
+          id: "vendorStep1Card",
+          key: "basic",
+          order: 1,
+          title: "Basic Details",
+          subtitle: "Who is this vendor?",
+          icon: { iconClass: "fa-solid fa-address-card" },
+          inputs: [
+            {
+              name: "vendorName",
+              label: "Vendor Name",
+              type: "text",
+              layout: "text",
+              placeholder: "Enter vendor name",
+              required: true,
+              minLength: 3,
+            },
+            {
+              name: "email",
+              label: "Email",
+              type: "email",
+              layout: "text",
+              placeholder: "name@example.com",
+              required: true,
+            },
+          ],
+        },
+        {
+          id: "vendorStep2Card",
+          key: "location",
+          order: 2,
+          title: "Location & Status",
+          subtitle: "Where are they based and what is their status?",
+          icon: { iconClass: "fa-solid fa-location-dot" },
+          inputs: [
+            {
+              name: "city",
+              label: "City",
+              type: "text",
+              layout: "text",
+              placeholder: "Toronto",
+            },
+            {
+              name: "status",
+              label: "Status",
+              type: "select",
+              layout: "text",
+              options: [
+                { value: "active", label: "Active" },
+                { value: "pending", label: "Pending" },
+                { value: "inactive", label: "Inactive" },
+              ],
+              value: "active",
+              required: true,
+            },
+          ],
+        },
+        {
+          id: "vendorStep3Card",
+          key: "review",
+          order: 3,
+          title: "Review & Confirm",
+          subtitle: "Check details before submitting.",
+          icon: { iconClass: "fa-solid fa-clipboard-check" },
+          inputs: [
+            {
+              name: "acceptTerms",
+              label: "I confirm the above vendor details are accurate.",
+              type: "checkbox",
+              layout: "checkbox",
+              required: true,
+            },
+          ],
+        },
+      ],
+    },
   },
   null,
   2
 );
 
 /* -------------------------------------------
- * Demo Page
+ * Demo Page with Tabs (Table / Card)
  * ----------------------------------------- */
 
 export default function CrudFormPage() {
-  const [crudJson, setCrudJson] = useState(DEFAULT_CRUD_FORM_JSON);
-  const [crudParseError, setCrudParseError] = useState("");
-  const [crudOutputJson, setCrudOutputJson] = useState(
-    "// Use the search bar, table row buttons, Add vendor, pagination, and the multi-step form to see OutputObject here…"
+  const [activeTab, setActiveTab] = useState("table");
+
+  // TABLE demo state
+  const [crudJsonTable, setCrudJsonTable] = useState(
+    DEFAULT_TABLE_CRUD_FORM_JSON
+  );
+  const [crudParseErrorTable, setCrudParseErrorTable] = useState("");
+  const [crudOutputJsonTable, setCrudOutputJsonTable] = useState(
+    "// Table Demo: interact with search, table row buttons, Add vendor, pagination, and the form to see OutputObject here…"
+  );
+
+  // CARD demo state
+  const [crudJsonCard, setCrudJsonCard] = useState(
+    DEFAULT_CARD_CRUD_FORM_JSON
+  );
+  const [crudParseErrorCard, setCrudParseErrorCard] = useState("");
+  const [crudOutputJsonCard, setCrudOutputJsonCard] = useState(
+    "// Card Demo: interact with search, card buttons, Add vendor, pagination, and the form to see OutputObject here…"
   );
 
   /* -------------------------------------------
-   * Build CrudFormObject from JSON
+   * Build CrudFormObject from JSON (TABLE)
    * ----------------------------------------- */
-  const crudModel = useMemo(() => {
+  const crudModelTable = useMemo(() => {
     try {
-      const raw = JSON.parse(crudJson || "{}");
-
+      const raw = JSON.parse(crudJsonTable || "{}");
       const model = new CrudFormObject(raw);
-      setCrudParseError("");
+      setCrudParseErrorTable("");
       return model;
     } catch (e) {
-      setCrudParseError(String(e.message || e));
+      setCrudParseErrorTable(String(e.message || e));
 
       // Safe fallback
       return new CrudFormObject({
-        id: "fallbackCrudForm",
-        name: "Invalid JSON (CrudForm)",
+        id: "fallbackCrudFormTable",
+        name: "Invalid JSON (Table CrudForm)",
         className: "container-fluid",
         type: "table",
         documentClass: "col-12",
@@ -264,23 +610,23 @@ export default function CrudFormPage() {
           label: "Search (JSON invalid)",
           type: "text",
           layout: "text",
-          placeholder: "Fix JSON on the left to preview real CRUD…"
+          placeholder: "Fix JSON on the left to preview real table CRUD…",
         },
         add: {
           name: "Add (disabled)",
           icon: { iconClass: "fa-solid fa-plus" },
           className: "btn btn-secondary",
-          disabled: true
+          disabled: true,
         },
         document: {
           name: "Table",
-          rows: []
+          rows: [],
         },
         form: {
-          id: "fallbackForm",
+          id: "fallbackFormTable",
           name: "Invalid Form",
           status: "draft",
-          tabs: []
+          tabs: [],
         },
         pagination: {
           totalPages: 0,
@@ -289,43 +635,120 @@ export default function CrudFormPage() {
           number: 0,
           first: true,
           last: true,
-          empty: true
-        }
+          empty: true,
+        },
       });
     }
-  }, [crudJson]);
+  }, [crudJsonTable]);
 
   /* -------------------------------------------
-   * Global output handler
+   * Build CrudFormObject from JSON (CARD)
+   * ----------------------------------------- */
+  const crudModelCard = useMemo(() => {
+    try {
+      const raw = JSON.parse(crudJsonCard || "{}");
+      const model = new CrudFormObject(raw);
+      setCrudParseErrorCard("");
+      return model;
+    } catch (e) {
+      setCrudParseErrorCard(String(e.message || e));
+
+      return new CrudFormObject({
+        id: "fallbackCrudFormCard",
+        name: "Invalid JSON (Card CrudForm)",
+        className: "container-fluid",
+        type: "card",
+        documentClass: "col-12",
+        search: {
+          name: "searchCard",
+          label: "Search (JSON invalid)",
+          type: "text",
+          layout: "text",
+          placeholder: "Fix JSON on the left to preview card CRUD…",
+        },
+        add: {
+          name: "Add (disabled)",
+          icon: { iconClass: "fa-solid fa-plus" },
+          className: "btn btn-secondary",
+          disabled: true,
+        },
+        document: [],
+        form: {
+          id: "fallbackFormCard",
+          name: "Invalid Form",
+          status: "draft",
+          tabs: [],
+        },
+        pagination: {
+          totalPages: 0,
+          totalElements: 0,
+          size: 0,
+          number: 0,
+          first: true,
+          last: true,
+          empty: true,
+        },
+      });
+    }
+  }, [crudJsonCard]);
+
+  /* -------------------------------------------
+   * Global output handlers
    * ----------------------------------------- */
 
-  function handleCrudOutput(out) {
+  function handleCrudOutputTable(out) {
     const payload =
       out instanceof OutputObject && typeof out.toJSON === "function"
         ? out.toJSON()
         : out;
 
-    setCrudOutputJson(JSON.stringify(payload, null, 2));
+    setCrudOutputJsonTable(JSON.stringify(payload, null, 2));
+  }
+
+  function handleCrudOutputCard(out) {
+    const payload =
+      out instanceof OutputObject && typeof out.toJSON === "function"
+        ? out.toJSON()
+        : out;
+
+    setCrudOutputJsonCard(JSON.stringify(payload, null, 2));
   }
 
   /* -------------------------------------------
-   * Helpers for reset / format / clear
+   * Helpers for reset / format
    * ----------------------------------------- */
 
-  function resetCrud() {
-    setCrudJson(DEFAULT_CRUD_FORM_JSON);
-    setCrudOutputJson(
-      "// Use the search bar, table row buttons, Add vendor, pagination, and the multi-step form to see OutputObject here…"
+  function resetCrudTable() {
+    setCrudJsonTable(DEFAULT_TABLE_CRUD_FORM_JSON);
+    setCrudOutputJsonTable(
+      "// Table Demo: interact with search, table row buttons, Add vendor, pagination, and the form to see OutputObject here…"
     );
-    setCrudParseError("");
+    setCrudParseErrorTable("");
   }
 
-  function formatCrud() {
+  function formatCrudTable() {
     try {
-      const parsed = JSON.parse(crudJson);
-      setCrudJson(JSON.stringify(parsed, null, 2));
+      const parsed = JSON.parse(crudJsonTable);
+      setCrudJsonTable(JSON.stringify(parsed, null, 2));
     } catch {
       // ignore; parse error already shown
+    }
+  }
+
+  function resetCrudCard() {
+    setCrudJsonCard(DEFAULT_CARD_CRUD_FORM_JSON);
+    setCrudOutputJsonCard(
+      "// Card Demo: interact with search, card buttons, Add vendor, pagination, and the form to see OutputObject here…"
+    );
+    setCrudParseErrorCard("");
+  }
+
+  function formatCrudCard() {
+    try {
+      const parsed = JSON.parse(crudJsonCard);
+      setCrudJsonCard(JSON.stringify(parsed, null, 2));
+    } catch {
+      // ignore
     }
   }
 
@@ -335,7 +758,7 @@ export default function CrudFormPage() {
 
   return (
     <div className="container py-3">
-      <h3 className="mb-3 text-center">AlloyCrudForm</h3>
+      <h3 className="mb-3 text-center">AlloyCrudForm (Table & Card Demos)</h3>
 
       {/* Usage snippet */}
       <div className="row mb-3">
@@ -348,210 +771,271 @@ export default function CrudFormPage() {
         </div>
       </div>
 
-      {/* Live preview */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <AlloyCrudForm crudForm={crudModel} output={handleCrudOutput} />
+      {/* Nav tabs */}
+      <ul className="nav nav-tabs mb-3" role="tablist">
+        <li className="nav-item" role="presentation">
+          <button
+            className={`nav-link ${activeTab === "table" ? "active" : ""}`}
+            type="button"
+            role="tab"
+            onClick={() => setActiveTab("table")}
+          >
+            Table Demo
+          </button>
+        </li>
+        <li className="nav-item" role="presentation">
+          <button
+            className={`nav-link ${activeTab === "card" ? "active" : ""}`}
+            type="button"
+            role="tab"
+            onClick={() => setActiveTab("card")}
+          >
+            Card Demo
+          </button>
+        </li>
+      </ul>
 
-          <div className="small text-secondary mt-2 text-center">
-            <strong>Search bar</strong> uses <code>AlloySearch</code> (wrapped
-            by <code>CrudFormObject</code>). It emits{" "}
-            <code>type="crud-form"</code> with <code>action="search"</code> and{" "}
-            <code>data</code> like{" "}
-            <code>{`{ "vendorSearch": "alpha" }`}</code> after debounced typing.
-            <br />
-            <strong>Sort</strong> (table header) emits{" "}
-            <code>action="Sort"</code> with{" "}
-            <code>data</code> like <code>{`{ "email": "asc" }`}</code>.
-            <br />
-            <strong>Pagination</strong> uses <code>AlloyPagination</code>.
-            Clicking First / Previous / a page number / Next / Last emits{" "}
-            <code>type="crud-form"</code>, <code>action="page"</code> with{" "}
-            <code>data</code> containing <code>nav</code>,{" "}
-            <code>pageNumber</code>, <code>size</code>,{" "}
-            <code>totalPages</code> and <code>totalElements</code>.
-            <br />
-            <strong>Add vendor</strong> switches to the multi-step{" "}
-            <code>AlloyTabForm</code> with blank values (Create mode). On{" "}
-            <code>Finish</code>, you get{" "}
-            <code>type="crud-form"</code>, <code>action="Create"</code> and
-            flat form values in <code>data</code>.
-            <br />
-            <strong>Edit</strong> / <strong>Delete</strong> on a row open the
-            same TabForm prefilled from that row. In Delete mode fields are
-            read-only. On <code>Finish</code>, you get{" "}
-            <code>action="Edit"</code> or <code>action="Delete"</code> with the
-            flattened payload.
-          </div>
-        </div>
-      </div>
-
-      {/* JSON in / JSON out */}
-      <div className="row g-3 align-items-stretch">
-        {/* Left: Input JSON */}
-        <div className="col-12 col-lg-6">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">CrudForm Input JSON (editable)</span>
-            <div className="d-flex gap-2">
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={resetCrud}
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={formatCrud}
-                title="Format JSON"
-              >
-                <i
-                  className="fa-solid fa-wand-magic-sparkles me-2"
-                  aria-hidden="true"
+      {/* TAB CONTENT */}
+      <div className="tab-content">
+        {/* TABLE TAB */}
+        {activeTab === "table" && (
+          <div className="tab-pane fade show active" role="tabpanel">
+            {/* Live preview */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <AlloyCrudForm
+                  crudForm={crudModelTable}
+                  output={handleCrudOutputTable}
                 />
-                Format
-              </button>
+
+                <div className="small text-secondary mt-2 text-center">
+                  <strong>Delete</strong> in this demo uses{" "}
+                  <code>modalToast</code>: clicking Delete opens a confirmation
+                  toast modal, and confirming emits{" "}
+                  <code>action="Delete"</code> with the underlying row data.
+                </div>
+              </div>
+            </div>
+
+            {/* JSON in / JSON out */}
+            <div className="row g-3 align-items-stretch">
+              {/* Left: Input JSON */}
+              <div className="col-12 col-lg-6">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-semibold">
+                    Table CrudForm Input JSON (editable)
+                  </span>
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={resetCrudTable}
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={formatCrudTable}
+                      title="Format JSON"
+                    >
+                      <i
+                        className="fa-solid fa-wand-magic-sparkles me-2"
+                        aria-hidden="true"
+                      />
+                      Format
+                    </button>
+                  </div>
+                </div>
+
+                <textarea
+                  className={`form-control font-monospace ${
+                    crudParseErrorTable ? "is-invalid" : ""
+                  }`}
+                  rows={22}
+                  value={crudJsonTable}
+                  onChange={(e) => setCrudJsonTable(e.target.value)}
+                  spellCheck={false}
+                />
+                {crudParseErrorTable && (
+                  <div className="invalid-feedback d-block mt-1">
+                    {crudParseErrorTable}
+                  </div>
+                )}
+
+                <div className="form-text">
+                  Required pieces: <code>type="table"</code>,{" "}
+                  <code>document</code> with <code>rows[]</code> and row
+                  actions, <code>form.tabs[].inputs[]</code> matching row field
+                  names, optional <code>pagination</code>, and optional{" "}
+                  <code>modalToast</code> for delete confirmation.
+                </div>
+              </div>
+
+              {/* Right: Output JSON */}
+              <div className="col-12 col-lg-6">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-semibold">
+                    Table Output (from <code>output</code> callback)
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => setCrudOutputJsonTable("// cleared")}
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                <textarea
+                  className="form-control font-monospace"
+                  rows={22}
+                  value={crudOutputJsonTable}
+                  onChange={(e) => setCrudOutputJsonTable(e.target.value)}
+                  spellCheck={false}
+                />
+
+                <div className="form-text">
+                  Search, Sort, Pagination, Create, Edit, and Delete events all
+                  come out as <code>type="crud-form"</code> with appropriate{" "}
+                  <code>action</code> and <code>data</code>. Delete confirm from
+                  the toast modal also emits <code>action="Delete"</code> with
+                  the row data.
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          <textarea
-            className={`form-control font-monospace ${
-              crudParseError ? "is-invalid" : ""
-            }`}
-            rows={22}
-            value={crudJson}
-            onChange={(e) => setCrudJson(e.target.value)}
-            spellCheck={false}
-          />
-          {crudParseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {crudParseError}
+        {/* CARD TAB */}
+        {activeTab === "card" && (
+          <div className="tab-pane fade show active" role="tabpanel">
+            {/* Live preview */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <AlloyCrudForm
+                  crudForm={crudModelCard}
+                  output={handleCrudOutputCard}
+                />
+
+                <div className="small text-secondary mt-2 text-center">
+                  Card demo mirrors the table behaviour:{" "}
+                  <strong>Edit</strong> emits{" "}
+                  <code>action="editInit"</code> with{" "}
+                  <code>{`{ id, vendorName, email, city, status }`}</code> and
+                  opens the form with the first tab prefilled;{" "}
+                  <strong>Delete</strong> uses <code>modalToast</code> and, on
+                  confirm, emits <code>action="Delete"</code> with the same row
+                  payload.
+                </div>
+              </div>
             </div>
-          )}
 
-          <div className="form-text">
-            Required pieces: <code>type</code> (<code>"table"</code> or{" "}
-            <code>"card"</code>), <code>document</code> (table object or card
-            array), <code>search.name</code>, <code>add.name</code>, vendor
-            fields in both <code>document.rows[]</code> and{" "}
-            <code>form.tabs[].inputs[]</code> so Edit/Delete can prefill
-            correctly. <br />
-            Optional: <code>pagination</code> to enable page events.
-          </div>
-        </div>
+            {/* JSON in / JSON out */}
+            <div className="row g-3 align-items-stretch">
+              {/* Left: Input JSON */}
+              <div className="col-12 col-lg-6">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-semibold">
+                    Card CrudForm Input JSON (editable)
+                  </span>
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={resetCrudCard}
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={formatCrudCard}
+                      title="Format JSON"
+                    >
+                      <i
+                        className="fa-solid fa-wand-magic-sparkles me-2"
+                        aria-hidden="true"
+                      />
+                      Format
+                    </button>
+                  </div>
+                </div>
 
-        {/* Right: Output JSON */}
-        <div className="col-12 col-lg-6">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">
-              Output (from <code>output</code> callback)
-            </span>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-danger"
-              onClick={() => setCrudOutputJson("// cleared")}
-            >
-              Clear
-            </button>
-          </div>
+                <textarea
+                  className={`form-control font-monospace ${
+                    crudParseErrorCard ? "is-invalid" : ""
+                  }`}
+                  rows={22}
+                  value={crudJsonCard}
+                  onChange={(e) => setCrudJsonCard(e.target.value)}
+                  spellCheck={false}
+                />
+                {crudParseErrorCard && (
+                  <div className="invalid-feedback d-block mt-1">
+                    {crudParseErrorCard}
+                  </div>
+                )}
 
-          <textarea
-            className="form-control font-monospace"
-            rows={22}
-            value={crudOutputJson}
-            onChange={(e) => setCrudOutputJson(e.target.value)}
-            spellCheck={false}
-          />
+                <div className="form-text">
+                  For card mode use <code>type="card"</code> and{" "}
+                  <code>document</code> as an array of card configs using the{" "}
+                  <code>CardActionObject</code> schema. All visible content
+                  lives in <code>fields[]</code> (each with its own{" "}
+                  <code>colClass</code> for Bootstrap grid). The field{" "}
+                  <code>id</code>s (<code>id</code>,{" "}
+                  <code>vendorName</code>, <code>email</code>,{" "}
+                  <code>city</code>, <code>status</code>) directly become keys
+                  in the emitted <code>data</code> object.
+                </div>
+              </div>
 
-          <div className="form-text">
-            Example (search event):
-            <pre className="mb-0 mt-1 small">
+              {/* Right: Output JSON */}
+              <div className="col-12 col-lg-6">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-semibold">
+                    Card Output (from <code>output</code> callback)
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => setCrudOutputJsonCard("// cleared")}
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                <textarea
+                  className="form-control font-monospace"
+                  rows={22}
+                  value={crudOutputJsonCard}
+                  onChange={(e) => setCrudOutputJsonCard(e.target.value)}
+                  spellCheck={false}
+                />
+
+                <div className="form-text">
+                  After this fix, an Edit on the first card should look like:
+                  <pre className="mb-0 mt-1 small">
 {`{
-  "id": "vendorCrudForm",
+  "id": "vendorCrudFormCard",
   "type": "crud-form",
-  "action": "search",
+  "action": "editInit",
   "error": false,
   "data": {
-    "vendorSearch": "alpha"
-  }
-}`}
-            </pre>
-
-            Example (pagination: click Next from page 1 of 10):
-            <pre className="mb-0 mt-1 small">
-{`{
-  "id": "vendorCrudForm",
-  "type": "crud-form",
-  "action": "page",
-  "error": false,
-  "data": {
-    "nav": "next",
-    "pageNumber": 1,
-    "size": 50,
-    "totalPages": 10,
-    "totalElements": 480,
-    "first": false,
-    "last": false,
-    "button": {
-      "...": "original AlloyButtonIcon OutputObject"
-    }
-  }
-}`}
-            </pre>
-
-            Example (Add → Finish, after successful submit):
-            <pre className="mb-0 mt-1 small">
-{`{
-  "id": "vendorCrudForm",
-  "type": "crud-form",
-  "action": "Create",
-  "error": false,
-  "data": {
-    "vendorName": "New Vendor Inc.",
-    "email": "new@vendor.com",
+    "id": "v001",
+    "vendorName": "Alpha Precast Ltd.",
+    "email": "info@alphaprecast.com",
     "city": "Toronto",
-    "status": "active",
-    "acceptTerms": true
+    "status": "Active"
   }
 }`}
-            </pre>
-
-            Example (Edit row → Finish):
-            <pre className="mb-0 mt-1 small">
-{`{
-  "id": "vendorCrudForm",
-  "type": "crud-form",
-  "action": "Edit",
-  "error": false,
-  "data": {
-    "vendorName": "Alpha Precast Ltd. (Updated)",
-    "email": "updated@alphaprecast.com",
-    "city": "Toronto",
-    "status": "active",
-    "acceptTerms": true
-  }
-}`}
-            </pre>
-
-            Example (Delete row → Finish):
-            <pre className="mb-0 mt-1 small">
-{`{
-  "id": "vendorCrudForm",
-  "type": "crud-form",
-  "action": "Delete",
-  "error": false,
-  "data": {
-    "vendorName": "Beta Concrete Inc.",
-    "email": "contact@betaconcrete.com",
-    "city": "Hamilton",
-    "status": "pending",
-    "acceptTerms": true
-  }
-}`}
-            </pre>
+                  </pre>
+                  exactly mirroring the table behaviour.
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

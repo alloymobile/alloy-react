@@ -1,6 +1,6 @@
 // src/components/cell/AlloyLoading.jsx
 
-import React, { useRef, forwardRef, useImperativeHandle } from "react";
+import React from "react";
 
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
 import { generateId } from "../../utils/idHelper.js";
@@ -81,32 +81,20 @@ export class LoadingObject {
  * If `visible === false`, component returns null.
  * ----------------------------------------- */
 
-export const AlloyLoading = forwardRef(function AlloyLoading({ loading }, ref) {
+export function AlloyLoading({ loading }) {
   if (!loading || !(loading instanceof LoadingObject)) {
-    throw new Error("AlloyLoading requires `loading` (LoadingObject instance).");
+    throw new Error(
+      "AlloyLoading requires `loading` (LoadingObject instance)."
+    );
   }
 
   if (!loading.visible) {
     return null;
   }
 
-  const elRef = useRef(null);
-  const autoId = useRef(loading.id);
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      el: elRef.current,
-      model: loading,
-      focus: () => elRef.current?.focus(),
-    }),
-    [loading]
-  );
-
   return (
     <div
-      id={autoId.current}
-      ref={elRef}
+      id={loading.id}
       className={loading.overlayClass}
       aria-busy="true"
       aria-live="polite"
@@ -116,11 +104,13 @@ export const AlloyLoading = forwardRef(function AlloyLoading({ loading }, ref) {
       <div className={loading.contentClass}>
         <AlloyIcon icon={loading.icon} />
         {loading.message && (
-          <div className={loading.messageClass}>{loading.message}</div>
+          <div className={loading.messageClass}>
+            {loading.message}
+          </div>
         )}
       </div>
     </div>
   );
-});
+}
 
 export default AlloyLoading;

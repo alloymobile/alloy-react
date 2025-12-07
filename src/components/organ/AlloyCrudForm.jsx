@@ -1,5 +1,5 @@
 // src/lib/components/tissue/AlloyCrudForm.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { OutputObject, generateId } from "../../utils/idHelper.js";
 
@@ -25,6 +25,10 @@ import AlloyTabForm, {
   TabFormObject,
 } from "../../components/organ/AlloyTabForm.jsx";
 
+import AlloyModalToast, {
+  ModalToastObject,
+} from "../tissue/AlloyModalToast.jsx";
+
 /* -------------------------------------------------------
  * CrudFormObject
  * ----------------------------------------------------- */
@@ -41,6 +45,7 @@ export class CrudFormObject {
       documentClass = "col-12", // wrapper for the whole document area
       form,
       pagination,
+      modalToast, // optional delete toast modal config
       ...rest
     } = cfg || {};
 
@@ -105,6 +110,14 @@ export class CrudFormObject {
         ? pagination
         : pagination
         ? new PaginationObject(pagination)
+        : null;
+
+    // Optional delete toast modal → ModalToastObject
+    this.modalToast =
+      modalToast instanceof ModalToastObject
+        ? modalToast
+        : modalToast
+        ? new ModalToastObject(modalToast)
         : null;
 
     Object.assign(this, rest);
@@ -189,6 +202,33 @@ function flattenValues(valuesByTab = {}) {
   return flat;
 }
 
+// Helper: open a Bootstrap modal by id, aligned with AlloyCrud
+function openModalById(id) {
+  if (!id) return;
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+
+  const modalEl = document.getElementById(id);
+  if (!modalEl) return;
+
+  const win = window;
+  const globalBootstrap =
+    win.bootstrap || win.Bootstrap || win["bootstrap"] || null;
+
+  if (globalBootstrap && typeof globalBootstrap.Modal === "function") {
+    const modalInstance = globalBootstrap.Modal.getOrCreateInstance(modalEl);
+    modalInstance.show();
+    return;
+  }
+
+  // Fallback: try clicking a data-api trigger if it exists
+  const trigger = document.querySelector(
+    `[data-bs-toggle="modal"][data-bs-target="#${id}"]`
+  );
+  if (trigger && typeof trigger.click === "function") {
+    trigger.click();
+  }
+}
+
 /* -------------------------------------------------------
  * AlloyCrudForm
  * ----------------------------------------------------- */
@@ -221,13 +261,31 @@ export function AlloyCrudForm({ crudForm, output }) {
   const isTable = crudForm.type === "table";
   const isCard = crudForm.type === "card";
 
+  // Hidden trigger for toast modal (confirm delete), aligned with AlloyCrud
+  const hiddenToastTriggerRef = useRef(null);
+
+  const doOpenToastModal = () => {
+    if (
+      hiddenToastTriggerRef.current &&
+      typeof hiddenToastTriggerRef.current.click === "function"
+    ) {
+      hiddenToastTriggerRef.current.click();
+      return;
+    }
+
+    if (crudForm.modalToast?.id) {
+      openModalById(crudForm.modalToast.id);
+    }
+  };
+
   /* ----------------- Search handlers ----------------- */
 
   const handleSearchOutput = (searchOut) => {
     if (!searchOut) return;
 
     const base =
-      searchOut instanceof OutputObject && typeof searchOut.toJSON === "function"
+      searchOut instanceof OutputObject &&
+      typeof searchOut.toJSON === "function"
         ? searchOut.toJSON()
         : searchOut;
 
@@ -251,7 +309,8 @@ export function AlloyCrudForm({ crudForm, output }) {
     if (!pageOut) return;
 
     const base =
-      pageOut instanceof OutputObject && typeof pageOut.toJSON === "function"
+      pageOut instanceof OutputObject &&
+      typeof pageOut.toJSON === "function"
         ? pageOut.toJSON()
         : pageOut;
 
@@ -331,7 +390,16 @@ export function AlloyCrudForm({ crudForm, output }) {
       }
 
       if (lower.includes("delete")) {
-        openForm("delete", row);
+        // Delete should use toast modal (if configured) instead of TabForm
+        setActiveRow(row || null);
+
+        if (crudForm.modalToast) {
+          doOpenToastModal();
+        } else {
+          // Fallback: keep old behaviour if no modalToast configured
+          openForm("delete", row);
+        }
+
         return;
       }
 
@@ -404,7 +472,14 @@ export function AlloyCrudForm({ crudForm, output }) {
     }
 
     if (lower.includes("delete")) {
-      openForm("delete", row);
+      setActiveRow(row || null);
+
+      if (crudForm.modalToast) {
+        doOpenToastModal();
+      } else {
+        openForm("delete", row);
+      }
+
       return;
     }
 
@@ -464,6 +539,37 @@ export function AlloyCrudForm({ crudForm, output }) {
 
     emit(out);
     backToTable();
+  };
+
+  /* ----------------- Modal toast output ----------------- */
+
+  const handleModalToastOutput = (toastOut) => {
+    if (!toastOut) return;
+
+    const base =
+      toastOut instanceof OutputObject &&
+      typeof toastOut.toJSON === "function"
+        ? toastOut.toJSON()
+        : toastOut;
+
+    if (base.type !== "modal-toast" || base.action !== "click") {
+      return;
+    }
+
+    // User confirmed delete in the toast modal
+    if (activeRow) {
+      const out = OutputObject.ok({
+        id: crudForm.id,
+        type: "crud-form",
+        action: "Delete",
+        data: {
+          ...activeRow,
+        },
+      });
+
+      emit(out);
+      setActiveRow(null);
+    }
   };
 
   /* ----------------- Render list view (table or cards) ----------------- */
@@ -610,6 +716,25 @@ export function AlloyCrudForm({ crudForm, output }) {
           {/* Tab-based form view */}
           <AlloyTabForm tabForm={tabFormModel} output={handleFormOutput} />
         </>
+      )}
+
+      {/* Hidden trigger for toast modal, aligned with AlloyCrud */}
+      {crudForm.modalToast && (
+        <button
+          type="button"
+          ref={hiddenToastTriggerRef}
+          className="d-none"
+          data-bs-toggle="modal"
+          data-bs-target={`#${crudForm.modalToast.id}`}
+        />
+      )}
+
+      {/* Delete confirmation toast modal (optional) */}
+      {crudForm.modalToast && (
+        <AlloyModalToast
+          modalToast={crudForm.modalToast}
+          output={handleModalToastOutput}
+        />
       )}
     </div>
   );
