@@ -206,7 +206,7 @@ function validateField(fieldDef, value, allValues) {
  *         }
  *       }
  * ------------------------------------------------------------------ */
-export function AlloyForm({ form, output }) {
+export function AlloyForm({ form, output, fileUploader }) {
   //
   // 1. Hydrate prop -> FormObject with consistent IDs.
   //
@@ -400,6 +400,7 @@ export function AlloyForm({ form, output }) {
               key={fld.id}
               input={fld}
               output={handleFieldOutput}
+              fileUploader={fileUploader}
             />
           ))}
 

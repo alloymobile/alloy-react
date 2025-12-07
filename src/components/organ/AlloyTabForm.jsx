@@ -147,7 +147,7 @@ function validateTab(tab, tabValues) {
  * AlloyTabForm
  * ----------------------------------------------------- */
 
-export function AlloyTabForm({ tabForm, output }) {
+export function AlloyTabForm({ tabForm, output, fileUploader }) {
   if (!tabForm || !(tabForm instanceof TabFormObject)) {
     throw new Error("AlloyTabForm requires `tabForm` (TabFormObject instance).");
   }
@@ -404,6 +404,7 @@ export function AlloyTabForm({ tabForm, output }) {
                   key={`inp-${iIdx}`}
                   input={model}
                   output={(out) => handleFieldOutput(currentTab.key, out)}
+                  fileUploader={fileUploader}
                 />
               );
             })}

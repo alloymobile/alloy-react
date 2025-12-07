@@ -187,7 +187,7 @@ function openModalById(id) {
  *   data: { ...payload }
  * }
  * ----------------------------------------------------- */
-export function AlloyCrud({ crud, output }) {
+export function AlloyCrud({ crud, output, fileUploader }) {
   if (!crud || !(crud instanceof CrudObject)) {
     throw new Error("AlloyCrud requires `crud` (CrudObject instance).");
   }
@@ -722,7 +722,11 @@ export function AlloyCrud({ crud, output }) {
       )}
 
       {/* Main form modal */}
-      <AlloyModal modal={modalModel} output={handleModalOutput} />
+      <AlloyModal
+        modal={modalModel}
+        output={handleModalOutput}
+        fileUploader={fileUploader}
+      />
 
       {/* Optional Toast Modal for confirm-delete */}
       {crud.toast && (

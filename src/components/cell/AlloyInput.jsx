@@ -24,11 +24,13 @@ import { generateId, OutputObject } from "../../utils/idHelper.js";
  *                                              "textarea",
  *                                              "select",
  *                                              "radio",
- *                                              "checkbox"
+ *                                              "checkbox",
+ *                                              "file"
  *
  * @property {string} [label]                - Human label for the field or group
- * @property {string|string[]} [value]       - Initial value.
+ * @property {string|string[]|File} [value]  - Initial value.
  *                                            For checkbox group: an array of checked values.
+ *                                            For file: URL or File.
  *                                            Defaults to "" (or [] for checkbox).
  *
  * @property {string} [layout]               - Visual layout style:
@@ -67,6 +69,9 @@ import { generateId, OutputObject } from "../../utils/idHelper.js";
  *
  * @property {string} [iconGroupClass]       - Extra classes for the icon span in
  *                                            "icon" layout. Defaults to "input-group-text".
+ *
+ * @property {string} [accept]               - For file input: accept attribute
+ * @property {boolean} [multiple]            - For file input: multiple files (future use)
  *
  * @property {any} [rest]                    - Any other props the user wants to stash.
  */
@@ -182,15 +187,20 @@ export class InputObject {
  * Props:
  *   - input: InputObject (required)
  *   - output?: (out: OutputObject) => void
+ *   - fileUploader?: (file: File, context?: any) => Promise<string>
  */
-export function AlloyInput({ input, output }) {
+export function AlloyInput({ input, output, fileUploader }) {
   const [val, setVal] = useState(input.value);
   const [touched, setTouched] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   // Resync when validation / value props change
   useEffect(() => {
     setVal(input.value);
     setTouched(false);
+    setUploading(false);
+    setUploadError("");
   }, [
     input.value,
     input.required,
@@ -268,14 +278,15 @@ export function AlloyInput({ input, output }) {
     return errs;
   };
 
-  const currentErrors = validate(val);
-  const showError = touched && currentErrors.length > 0;
+  const baseErrors = validate(val);
+  const combinedErrors = uploadError ? [...baseErrors, uploadError] : baseErrors;
+  const showError = touched && combinedErrors.length > 0;
 
   const errorBlock =
     showError &&
-    currentErrors.length > 0 && (
+    combinedErrors.length > 0 && (
       <div className="mt-2" aria-live="polite">
-        {currentErrors.map((msg, i) => (
+        {combinedErrors.map((msg, i) => (
           <div
             key={i}
             className="alert alert-danger py-2 mb-2"
@@ -290,6 +301,9 @@ export function AlloyInput({ input, output }) {
   // Emit via OutputObject (used by demo AND AlloyForm)
   const emit = (nextVal, action = "change") => {
     const errs = validate(nextVal);
+    if (uploadError) {
+      errs.push(uploadError);
+    }
     const hasError = errs.length > 0;
 
     if (typeof output === "function") {
@@ -308,8 +322,44 @@ export function AlloyInput({ input, output }) {
     }
   };
 
+  // file-specific change handler (Option 1: upload here, emit URL)
+  const handleFileChange = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+
+    if (!fileUploader) {
+      // fallback: pass File directly if no uploader (demo / tests)
+      setVal(file);
+      setUploadError("");
+      emit(file, "change");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadError("");
+      const url = await fileUploader(file, { input });
+      setVal(url);          // store URL as field value
+      emit(url, "change");  // propagate URL upward
+    } catch (err) {
+      console.error("File upload failed", err);
+      const msg =
+        (err && err.message) || "File upload failed. Please try again.";
+      setUploadError(msg);
+      // emit with previous val so form state doesn't break
+      emit(val, "change");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // shared change handler
   const handleChange = (e) => {
+    if (input.type === "file") {
+      return handleFileChange(e);
+    }
+
     const v = e.target.value;
 
     if (input.type === "checkbox") {
@@ -434,6 +484,25 @@ export function AlloyInput({ input, output }) {
     </div>
   );
 
+  const renderFile = () => (
+    <div>
+      <input
+        {...commonControlProps}
+        type="file"
+        onChange={handleFileChange}
+        className={withInvalid(input.className)}
+        accept={input.accept}
+        multiple={!!input.multiple}
+      />
+      {uploading && (
+        <div className="form-text mt-1">Uploading...</div>
+      )}
+      {!uploading && val && typeof val === "string" && (
+        <div className="form-text mt-1 text-break">{val}</div>
+      )}
+    </div>
+  );
+
   const renderTextLike = () => (
     <input
       {...commonControlProps}
@@ -454,6 +523,8 @@ export function AlloyInput({ input, output }) {
         return renderRadioGroup();
       case "checkbox":
         return renderCheckboxGroup();
+      case "file":
+        return renderFile();
       default:
         return renderTextLike();
     }
@@ -492,17 +563,16 @@ export function AlloyInput({ input, output }) {
             <AlloyIcon icon={input.icon} />
           </span>
 
-          {["radio", "checkbox"].includes(input.type) ? (
-            renderControl()
-          ) : (
-            <input
-              {...commonControlProps}
-              type={input.type}
-              value={val}
-              onChange={handleChange}
-              className={withInvalid(input.className)}
-            />
-          )}
+          {["radio", "checkbox"].includes(input.type)
+            ? renderControl()
+            : // For text-like, select, file etc, render just the bare control
+              input.type === "textarea"
+            ? renderTextarea()
+            : input.type === "select"
+            ? renderSelect()
+            : input.type === "file"
+            ? renderFile()
+            : renderTextLike()}
         </div>
 
         {!(input.type === "radio" || input.type === "checkbox") &&
@@ -514,9 +584,15 @@ export function AlloyInput({ input, output }) {
   // layout: "text" (default)
   return (
     <div className="mb-3">
-      {["text", "textarea", "number", "email", "password", "date"].includes(
-        input.type
-      ) &&
+      {[
+        "text",
+        "textarea",
+        "number",
+        "email",
+        "password",
+        "date",
+        "file"
+      ].includes(input.type) &&
         input.label && (
           <label htmlFor={input.id} className="form-label">
             {input.label}

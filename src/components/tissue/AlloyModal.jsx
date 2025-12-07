@@ -121,7 +121,7 @@ function dismissModalById(id) {
 /* -------------------------------------------
  * AlloyModal
  * ----------------------------------------- */
-export function AlloyModal({ modal, output }) {
+export function AlloyModal({ modal, output, fileUploader }) {
   if (!modal || !(modal instanceof ModalObject)) {
     throw new Error("AlloyModal requires `modal` (ModalObject instance).");
   }
@@ -225,6 +225,7 @@ export function AlloyModal({ modal, output }) {
                 key={inputObj.id}
                 input={inputObj}
                 output={handleInputOutput}
+                fileUploader={fileUploader}
               />
             ))}
           </div>

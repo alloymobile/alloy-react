@@ -232,7 +232,7 @@ function openModalById(id) {
 /* -------------------------------------------------------
  * AlloyCrudForm
  * ----------------------------------------------------- */
-export function AlloyCrudForm({ crudForm, output }) {
+export function AlloyCrudForm({ crudForm, output, fileUploader }) {
   if (!crudForm || !(crudForm instanceof CrudFormObject)) {
     throw new Error(
       "AlloyCrudForm requires `crudForm` (CrudFormObject instance)."
@@ -714,7 +714,11 @@ export function AlloyCrudForm({ crudForm, output }) {
           </div>
 
           {/* Tab-based form view */}
-          <AlloyTabForm tabForm={tabFormModel} output={handleFormOutput} />
+          <AlloyTabForm
+            tabForm={tabFormModel}
+            output={handleFormOutput}
+            fileUploader={fileUploader}
+          />
         </>
       )}
 
