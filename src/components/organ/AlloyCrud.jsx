@@ -187,6 +187,15 @@ function openModalById(id) {
  *   data: { ...payload }
  * }
  * ----------------------------------------------------- */
+/**
+ * @typedef {Object} AlloyCrudProps
+ * @property {CrudObject} crud
+ * @property {(out: any) => void | Promise<void>} [output]
+ * @property {(files: any) => Promise<any>} [fileUploader]  // <-- change this
+ */
+/**
+ * @param {AlloyCrudProps} props
+ */
 export function AlloyCrud({ crud, output, fileUploader }) {
   if (!crud || !(crud instanceof CrudObject)) {
     throw new Error("AlloyCrud requires `crud` (CrudObject instance).");
@@ -367,6 +376,7 @@ export function AlloyCrud({ crud, output, fileUploader }) {
         action: action === "select" ? "search-select" : "search",
         data,
       });
+      console.log("⭐ AlloyCrud.emit CRUD", out);
       emit(out);
     }
   };

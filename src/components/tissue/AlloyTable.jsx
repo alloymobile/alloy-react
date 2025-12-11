@@ -20,6 +20,21 @@ function prettifyColumnLabel(key = "") {
   return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
 }
 
+/**
+ * Format a cell value for display.
+ * - Booleans → "true" / "false" so they don't render as blank.
+ * - Everything else → String(value).
+ */
+function formatCellValue(value, key) {
+  if (value === null || value === undefined) return "";
+
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
+  return String(value);
+}
+
 /* -------------------------------------------
  * @typedef {Object} TableRow
  * @property {string|number} [id]
@@ -275,11 +290,14 @@ export function AlloyTable({ table, output }) {
               </td>
 
               {/* data cols */}
-              {headerKeys.map((key) => (
-                <td key={`${row?.id ?? idx}-${key}`}>
-                  <span>{row?.[key]}</span>
-                </td>
-              ))}
+              {headerKeys.map((key) => {
+                const value = formatCellValue(row?.[key], key);
+                return (
+                  <td key={`${row?.id ?? idx}-${key}`}>
+                    <span>{value}</span>
+                  </td>
+                );
+              })}
             </tr>
           ))
         ) : (

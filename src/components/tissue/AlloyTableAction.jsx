@@ -92,6 +92,21 @@ function resolveLink(template, row, rowId) {
   return `${base}/${id}`;
 }
 
+/**
+ * Format a cell value for display.
+ * - Booleans → "true" / "false" so they don't render as blank.
+ * - Everything else → String(value).
+ */
+function formatCellValue(value, key) {
+  if (value === null || value === undefined) return "";
+
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
+  return String(value);
+}
+
 /* ---------------------- Model ---------------------- */
 /**
  * TableActionObject
@@ -316,12 +331,13 @@ export function AlloyTableAction({ tableAction, output }) {
                 {/* data cells */}
                 {headerKeys.map((key) => {
                   const to = resolveLink(tableAction.link, row, rowId);
+                  const value = formatCellValue(row?.[key], key);
 
                   return (
                     <td key={`${rowId}-${key}`}>
                       {to ? (
                         <Link
-                          to={to}
+                          href={to}
                           onClick={() => {
                             const out = new OutputObject({
                               id: tblIdRef.current,
@@ -337,10 +353,10 @@ export function AlloyTableAction({ tableAction, output }) {
                           }}
                           className="text-dark text-decoration-none"
                         >
-                          <span>{row?.[key]}</span>
+                          <span>{value}</span>
                         </Link>
                       ) : (
-                        <span className="text-dark">{row?.[key]}</span>
+                        <span className="text-dark">{value}</span>
                       )}
                     </td>
                   );

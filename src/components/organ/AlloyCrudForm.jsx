@@ -144,7 +144,6 @@ function buildTabFormModel(crudForm, mode = "create", row = null) {
       ? crudForm.form
       : new TabFormObject(crudForm.form || { tabs: [] });
 
-  // Convert TabFormObject → plain config
   const baseCfg = {
     id: base.id,
     name: base.name,
@@ -154,9 +153,7 @@ function buildTabFormModel(crudForm, mode = "create", row = null) {
     tabs: base.tabs,
   };
 
-  // Deep clone so we can safely mutate
   const clone = JSON.parse(JSON.stringify(baseCfg || {}));
-
   const tabs = Array.isArray(clone.tabs) ? clone.tabs : [];
 
   tabs.forEach((tab, tabIndex) => {
@@ -165,12 +162,26 @@ function buildTabFormModel(crudForm, mode = "create", row = null) {
       const fieldName = input?.name;
       if (!fieldName) return;
 
-      // For "edit" mode, ONLY prefill the FIRST tab from the row.
-      // For "create" / "delete", keep original behaviour (any tab).
-      const shouldPrefillFromRow =
+      // ❌ OLD LOGIC (overwrites with empty strings)
+      // const shouldPrefillFromRow =
+      //   row &&
+      //   Object.prototype.hasOwnProperty.call(row, fieldName) &&
+      //   (mode !== "edit" || tabIndex === 0);
+      //
+      // if (shouldPrefillFromRow) {
+      //   input.value = row[fieldName];
+      // }
+
+      // ✅ NEW LOGIC: only use row value if it's non-empty
+      const hasRowValue =
         row &&
         Object.prototype.hasOwnProperty.call(row, fieldName) &&
-        (mode !== "edit" || tabIndex === 0);
+        row[fieldName] !== undefined &&
+        row[fieldName] !== null &&
+        row[fieldName] !== "";
+
+      const shouldPrefillFromRow =
+        hasRowValue && (mode !== "edit" || tabIndex === 0);
 
       if (shouldPrefillFromRow) {
         input.value = row[fieldName];
@@ -232,6 +243,15 @@ function openModalById(id) {
 /* -------------------------------------------------------
  * AlloyCrudForm
  * ----------------------------------------------------- */
+/**
+ * @typedef {Object} AlloyCrudFormProps
+ * @property {CrudFormObject} crudForm
+ * @property {(out: any) => void | Promise<void>} [output]
+ * @property {any} [fileUploader]  // <-- make it completely flexible
+ */
+/**
+ * @param {AlloyCrudFormProps} props
+ */
 export function AlloyCrudForm({ crudForm, output, fileUploader }) {
   if (!crudForm || !(crudForm instanceof CrudFormObject)) {
     throw new Error(
