@@ -5,15 +5,9 @@ import { OutputObject, generateId } from "../../utils/idHelper.js";
 
 import AlloyModal, { ModalObject } from "../tissue/AlloyModal.jsx";
 import AlloySearch, { SearchObject } from "../cell/AlloySearch.jsx";
-import AlloyButtonIcon, {
-  ButtonIconObject,
-} from "../cell/AlloyButtonIcon.jsx";
-import AlloyTableAction, {
-  TableActionObject,
-} from "../tissue/AlloyTableAction.jsx";
-import AlloyPagination, {
-  PaginationObject,
-} from "../tissue/AlloyPagination.jsx";
+import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
+import AlloyTableAction, { TableActionObject } from "../tissue/AlloyTableAction.jsx";
+import AlloyPagination, { PaginationObject } from "../tissue/AlloyPagination.jsx";
 
 /* -------------------------------------------------------
  * EmailObject (model)
@@ -24,11 +18,10 @@ import AlloyPagination, {
  *
  *   modal: ModalConfig | ModalObject;
  *
- *   // Search: SearchObject wrapper around inner InputObject config
- *   // We accept either:
- *   //   - SearchObject
- *   //   - plain inner InputConfig → wrapped as new SearchObject({ search: cfg })
- *   search?: SearchObject | InputConfig;
+ *   // Search accepts BOTH shapes:
+ *   //  A) Old: inner InputConfig (ex: { name, type, ... })
+ *   //  B) New wrapper: { id, className, search: { name, ... }, minChars, debounceMs, resultConfig }
+ *   search?: SearchObject | Object;
  *
  *   send?: ButtonIconConfig | ButtonIconObject;
  *
@@ -58,14 +51,18 @@ export class EmailObject {
     this.modal =
       modal instanceof ModalObject ? modal : new ModalObject(modal || {});
 
-    // Search: normalize to SearchObject (inner input lives in search.search)
-    if (search instanceof SearchObject) {
-      this.search = search;
-    } else if (search) {
-      this.search = new SearchObject({ search });
-    } else {
-      this.search = null;
-    }
+    // ✅ Search: normalize to SearchObject
+    // Supports BOTH:
+    // 1) Old: search is InputConfig/InputObject (no wrapper)
+    // 2) New: search is wrapper object: { id, className, search: {...}, minChars, debounceMs, resultConfig, ... }
+    this.search =
+      search instanceof SearchObject
+        ? search
+        : search
+        ? search.search
+          ? new SearchObject(search)       // wrapper shape
+          : new SearchObject({ search })   // old shape (input-only)
+        : null;
 
     // Send button
     this.send =
@@ -261,9 +258,7 @@ export function AlloyEmail({ email, output }) {
         ? searchOut.toJSON()
         : searchOut;
 
-    const action =
-      base.action === "select" ? "search-select" : "search";
-
+    const action = base.action === "select" ? "search-select" : "search";
     const data = base.data || {};
 
     const out = OutputObject.ok({
@@ -462,10 +457,7 @@ export function AlloyEmail({ email, output }) {
         <div className="row input-group mt-2">
           <div className="col-sm-8">
             {email.search && (
-              <AlloySearch
-                search={email.search}
-                output={handleSearchOutput}
-              />
+              <AlloySearch search={email.search} output={handleSearchOutput} />
             )}
           </div>
 
@@ -480,10 +472,7 @@ export function AlloyEmail({ email, output }) {
         </div>
 
         {/* Table of emails / recipients / templates */}
-        <AlloyTableAction
-          tableAction={email.table}
-          output={handleTableOutput}
-        />
+        <AlloyTableAction tableAction={email.table} output={handleTableOutput} />
 
         {/* Pagination (optional) */}
         {email.page && (

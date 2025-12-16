@@ -4,30 +4,18 @@ import React, { useEffect, useRef, useState } from "react";
 import { OutputObject, generateId } from "../../utils/idHelper.js";
 
 import AlloySearch, { SearchObject } from "../cell/AlloySearch.jsx";
-import AlloyButtonIcon, {
-  ButtonIconObject,
-} from "../cell/AlloyButtonIcon.jsx";
+import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 
-import AlloyTableAction, {
-  TableActionObject,
-} from "../tissue/AlloyTableAction.jsx";
+import AlloyTableAction, { TableActionObject } from "../tissue/AlloyTableAction.jsx";
 
-import AlloyCardAction, {
-  CardActionObject,
-} from "../tissue/AlloyCardAction.jsx";
+import AlloyCardAction, { CardActionObject } from "../tissue/AlloyCardAction.jsx";
 
-import AlloyPagination, {
-  PaginationObject,
-} from "../tissue/AlloyPagination.jsx";
+import AlloyPagination, { PaginationObject } from "../tissue/AlloyPagination.jsx";
 
 // NOTE: adjust this relative import path if needed in your repo
-import AlloyTabForm, {
-  TabFormObject,
-} from "../../components/organ/AlloyTabForm.jsx";
+import AlloyTabForm, { TabFormObject } from "../../components/organ/AlloyTabForm.jsx";
 
-import AlloyModalToast, {
-  ModalToastObject,
-} from "../tissue/AlloyModalToast.jsx";
+import AlloyModalToast, { ModalToastObject } from "../tissue/AlloyModalToast.jsx";
 
 /* -------------------------------------------------------
  * CrudFormObject
@@ -53,12 +41,18 @@ export class CrudFormObject {
     this.name = name ?? "";
     this.className = className;
 
-    // Search → SearchObject (wrapping inner InputObject config)
+    // ✅ Search → supports BOTH shapes:
+    // 1) Old: search is InputConfig/InputObject (no wrapper)
+    //    "search": { "name": "...", "type": "text", ... }
+    // 2) New: search is wrapper SearchObject config:
+    //    "search": { "id": "...", "className": "...", "search": { "name": "...", ... }, "minChars": 2, ... }
     this.search =
       search instanceof SearchObject
         ? search
         : search
-        ? new SearchObject({ search })
+        ? search.search
+          ? new SearchObject(search) // wrapper shape
+          : new SearchObject({ search }) // old shape (input-only)
         : null;
 
     // Add button → ButtonIconObject
@@ -128,16 +122,6 @@ export class CrudFormObject {
  * Helpers
  * ----------------------------------------------------- */
 
-// Build a TabFormObject for a given mode ("create" | "edit" | "delete")
-// and an optional row object (for Edit/Delete prefilling).
-//
-// Uses crudForm.form as the BASE TabFormObject, converts it to a plain
-// config, deep clones it, injects row values into tab.inputs[].value,
-// and for delete mode marks fields readOnly/disabled.
-//
-// For "edit" mode we ONLY prefill the *first* tab from the row.
-// Other tabs are left with their base/default values so they can be
-// repopulated later from a full API response.
 function buildTabFormModel(crudForm, mode = "create", row = null) {
   const base =
     crudForm.form instanceof TabFormObject
@@ -162,17 +146,6 @@ function buildTabFormModel(crudForm, mode = "create", row = null) {
       const fieldName = input?.name;
       if (!fieldName) return;
 
-      // ❌ OLD LOGIC (overwrites with empty strings)
-      // const shouldPrefillFromRow =
-      //   row &&
-      //   Object.prototype.hasOwnProperty.call(row, fieldName) &&
-      //   (mode !== "edit" || tabIndex === 0);
-      //
-      // if (shouldPrefillFromRow) {
-      //   input.value = row[fieldName];
-      // }
-
-      // ✅ NEW LOGIC: only use row value if it's non-empty
       const hasRowValue =
         row &&
         Object.prototype.hasOwnProperty.call(row, fieldName) &&
@@ -201,7 +174,6 @@ function buildTabFormModel(crudForm, mode = "create", row = null) {
   return new TabFormObject(clone);
 }
 
-// Flatten TabForm values map: { tabKey: { field: value } } → { field: value }
 function flattenValues(valuesByTab = {}) {
   const flat = {};
   Object.values(valuesByTab || {}).forEach((perTab) => {
@@ -213,7 +185,6 @@ function flattenValues(valuesByTab = {}) {
   return flat;
 }
 
-// Helper: open a Bootstrap modal by id, aligned with AlloyCrud
 function openModalById(id) {
   if (!id) return;
   if (typeof document === "undefined" || typeof window === "undefined") return;
@@ -231,7 +202,6 @@ function openModalById(id) {
     return;
   }
 
-  // Fallback: try clicking a data-api trigger if it exists
   const trigger = document.querySelector(
     `[data-bs-toggle="modal"][data-bs-target="#${id}"]`
   );
@@ -247,7 +217,7 @@ function openModalById(id) {
  * @typedef {Object} AlloyCrudFormProps
  * @property {CrudFormObject} crudForm
  * @property {(out: any) => void | Promise<void>} [output]
- * @property {any} [fileUploader]  // <-- make it completely flexible
+ * @property {any} [fileUploader]
  */
 /**
  * @param {AlloyCrudFormProps} props
@@ -265,8 +235,8 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     }
   };
 
-  const [view, setView] = useState("table"); // "table" or "form"
-  const [formMode, setFormMode] = useState("create"); // "create" | "edit" | "delete"
+  const [view, setView] = useState("table");
+  const [formMode, setFormMode] = useState("create");
   const [activeRow, setActiveRow] = useState(null);
 
   const [tabFormModel, setTabFormModel] = useState(() =>
@@ -281,7 +251,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
   const isTable = crudForm.type === "table";
   const isCard = crudForm.type === "card";
 
-  // Hidden trigger for toast modal (confirm delete), aligned with AlloyCrud
   const hiddenToastTriggerRef = useRef(null);
 
   const doOpenToastModal = () => {
@@ -297,8 +266,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       openModalById(crudForm.modalToast.id);
     }
   };
-
-  /* ----------------- Search handlers ----------------- */
 
   const handleSearchOutput = (searchOut) => {
     if (!searchOut) return;
@@ -322,8 +289,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       emit(out);
     }
   };
-
-  /* ----------------- Pagination handler ----------------- */
 
   const handlePaginationOutput = (pageOut) => {
     if (!pageOut) return;
@@ -350,8 +315,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     emit(out);
   };
 
-  /* ----------------- Helpers: open/close form view ----------------- */
-
   function openForm(mode, row) {
     setFormMode(mode);
     setActiveRow(row || null);
@@ -364,8 +327,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     setFormMode("create");
     setActiveRow(null);
   }
-
-  /* ----------------- Table handlers ----------------- */
 
   const handleTableOutput = (tableOut) => {
     if (!tableOut) return;
@@ -393,11 +354,8 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       const lower = (btnName || "").toLowerCase();
 
       if (lower.includes("edit")) {
-        // Open form in "edit" mode with initial row data
         openForm("edit", row);
 
-        // Emit an initial editInit event so the parent can fetch
-        // the FULL entity and repopulate all tabs.
         const out = OutputObject.ok({
           id: crudForm.id,
           type: "crud-form",
@@ -410,13 +368,11 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       }
 
       if (lower.includes("delete")) {
-        // Delete should use toast modal (if configured) instead of TabForm
         setActiveRow(row || null);
 
         if (crudForm.modalToast) {
           doOpenToastModal();
         } else {
-          // Fallback: keep old behaviour if no modalToast configured
           openForm("delete", row);
         }
 
@@ -463,8 +419,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     emit(out);
   };
 
-  /* ----------------- Card handlers ----------------- */
-
   const handleCardOutput = (cardOut) => {
     if (!cardOut || cardOut.type !== "card-action") {
       return;
@@ -475,11 +429,8 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     const lower = (btnName || "").toLowerCase();
 
     if (lower.includes("edit")) {
-      // Open form in "edit" mode with initial row data
       openForm("edit", row);
 
-      // Emit an initial editInit event so the parent can fetch
-      // the FULL entity and repopulate all tabs.
       const out = OutputObject.ok({
         id: crudForm.id,
         type: "crud-form",
@@ -516,13 +467,9 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     }
   };
 
-  /* ----------------- Add button ----------------- */
-
   const handleAddOutput = () => {
     openForm("create", null);
   };
-
-  /* ----------------- TabForm output ----------------- */
 
   const handleFormOutput = (tfOut) => {
     if (!tfOut) return;
@@ -534,7 +481,7 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
 
     if (base.type !== "tab-form") return;
 
-    const tfAction = base.action; // "draft" | "submit"
+    const tfAction = base.action;
     const data = base.data || {};
     const valuesByTab = data.values || {};
     const flatValues = flattenValues(valuesByTab);
@@ -561,8 +508,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     backToTable();
   };
 
-  /* ----------------- Modal toast output ----------------- */
-
   const handleModalToastOutput = (toastOut) => {
     if (!toastOut) return;
 
@@ -576,7 +521,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       return;
     }
 
-    // User confirmed delete in the toast modal
     if (activeRow) {
       const out = OutputObject.ok({
         id: crudForm.id,
@@ -591,8 +535,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       setActiveRow(null);
     }
   };
-
-  /* ----------------- Render list view (table or cards) ----------------- */
 
   const renderList = () => {
     if (isTable && crudForm.document) {
@@ -667,13 +609,10 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
     );
   };
 
-  /* ----------------- Render ----------------- */
-
   return (
     <div className={crudForm.className}>
       {inTableView ? (
         <>
-          {/* Search + Add row */}
           <div className="row input-group mt-2">
             <div className="col-sm-8">
               {crudForm.search && (
@@ -694,12 +633,10 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
             </div>
           </div>
 
-          {/* Table or Card grid wrapped in row + documentClass + pagination */}
           {renderList()}
         </>
       ) : (
         <>
-          {/* Form header with back-to-list */}
           <div className="d-flex align-items-center justify-content-between mt-2 mb-3">
             <div>
               <h5 className="mb-1">
@@ -733,7 +670,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
             />
           </div>
 
-          {/* Tab-based form view */}
           <AlloyTabForm
             tabForm={tabFormModel}
             output={handleFormOutput}
@@ -742,7 +678,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
         </>
       )}
 
-      {/* Hidden trigger for toast modal, aligned with AlloyCrud */}
       {crudForm.modalToast && (
         <button
           type="button"
@@ -753,7 +688,6 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
         />
       )}
 
-      {/* Delete confirmation toast modal (optional) */}
       {crudForm.modalToast && (
         <AlloyModalToast
           modalToast={crudForm.modalToast}

@@ -8,7 +8,7 @@ import { AlloyInput, InputObject } from "../../../src";
  * All of these use layout: "icon".
  * layout: "icon" REQUIRES `icon`.
  *
- * We now include `className` in every preset. That class is passed down
+ * We include `className` in every preset. That class is passed down
  * to the rendered <input /> / <textarea /> / etc. in AlloyInput.
  *
  * You can override className in the JSON textarea to do custom themes
@@ -24,7 +24,7 @@ const DEFAULTS = {
     required: true,
     icon: { iconClass: "fa-solid fa-user" },
     className: "form-control",
-    // NEW: styles the <span> that wraps the icon (in addition to "input-group-text")
+    // styles the <span> wrapping the icon (in addition to "input-group-text")
     iconGroupClass: "bg-light border-0"
   },
 
@@ -72,6 +72,21 @@ const DEFAULTS = {
     required: true,
     icon: { iconClass: "fa-solid fa-calendar" },
     className: "form-control"
+  },
+
+  // ✅ NEW: Canvas demo in icon layout
+  // Emits: data.value = "data:image/png;base64,...."
+  canvas: {
+    name: "signature",
+    label: "Signature (Canvas)",
+    type: "canvas",
+    layout: "icon",
+    required: true,
+    icon: { iconClass: "fa-solid fa-pen-nib" },
+    iconGroupClass: "bg-light border-0",
+    width: 600,
+    height: 220,
+    canvasStrokeWidth: 2
   }
 };
 
@@ -97,9 +112,6 @@ export default function InputIconPage() {
   /**
    * Build InputObject for preview.
    * If user JSON is broken, fall back to DEFAULTS[tab] so preview never dies.
-   *
-   * NOTE: AlloyInput now syncs validation props (required, pattern, etc.)
-   * via useEffect, so changing those in the JSON will re-validate live.
    */
   const model = useMemo(() => {
     try {
@@ -120,7 +132,7 @@ export default function InputIconPage() {
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
-  // Switch tabs between username / email / password / age / dob
+  // Switch tabs between username / email / password / age / dob / canvas
   function switchTab(nextTab) {
     const fresh = DEFAULTS[nextTab];
     setTab(nextTab);
@@ -138,6 +150,8 @@ export default function InputIconPage() {
       // ignore; parseError UI already covers invalid JSON
     }
   }
+
+  const isCanvas = tab === "canvas" || model?.type === "canvas";
 
   return (
     <div className="container py-3">
@@ -172,31 +186,43 @@ export default function InputIconPage() {
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
           <AlloyInput input={model} output={handleOutput} />
+
           <div className="small text-secondary mt-2 text-center">
             <div>
               <code>layout: "icon"</code> uses a Bootstrap{" "}
               <code>.input-group</code> and shows an icon on the left.
             </div>
+
             <div>
               This layout <strong>requires</strong>{" "}
-              <code>icon: {"{ iconClass: \"fa-solid fa-user\" }"}</code>.
+              <code>icon</code> (example:{" "}
+              <code>{`{ "iconClass": "fa-solid fa-user" }`}</code>).
             </div>
-            <div>
-              <code>className</code> goes directly on the control element.
-              We default to <code>"form-control"</code>, but you can try
-              editing the JSON to something like{" "}
-              <code>
-                "form-control form-control-lg bg-dark text-white"
-              </code>{" "}
-              and see it live.
+
+            {isCanvas && (
+              <div className="mt-1">
+                <strong>Canvas output:</strong> emits a DataURL string in{" "}
+                <code>data.value</code>, like{" "}
+                <code>data:image/png;base64,...</code>.
+              </div>
+            )}
+
+            <div className="mt-1">
+              <code>className</code> goes directly on the control element. We
+              default to <code>"form-control"</code>, but you can try editing the
+              JSON to something like{" "}
+              <code>"form-control form-control-lg bg-dark text-white"</code> and
+              see it live.
             </div>
-            <div>
+
+            <div className="mt-1">
               You can style the icon wrapper span using{" "}
-              <code>iconGroupClass</code> (it is merged with{" "}
+              <code>iconGroupClass</code> (merged with{" "}
               <code>"input-group-text"</code>), e.g.{" "}
               <code>"bg-light border-0"</code>.
             </div>
-            <div>
+
+            <div className="mt-1">
               Required / pattern / passwordStrength validate on blur and speak
               errors with <code>aria-live="polite"</code>.
             </div>
@@ -234,10 +260,9 @@ export default function InputIconPage() {
             onChange={(e) => setInputJson(e.target.value)}
             spellCheck={false}
           />
+
           {parseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {parseError}
-            </div>
+            <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
 
           <div className="form-text">
@@ -262,8 +287,14 @@ export default function InputIconPage() {
                 <code>passwordStrength</code>, <code>min</code>, etc.
               </li>
               <li>
-                These rules update live now — delete <code>required</code> in
-                the JSON, blur again, and the error should stop.
+                NEW: <code>type: "canvas"</code> supports optional{" "}
+                <code>width</code>, <code>height</code>,{" "}
+                <code>canvasStrokeWidth</code>, and <code>disabled</code>, and
+                emits <code>data:image/png;base64,...</code> as <code>value</code>.
+              </li>
+              <li>
+                These rules update live — delete <code>required</code> in the
+                JSON, blur again, and the error should stop.
               </li>
             </ul>
           </div>
@@ -303,7 +334,6 @@ export default function InputIconPage() {
   "type": "input",
   "action": "change",
   "error": false,
-  "errorMessage": [],
   "data": {
     "name": "username",
     "value": "imtapas",
@@ -311,8 +341,9 @@ export default function InputIconPage() {
   }
 }`}
             </pre>
-            Use <code>data.value</code> for the payload, and{" "}
-            <code>error</code> / <code>errorMessage</code> for flow-level logic.
+
+            For <code>type: "canvas"</code>, <code>data.value</code> will be a
+            DataURL string like <code>data:image/png;base64,...</code>.
           </div>
         </div>
       </div>

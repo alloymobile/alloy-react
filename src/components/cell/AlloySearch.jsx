@@ -1,5 +1,5 @@
 // src/lib/components/tissue/AlloySearch.jsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { OutputObject, generateId } from "../../utils/idHelper.js";
 import AlloyInput, { InputObject } from "./AlloyInput.jsx";
@@ -46,23 +46,19 @@ export class SearchObject {
       // SAFE DEFAULT: provide name + icon so InputObject doesn't throw
       this.search = new InputObject({
         id: "searchInput",
-        name: "search",
+        name: "query",
         type: "text",
         layout: "icon",
         label: cfg.label ?? "Search",
         placeholder: cfg.placeholder ?? "Search…",
-        icon: {
-          iconClass: "fa-solid fa-magnifying-glass",
-        },
+        icon: { iconClass: "fa-solid fa-magnifying-glass" },
         className: "form-control",
       });
     }
 
     // Behaviour tuning
     this.minChars =
-      typeof cfg.minChars === "number" && cfg.minChars >= 0
-        ? cfg.minChars
-        : 2;
+      typeof cfg.minChars === "number" && cfg.minChars >= 0 ? cfg.minChars : 2;
 
     this.debounceMs =
       typeof cfg.debounceMs === "number" && cfg.debounceMs >= 0
@@ -79,6 +75,7 @@ export class SearchObject {
       descriptionKey: "description",
       iconKey: "iconClass",
     };
+
     this.resultConfig = {
       ...defaultResultConfig,
       ...(cfg.resultConfig || {}),
@@ -99,6 +96,15 @@ export class SearchObject {
  *        data: { [fieldName]: "query text" }
  *      }
  *
+ *   1b) Clear:
+ *      {
+ *        id: search.id,
+ *        type: "search-bar",
+ *        action: "clear",
+ *        error: false,
+ *        data: { [fieldName]: "" }
+ *      }
+ *
  *   2) Result selection:
  *      {
  *        id: search.id,
@@ -112,7 +118,7 @@ export class SearchObject {
  *      }
  *
  * NOTE:
- *   - Component does NOT call HTTP. Parent listens for "search",
+ *   - Component does NOT call HTTP. Parent listens for "search"/"clear",
  *     calls server, and re-renders with updated `results`.
  * ----------------------------------------------------- */
 export function AlloySearch({ search, output }) {
@@ -121,21 +127,20 @@ export function AlloySearch({ search, output }) {
   }
 
   const emit = (out) => {
-    if (typeof output === "function") {
-      output(out);
-    }
+    if (typeof output === "function") output(out);
   };
+
+  const inputName = search.search?.name ?? "query";
 
   /* ----------------- Local state (live query) ----------------- */
 
   const [liveValue, setLiveValue] = useState(() => {
-    // Start from InputObject's value if set
     return typeof search.search?.value !== "undefined"
       ? String(search.search.value)
       : "";
   });
 
-  // When parent swaps SearchObject (e.g. different form), sync value
+  // When parent swaps SearchObject (e.g. different screen), sync value
   useEffect(() => {
     const v =
       typeof search.search?.value !== "undefined"
@@ -144,36 +149,35 @@ export function AlloySearch({ search, output }) {
     setLiveValue(v);
   }, [search]);
 
-  /* ----------------- Debounced search emission ----------------- */
+  /* ----------------- Debounced search + clear emission ----------------- */
 
   useEffect(() => {
-    const fieldName = search.search?.name ?? "search";
     const trimmed = (liveValue || "").trim();
 
-    // Minimum characters guard
+    // ✅ IMPORTANT: when cleared (or below minChars) emit "clear"
     if (!trimmed || trimmed.length < search.minChars) {
-      // Optionally emit a "clear" event if you ever need it
-      // For now, just do nothing.
+      const out = OutputObject.ok({
+        id: search.id,
+        type: "search-bar",
+        action: "clear",
+        data: { [inputName]: "" },
+      });
+      emit(out);
       return;
     }
 
-    // Debounce: wait debounceMs after last keypress
     const handle = setTimeout(() => {
-      const data = { [fieldName]: trimmed };
-
       const out = OutputObject.ok({
         id: search.id,
         type: "search-bar",
         action: "search",
-        data,
+        data: { [inputName]: trimmed },
       });
-
       emit(out);
     }, search.debounceMs);
 
-    // Cancel previous timer if liveValue changes quickly
     return () => clearTimeout(handle);
-  }, [liveValue, search, emit]);
+  }, [liveValue, search.id, search.minChars, search.debounceMs, inputName]);
 
   /* ----------------- Handle inner input events ----------------- */
 
@@ -186,9 +190,8 @@ export function AlloySearch({ search, output }) {
         : inputOut;
 
     const value = base?.data?.value;
-
     setLiveValue(typeof value === "string" ? value : String(value ?? ""));
-    // NOTE: no emit here — debounced effect above handles the search event.
+    // NOTE: no emit here — effect above handles debounced search/clear.
   };
 
   /* ----------------- Results mapping helpers ----------------- */
@@ -209,11 +212,7 @@ export function AlloySearch({ search, output }) {
       }
 
       const obj = item || {};
-      const id =
-        obj[idKey] ??
-        obj.id ??
-        obj.key ??
-        String(index);
+      const id = obj[idKey] ?? obj.id ?? obj.key ?? String(index);
 
       const label =
         obj[labelKey] ??
@@ -240,19 +239,21 @@ export function AlloySearch({ search, output }) {
   /* ----------------- Result selection handler ----------------- */
 
   const handleResultClick = (resultItem) => {
-    const fieldName = search.search?.name ?? "search";
-
     const out = OutputObject.ok({
       id: search.id,
       type: "search-bar",
       action: "select",
       data: {
-        [fieldName]: (liveValue || "").trim(),
-        result: resultItem.raw, // send raw object/string back to parent
+        [inputName]: (liveValue || "").trim(),
+        result: resultItem.raw,
       },
     });
 
     emit(out);
+
+    // ✅ Optional UX: clear the input after selecting a result
+    // If you DON'T want this behaviour, remove the next line.
+    setLiveValue("");
   };
 
   /* ----------------- Render ----------------- */
@@ -280,6 +281,7 @@ export function AlloySearch({ search, output }) {
                       <small className="text-muted">{item.description}</small>
                     )}
                   </div>
+
                   {item.iconClass && (
                     <span className="ms-2 text-secondary">
                       <i className={item.iconClass} aria-hidden="true" />

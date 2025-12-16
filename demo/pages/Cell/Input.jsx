@@ -129,6 +129,23 @@ const DEFAULT_INPUTS = {
     icon: { iconClass: "fa-solid fa-user" },
     // This styles the <span> wrapping the icon in the input-group
     iconGroupClass: "bg-light border-0"
+  },
+
+  // ✅ NEW: canvas demo (signature/drawing)
+  // Emits data.value as a string like:
+  // "data:image/png;base64,iVBORw0KGgo..."
+  canvas: {
+    name: "signature",
+    label: "Signature (canvas)",
+    type: "canvas",
+    layout: "text",
+    required: true,
+    // Optional canvas config supported by AlloyInput:
+    width: 600,
+    height: 220,
+    canvasStrokeWidth: 2,
+    // You can also test disabled mode:
+    // disabled: true
   }
 };
 
@@ -233,6 +250,15 @@ export default function InputPage() {
               <code>minLength</code>, tweak <code>pattern</code>, etc. The field
               re-validates live (no remount needed).
             </div>
+
+            {tab === "canvas" && (
+              <div className="mt-1">
+                Canvas value emits as a <strong>DataURL string</strong> (includes{" "}
+                <code>data:image/png;base64,</code> prefix). Use the output panel
+                to copy it.
+              </div>
+            )}
+
             <div>
               Errors announce with <code>aria-live="polite"</code> after blur.
             </div>
@@ -303,6 +329,11 @@ export default function InputPage() {
                 <code>iconGroupClass</code> to style the icon span (e.g.{" "}
                 <code>"bg-light border-0"</code>).
               </li>
+              <li>
+                NEW: <code>type: "canvas"</code> supports optional{" "}
+                <code>width</code>, <code>height</code>,{" "}
+                <code>canvasStrokeWidth</code>, and <code>disabled</code>.
+              </li>
             </ul>
           </div>
         </div>
@@ -343,7 +374,6 @@ export default function InputPage() {
   "type": "input",
   "action": "change",   // or "blur"
   "error": false,       // true if validation failed
-  "errorMessage": [],
   "data": {
     "name": "email",
     "value": "user@example.com",
@@ -353,6 +383,11 @@ export default function InputPage() {
             </pre>
             Use <code>error</code> to know if the field is currently invalid,
             and read <code>data.value</code> for the latest value.
+            <div className="mt-2">
+              For <code>type: "canvas"</code>, <code>data.value</code> will be a
+              DataURL string like{" "}
+              <code>data:image/png;base64,...</code>.
+            </div>
           </div>
         </div>
       </div>

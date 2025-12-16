@@ -4,16 +4,12 @@ import { AlloyInput, InputObject } from "../../../src";
 /**
  * DEFAULTS
  *
- * All of these use layout: "floating".
+ * Most of these use layout: "floating".
  * layout: "floating" REQUIRES an `icon`.
  *
- * Every preset now includes `className: "form-control"`.
- * You can override that in the editor to apply custom classes to the actual
- * rendered control (<input>, <textarea>, etc.).
- *
  * NOTE:
- * - `iconGroupClass` is used only for layout: "icon" (to style the icon span).
- *   It is not used in "floating" layout.
+ * - Canvas does NOT work well with Bootstrap floating labels.
+ *   So canvas preset uses layout: "text" (or you can switch it to "icon").
  */
 const DEFAULTS = {
   name: {
@@ -67,6 +63,23 @@ const DEFAULTS = {
     required: true,
     icon: { iconClass: "fa-solid fa-calendar" },
     className: "form-control"
+  },
+
+  // ✅ NEW: Canvas demo
+  // IMPORTANT: canvas uses layout "text" (floating label isn't suitable for <canvas>).
+  // Emits: data.value = "data:image/png;base64,...."
+  canvas: {
+    name: "signature",
+    label: "Signature (Canvas)",
+    type: "canvas",
+    layout: "text", // ✅ do NOT use "floating" for canvas
+    required: true,
+    width: 600,
+    height: 220,
+    canvasStrokeWidth: 2
+    // If you want an icon next to canvas, you can change to:
+    // layout: "icon",
+    // icon: { iconClass: "fa-solid fa-pen-nib" }
   }
 };
 
@@ -119,6 +132,9 @@ export default function InputFloatingPage() {
     }
   }
 
+  const isCanvas = tab === "canvas" || model?.type === "canvas";
+  const isFloating = model?.layout === "floating";
+
   return (
     <div className="container py-3">
       <h3 className="mb-4 text-center">AlloyInput (layout: "floating")</h3>
@@ -151,7 +167,17 @@ export default function InputFloatingPage() {
       {/* Live preview */}
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+          {isCanvas && isFloating && (
+            <div className="alert alert-warning py-2">
+              <strong>Note:</strong> Canvas doesn’t work well with{" "}
+              <code>layout: "floating"</code>. Switch canvas to{" "}
+              <code>layout: "text"</code> or <code>layout: "icon"</code> in the
+              JSON.
+            </div>
+          )}
+
           <AlloyInput input={model} output={handleOutput} />
+
           <div className="small text-secondary mt-2 text-center">
             <div className="mb-2">
               <code>layout: "floating"</code> uses Bootstrap{" "}
@@ -160,30 +186,26 @@ export default function InputFloatingPage() {
             </div>
 
             <div className="mb-2">
-              <strong>Must include:</strong>{" "}
-              <code>layout: "floating"</code> and an{" "}
-              <code>icon</code> (for example{" "}
-              <code>{`{ iconClass: "fa-solid fa-user" }`}</code>).
+              <strong>Floating requires:</strong>{" "}
+              <code>layout: "floating"</code> and an <code>icon</code> (for
+              example <code>{`{ iconClass: "fa-solid fa-user" }`}</code>).
             </div>
 
-            <div className="mb-2">
-              <strong>Styling:</strong>{" "}
-              <code>className</code> is applied directly to the rendered control
-              (&lt;input/&gt;, &lt;textarea/&gt;, etc).
-              All presets default to{" "}
-              <code>"form-control"</code>.
-              You can live-edit it in the JSON to anything like{" "}
-              <code>
-                "form-control form-control-lg bg-dark text-white border-warning"
-              </code>{" "}
-              and the preview will reflect that.
-            </div>
+            {isCanvas && (
+              <div className="mb-2">
+                <strong>Canvas output:</strong> emits a DataURL string in{" "}
+                <code>data.value</code>, like{" "}
+                <code>data:image/png;base64,...</code>.
+                <br />
+                Best layouts for canvas: <code>"text"</code> or{" "}
+                <code>"icon"</code>.
+              </div>
+            )}
 
             <div className="mb-0">
               Validation (<code>required</code>, <code>pattern</code>,{" "}
-              <code>passwordStrength</code>, <code>min</code>, etc.) re-syncs
-              every render. If you delete <code>required</code> from the JSON
-              and blur again, the "required" error should go away. Errors are
+              <code>passwordStrength</code>, <code>min</code>, etc.) is reactive.
+              Edit the JSON, blur again, and watch rules change. Errors are
               spoken with <code>aria-live="polite"</code>.
             </div>
           </div>
@@ -222,9 +244,7 @@ export default function InputFloatingPage() {
           />
 
           {parseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {parseError}
-            </div>
+            <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
 
           <div className="form-text">
@@ -233,17 +253,11 @@ export default function InputFloatingPage() {
                 <code>name</code> is required.
               </li>
               <li>
-                <code>layout: "floating"</code> is required and must include{" "}
-                <code>icon</code>.
+                <code>layout: "floating"</code> requires an <code>icon</code>.
               </li>
               <li>
-                <code>className</code> customizes the control’s classes. We
-                default to <code>"form-control"</code>.
-              </li>
-              <li>
-                For <code>layout: "icon"</code> (separate demo), you can also
-                use <code>iconGroupClass</code> to style the icon span inside
-                the input group.
+                <code>className</code> customizes the control’s classes (default{" "}
+                <code>"form-control"</code>).
               </li>
               <li>
                 Add validation knobs like{" "}
@@ -251,8 +265,14 @@ export default function InputFloatingPage() {
                 <code>passwordStrength</code>, <code>min</code>, etc.
               </li>
               <li>
-                Those validation props are reactive in the preview — edit the
-                JSON, blur the field, and watch the error rules change.
+                NEW: <code>type: "canvas"</code> supports optional{" "}
+                <code>width</code>, <code>height</code>,{" "}
+                <code>canvasStrokeWidth</code>, and <code>disabled</code>.
+              </li>
+              <li>
+                For canvas, use <code>layout: "text"</code> or{" "}
+                <code>layout: "icon"</code> (floating labels aren’t suitable for{" "}
+                <code>&lt;canvas&gt;</code>).
               </li>
             </ul>
           </div>
@@ -292,7 +312,6 @@ export default function InputFloatingPage() {
   "type": "input",
   "action": "change",
   "error": false,
-  "errorMessage": [],
   "data": {
     "name": "email",
     "value": "user@example.com",
@@ -300,8 +319,8 @@ export default function InputFloatingPage() {
   }
 }`}
             </pre>
-            Use <code>error</code> / <code>errorMessage</code> for flow-level
-            logic, and <code>data.value</code> for the latest field value.
+            For <code>type: "canvas"</code>, <code>data.value</code> will be a
+            DataURL string like <code>data:image/png;base64,...</code>.
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
 import { generateId, OutputObject } from "../../utils/idHelper.js";
 
@@ -25,12 +25,14 @@ import { generateId, OutputObject } from "../../utils/idHelper.js";
  *                                              "select",
  *                                              "radio",
  *                                              "checkbox",
- *                                              "file"
+ *                                              "file",
+ *                                              "canvas"   // ✅ NEW
  *
  * @property {string} [label]                - Human label for the field or group
  * @property {string|string[]|File} [value]  - Initial value.
  *                                            For checkbox group: an array of checked values.
  *                                            For file: URL or File.
+ *                                            For canvas: DataURL string (data:image/png;base64,...)
  *                                            Defaults to "" (or [] for checkbox).
  *
  * @property {string} [layout]               - Visual layout style:
@@ -72,6 +74,12 @@ import { generateId, OutputObject } from "../../utils/idHelper.js";
  *
  * @property {string} [accept]               - For file input: accept attribute
  * @property {boolean} [multiple]            - For file input: multiple files (future use)
+ *
+ * @property {boolean} [disabled]            - Standard disabled flag. For canvas: disables drawing.
+ *
+ * @property {number} [width]                - Canvas width in px (default 420)
+ * @property {number} [height]               - Canvas height in px (default 180)
+ * @property {number} [canvasStrokeWidth]    - Canvas stroke width (default 2)
  *
  * @property {any} [rest]                    - Any other props the user wants to stash.
  */
@@ -127,11 +135,7 @@ export class InputObject {
     }
 
     const normalizedIcon =
-      icon instanceof IconObject
-        ? icon
-        : icon
-        ? new IconObject(icon)
-        : undefined;
+      icon instanceof IconObject ? icon : icon ? new IconObject(icon) : undefined;
 
     this.id = id ?? generateId("input");
     this.name = name;
@@ -145,8 +149,7 @@ export class InputObject {
     // icon group class (span around icon in "icon" layout)
     const baseIconGroupClass = "input-group-text";
     if (typeof iconGroupClass === "string" && iconGroupClass.trim() !== "") {
-      this.iconGroupClass =
-        baseIconGroupClass + " " + iconGroupClass.trim();
+      this.iconGroupClass = baseIconGroupClass + " " + iconGroupClass.trim();
     } else {
       this.iconGroupClass = baseIconGroupClass; // backward compatible default
     }
@@ -195,12 +198,28 @@ export function AlloyInput({ input, output, fileUploader }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
 
+  // Canvas refs/state
+  const canvasRef = useRef(null);
+  const drawingRef = useRef(false);
+  const lastPointRef = useRef({ x: 0, y: 0 });
+
+  const canvasWidth = input.width ?? 420;
+  const canvasHeight = input.height ?? 180;
+  const strokeWidth = input.canvasStrokeWidth ?? 2;
+  const disabled = !!input.disabled;
+
   // Resync when validation / value props change
   useEffect(() => {
     setVal(input.value);
     setTouched(false);
     setUploading(false);
     setUploadError("");
+
+    // Initialize canvas when switching to canvas type
+    if (input.type === "canvas") {
+      setTimeout(() => initCanvas(), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     input.value,
     input.required,
@@ -251,15 +270,20 @@ export function AlloyInput({ input, output, fileUploader }) {
       errs.push(`Maximum length is ${input.maxLength}`);
     }
 
-    // pattern
+    // pattern (safe)
     if (
       typeof trimmed === "string" &&
       input.pattern &&
       input.pattern !== ""
     ) {
-      const re = new RegExp(input.pattern);
-      if (!re.test(trimmed)) {
-        errs.push("Invalid format.");
+      try {
+        const re = new RegExp(input.pattern);
+        if (!re.test(trimmed)) {
+          errs.push("Invalid format.");
+        }
+      } catch (e) {
+        console.warn("Invalid regex pattern:", input.pattern, e);
+        errs.push("Invalid validation pattern configuration.");
       }
     }
 
@@ -339,7 +363,7 @@ export function AlloyInput({ input, output, fileUploader }) {
     try {
       setUploading(true);
       setUploadError("");
-      // 🔴 Fixed: pass fieldName + file + context
+      // pass fieldName + file + context
       const url = await fileUploader(input.name, file, { input });
       setVal(url);          // store URL as field value
       emit(url, "change");  // propagate URL upward
@@ -385,6 +409,15 @@ export function AlloyInput({ input, output, fileUploader }) {
   // onBlur: mark field as touched AND emit a "blur" action
   const handleBlur = () => {
     setTouched(true);
+
+    // For canvas, commit the current drawing to a DataURL before blur emit
+    if (input.type === "canvas") {
+      const next = getCanvasDataUrl();
+      setVal(next);
+      emit(next, "blur");
+      return;
+    }
+
     emit(val, "blur");
   };
 
@@ -393,11 +426,95 @@ export function AlloyInput({ input, output, fileUploader }) {
     name: input.name,
     placeholder: input.placeholder,
     onBlur: handleBlur,
-    "aria-invalid": showError || undefined
+    "aria-invalid": showError || undefined,
+    disabled: !!input.disabled
   };
 
-  const withInvalid = (base) =>
-    base + (showError ? " is-invalid" : "");
+  const withInvalid = (base) => base + (showError ? " is-invalid" : "");
+
+  /* ---------------- CANVAS HELPERS ---------------- */
+
+  const initCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = strokeWidth;
+    ctx.strokeStyle = "#000";
+  };
+
+  const getCanvasDataUrl = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return "";
+    // Always include file type prefix
+    return canvas.toDataURL("image/png");
+  };
+
+  const getPoint = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+
+    if (e.touches && e.touches[0]) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  };
+
+  const drawLine = (from, to) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+  };
+
+  const onCanvasStart = (e) => {
+    if (disabled) return;
+    drawingRef.current = true;
+    lastPointRef.current = getPoint(e);
+  };
+
+  const onCanvasMove = (e) => {
+    if (disabled) return;
+    if (!drawingRef.current) return;
+    if (e.preventDefault) e.preventDefault();
+
+    const p = getPoint(e);
+    drawLine(lastPointRef.current, p);
+    lastPointRef.current = p;
+  };
+
+  const onCanvasEnd = () => {
+    if (disabled) return;
+    if (!drawingRef.current) return;
+
+    drawingRef.current = false;
+    const dataUrl = getCanvasDataUrl(); // data:image/png;base64,...
+    setVal(dataUrl);
+    emit(dataUrl, "change");
+  };
+
+  const clearCanvas = () => {
+    initCanvas();
+    setVal("");
+    emit("", "change");
+  };
 
   /* ---------------- RENDERERS ---------------- */
 
@@ -431,7 +548,7 @@ export function AlloyInput({ input, output, fileUploader }) {
         <label className="form-label d-block mb-2">{input.label}</label>
       )}
       {input.options.map((o, i) => (
-        <div className="form-check" key={i}>
+        <div className="form-check" key={o.value ?? i}>
           <input
             type="radio"
             id={`${input.id}_${i}`}
@@ -442,11 +559,9 @@ export function AlloyInput({ input, output, fileUploader }) {
             onChange={handleChange}
             onBlur={handleBlur}
             aria-invalid={showError || undefined}
+            disabled={!!input.disabled}
           />
-          <label
-            className="form-check-label"
-            htmlFor={`${input.id}_${i}`}
-          >
+          <label className="form-check-label" htmlFor={`${input.id}_${i}`}>
             {o.label}
           </label>
         </div>
@@ -461,7 +576,7 @@ export function AlloyInput({ input, output, fileUploader }) {
         <label className="form-label d-block mb-2">{input.label}</label>
       )}
       {input.options.map((o, i) => (
-        <div className="form-check" key={i}>
+        <div className="form-check" key={o.value ?? i}>
           <input
             type="checkbox"
             id={`${input.id}_${i}`}
@@ -472,11 +587,9 @@ export function AlloyInput({ input, output, fileUploader }) {
             onChange={handleChange}
             onBlur={handleBlur}
             aria-invalid={showError || undefined}
+            disabled={!!input.disabled}
           />
-          <label
-            className="form-check-label"
-            htmlFor={`${input.id}_${i}`}
-          >
+          <label className="form-check-label" htmlFor={`${input.id}_${i}`}>
             {o.label}
           </label>
         </div>
@@ -495,12 +608,51 @@ export function AlloyInput({ input, output, fileUploader }) {
         accept={input.accept}
         multiple={!!input.multiple}
       />
-      {uploading && (
-        <div className="form-text mt-1">Uploading...</div>
-      )}
+      {uploading && <div className="form-text mt-1">Uploading...</div>}
       {!uploading && val && typeof val === "string" && (
         <div className="form-text mt-1 text-break">{val}</div>
       )}
+    </div>
+  );
+
+  const renderCanvas = () => (
+    <div>
+      <canvas
+        ref={canvasRef}
+        width={canvasWidth}
+        height={canvasHeight}
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+          border: "1px solid #ced4da",
+          borderRadius: "0.375rem",
+          touchAction: "none",
+          cursor: disabled ? "not-allowed" : "crosshair",
+          opacity: disabled ? 0.6 : 1
+        }}
+        onMouseDown={onCanvasStart}
+        onMouseMove={onCanvasMove}
+        onMouseUp={onCanvasEnd}
+        onMouseLeave={onCanvasEnd}
+        onTouchStart={onCanvasStart}
+        onTouchMove={onCanvasMove}
+        onTouchEnd={onCanvasEnd}
+        aria-invalid={showError || undefined}
+      />
+
+      {!disabled && (
+        <div className="mt-2">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={clearCanvas}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      {showError && errorBlock}
     </div>
   );
 
@@ -526,6 +678,8 @@ export function AlloyInput({ input, output, fileUploader }) {
         return renderCheckboxGroup();
       case "file":
         return renderFile();
+      case "canvas":
+        return renderCanvas();
       default:
         return renderTextLike();
     }
@@ -544,8 +698,7 @@ export function AlloyInput({ input, output, fileUploader }) {
             {input.label}
           </label>
         </div>
-        {!(input.type === "radio" || input.type === "checkbox") &&
-          errorBlock}
+        {!(input.type === "radio" || input.type === "checkbox") && errorBlock}
       </div>
     );
   }
@@ -566,18 +719,18 @@ export function AlloyInput({ input, output, fileUploader }) {
 
           {["radio", "checkbox"].includes(input.type)
             ? renderControl()
-            : // For text-like, select, file etc, render just the bare control
-              input.type === "textarea"
+            : input.type === "textarea"
             ? renderTextarea()
             : input.type === "select"
             ? renderSelect()
             : input.type === "file"
             ? renderFile()
+            : input.type === "canvas"
+            ? renderCanvas()
             : renderTextLike()}
         </div>
 
-        {!(input.type === "radio" || input.type === "checkbox") &&
-          errorBlock}
+        {!(input.type === "radio" || input.type === "checkbox") && errorBlock}
       </div>
     );
   }
@@ -592,7 +745,8 @@ export function AlloyInput({ input, output, fileUploader }) {
         "email",
         "password",
         "date",
-        "file"
+        "file",
+        "canvas"
       ].includes(input.type) &&
         input.label && (
           <label htmlFor={input.id} className="form-label">
@@ -602,8 +756,7 @@ export function AlloyInput({ input, output, fileUploader }) {
 
       {renderControl()}
 
-      {!(input.type === "radio" || input.type === "checkbox") &&
-        errorBlock}
+      {!(input.type === "radio" || input.type === "checkbox") && errorBlock}
     </div>
   );
 }
