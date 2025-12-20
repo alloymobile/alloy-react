@@ -1,5 +1,5 @@
 // pages/Cell/InputIconPage.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { AlloyInput, InputObject } from "../../../src";
 
 /**
@@ -13,6 +13,11 @@ import { AlloyInput, InputObject } from "../../../src";
  *
  * You can override className in the JSON textarea to do custom themes
  * (e.g. "form-control form-control-lg bg-dark text-white").
+ *
+ * NOTE (SSR-safe IDs):
+ * - InputObject should NOT auto-generate `id` (prevents Next.js SSR hydration mismatches).
+ * - If you want a predictable id for testing, add `id: "myId"` in any preset JSON.
+ * - Otherwise AlloyInput generates a stable SSR/CSR id internally via useId()/useDomId().
  */
 const DEFAULTS = {
   username: {
@@ -25,6 +30,7 @@ const DEFAULTS = {
     icon: { iconClass: "fa-solid fa-user" },
     className: "form-control",
     // styles the <span> wrapping the icon (in addition to "input-group-text")
+    // Tip: set iconGroupClass: "" to ignore extra styling (keeps only "input-group-text")
     iconGroupClass: "bg-light border-0"
   },
 
@@ -74,7 +80,23 @@ const DEFAULTS = {
     className: "form-control"
   },
 
-  // ✅ NEW: Canvas demo in icon layout
+  // ✅ File demo in icon layout (MULTI enabled)
+  // - With fileUploader: emits string[] (multi) blob URLs in this demo
+  // - Without fileUploader: emits File[] (multi)
+  file: {
+    name: "attachments",
+    label: "Upload Files (icon layout, multi)",
+    type: "file",
+    layout: "icon",
+    required: true,
+    icon: { iconClass: "fa-solid fa-paperclip" },
+    className: "form-control",
+    iconGroupClass: "bg-light border-0",
+    accept: ".pdf,.png,.jpg,.jpeg",
+    multiple: true
+  },
+
+  // ✅ Canvas demo in icon layout
   // Emits: data.value = "data:image/png;base64,...."
   canvas: {
     name: "signature",
@@ -93,38 +115,44 @@ const DEFAULTS = {
 const TABS = Object.keys(DEFAULTS);
 
 export default function InputIconPage() {
-  // which icon-style input we're looking at
   const [tab, setTab] = useState("username");
 
-  // editable JSON for the currently selected preset
   const [inputJson, setInputJson] = useState(
     JSON.stringify(DEFAULTS["username"], null, 2)
   );
 
-  // live output from AlloyInput's `output` callback
   const [outputJson, setOutputJson] = useState(
     "// Interact with the field (type, blur, etc.)"
   );
 
-  // parse error state for the JSON editor
   const [parseError, setParseError] = useState("");
 
   /**
    * Build InputObject for preview.
-   * If user JSON is broken, fall back to DEFAULTS[tab] so preview never dies.
+   * Keep useMemo PURE (no setState inside render). We return parseErr and set it in an effect.
    */
-  const model = useMemo(() => {
+  const { model, parseErr } = useMemo(() => {
     try {
       const raw = JSON.parse(inputJson || "{}");
-      setParseError("");
-      return new InputObject(raw);
+      return { model: new InputObject(raw), parseErr: "" };
     } catch (e) {
-      setParseError(String(e.message || e));
-      return new InputObject(DEFAULTS[tab]);
+      const msg = String(e?.message || e);
+      return { model: new InputObject(DEFAULTS[tab]), parseErr: msg };
     }
   }, [inputJson, tab]);
 
-  // AlloyInput calls this whenever the field changes (OutputObject)
+  useEffect(() => {
+    setParseError(parseErr);
+  }, [parseErr]);
+
+  // Demo-only fileUploader:
+  // returns a local blob URL so you can see URL behavior without a backend.
+  async function demoFileUploader(fieldName, file) {
+    // eslint-disable-next-line no-unused-vars
+    const _ = fieldName;
+    return URL.createObjectURL(file);
+  }
+
   function handleOutput(out) {
     const payload =
       out && typeof out.toJSON === "function" ? out.toJSON() : out;
@@ -132,7 +160,6 @@ export default function InputIconPage() {
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
-  // Switch tabs between username / email / password / age / dob / canvas
   function switchTab(nextTab) {
     const fresh = DEFAULTS[nextTab];
     setTab(nextTab);
@@ -141,7 +168,6 @@ export default function InputIconPage() {
     setParseError("");
   }
 
-  // Pretty-print whatever's in the left JSON editor
   function handleFormat() {
     try {
       const parsed = JSON.parse(inputJson);
@@ -152,6 +178,10 @@ export default function InputIconPage() {
   }
 
   const isCanvas = tab === "canvas" || model?.type === "canvas";
+  const isFile = tab === "file" || model?.type === "file";
+
+  // Enable uploader only for file tab (keeps other tabs pure)
+  const uploader = isFile ? demoFileUploader : undefined;
 
   return (
     <div className="container py-3">
@@ -164,6 +194,7 @@ export default function InputIconPage() {
             <button
               className={`nav-link ${key === tab ? "active" : ""}`}
               onClick={() => switchTab(key)}
+              type="button"
             >
               {key}
             </button>
@@ -185,46 +216,51 @@ export default function InputIconPage() {
       {/* Live component preview */}
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
-          <AlloyInput input={model} output={handleOutput} />
+          {/* key={tab} remounts between presets (keeps demo clean; canvas won't carry state) */}
+          <AlloyInput
+            key={tab}
+            input={model}
+            output={handleOutput}
+            fileUploader={uploader}
+          />
 
           <div className="small text-secondary mt-2 text-center">
             <div>
-              <code>layout: "icon"</code> uses a Bootstrap{" "}
-              <code>.input-group</code> and shows an icon on the left.
+              <code>layout: "icon"</code> uses a Bootstrap <code>.input-group</code>{" "}
+              and shows an icon on the left.
             </div>
 
             <div>
-              This layout <strong>requires</strong>{" "}
-              <code>icon</code> (example:{" "}
+              This layout <strong>requires</strong> <code>icon</code> (example:{" "}
               <code>{`{ "iconClass": "fa-solid fa-user" }`}</code>).
             </div>
+
+            <div className="mt-1">
+              You can style the icon wrapper span using <code>iconGroupClass</code>.
+              It’s appended to <code>"input-group-text"</code>. If you want no extra
+              styling, set <code>iconGroupClass: ""</code>.
+            </div>
+
+            {isFile && (
+              <div className="mt-1">
+                <strong>File output:</strong> this demo enables <code>fileUploader</code>{" "}
+                and <code>multiple: true</code>, so <code>data.value</code> emits{" "}
+                <code>string[]</code> (blob URLs). Without uploader, it would emit{" "}
+                <code>File[]</code>.
+              </div>
+            )}
 
             {isCanvas && (
               <div className="mt-1">
                 <strong>Canvas output:</strong> emits a DataURL string in{" "}
-                <code>data.value</code>, like{" "}
-                <code>data:image/png;base64,...</code>.
+                <code>data.value</code>, like <code>data:image/png;base64,...</code>.
+                Blank canvas stays empty so <code>required</code> works correctly.
               </div>
             )}
 
             <div className="mt-1">
-              <code>className</code> goes directly on the control element. We
-              default to <code>"form-control"</code>, but you can try editing the
-              JSON to something like{" "}
-              <code>"form-control form-control-lg bg-dark text-white"</code> and
-              see it live.
-            </div>
-
-            <div className="mt-1">
-              You can style the icon wrapper span using{" "}
-              <code>iconGroupClass</code> (merged with{" "}
-              <code>"input-group-text"</code>), e.g.{" "}
-              <code>"bg-light border-0"</code>.
-            </div>
-
-            <div className="mt-1">
-              Required / pattern / passwordStrength validate on blur and speak
-              errors with <code>aria-live="polite"</code>.
+              Required / pattern / passwordStrength validate on blur and speak errors
+              with <code>aria-live="polite"</code>.
             </div>
           </div>
         </div>
@@ -272,29 +308,27 @@ export default function InputIconPage() {
                 <code>icon</code>.
               </li>
               <li>
-                <code>className</code> controls styling for the actual{" "}
-                {"<input />"} (or {"<input type='date' />"}, etc.). Default is{" "}
-                <code>"form-control"</code>.
+                <code>className</code> controls styling for the actual control
+                element. Default is <code>"form-control"</code>.
               </li>
               <li>
-                <code>iconGroupClass</code> controls classes on the icon span
-                inside the input group. It is appended to{" "}
-                <code>"input-group-text"</code>.
+                <code>iconGroupClass</code> controls classes on the icon span and
+                is appended to <code>"input-group-text"</code>. Set it to{" "}
+                <code>""</code> to ignore extra span styling.
               </li>
               <li>
-                You can customize validation:{" "}
-                <code>required</code>, <code>pattern</code>,{" "}
-                <code>passwordStrength</code>, <code>min</code>, etc.
+                You can customize validation: <code>required</code>,{" "}
+                <code>pattern</code>, <code>passwordStrength</code>, <code>min</code>, etc.
               </li>
               <li>
-                NEW: <code>type: "canvas"</code> supports optional{" "}
-                <code>width</code>, <code>height</code>,{" "}
-                <code>canvasStrokeWidth</code>, and <code>disabled</code>, and
-                emits <code>data:image/png;base64,...</code> as <code>value</code>.
+                <code>type: "file"</code> supports <code>accept</code> and{" "}
+                <code>multiple</code>. With <code>fileUploader</code>, value becomes{" "}
+                a URL string (multi = <code>string[]</code>).
               </li>
               <li>
-                These rules update live — delete <code>required</code> in the
-                JSON, blur again, and the error should stop.
+                <code>type: "canvas"</code> supports optional <code>width</code>,{" "}
+                <code>height</code>, <code>canvasStrokeWidth</code>, and{" "}
+                <code>disabled</code>, and emits <code>data:image/png;base64,...</code>.
               </li>
             </ul>
           </div>
@@ -330,7 +364,7 @@ export default function InputIconPage() {
             The callback receives a normalized <code>OutputObject</code>, e.g.:
             <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
 {`{
-  "id": "input-abc123",
+  "id": "input-<stable>",
   "type": "input",
   "action": "change",
   "error": false,
@@ -342,8 +376,8 @@ export default function InputIconPage() {
 }`}
             </pre>
 
-            For <code>type: "canvas"</code>, <code>data.value</code> will be a
-            DataURL string like <code>data:image/png;base64,...</code>.
+            For <code>type: "canvas"</code>, <code>data.value</code> is a DataURL string.
+            For <code>type: "file"</code> with multi enabled, <code>data.value</code> is an array.
           </div>
         </div>
       </div>

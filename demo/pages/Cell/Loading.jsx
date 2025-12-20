@@ -1,59 +1,71 @@
 // demo/pages/tissue/LoadingPage.jsx
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { AlloyLoading, LoadingObject } from "../../../src"; // ensure re-export
 
 export default function LoadingPage() {
   // Starting example the user can edit in the textarea
   const initial = {
+    // Optional: You can set a predictable id for testing.
+    // If omitted, AlloyLoading will generate an SSR-safe id internally.
     id: "alloyLoading1",
+
     message: "Loading data...",
+
     icon: {
-      iconClass: "fa-solid fa-spinner fa-3x fa-spin"
+      iconClass: "fa-solid fa-spinner fa-3x fa-spin",
+      // IconObject now supports className ("" = ignore)
+      className: ""
     },
+
     // Bootstrap defaults – user can change via JSON
     overlayClass:
       "d-flex align-items-center justify-content-center bg-dark bg-opacity-25 w-100 h-100 rounded",
     contentClass: "text-center p-4 rounded bg-white shadow",
     messageClass: "mt-3 text-muted",
     ariaLabel: "Loading demo overlay",
+
+    // ✅ Playground should control this:
     visible: true
   };
 
   // Textarea value as string
   const [jsonText, setJsonText] = useState(JSON.stringify(initial, null, 2));
+
+  // Parse/validation error shown under textarea
   const [error, setError] = useState("");
 
-  // Simple toggle so user can hide/show overlay in the demo
-  const [show, setShow] = useState(true);
-
-  // Parse the textarea into a plain object `data`
-  const data = useMemo(() => {
+  /**
+   * Parse JSON safely (keep useMemo PURE; do not setState inside render).
+   * The textbox is the playground — JSON is the source of truth.
+   */
+  const { data, parseErr } = useMemo(() => {
     try {
       const obj = JSON.parse(jsonText || "{}");
-      setError("");
-      return obj;
+      return { data: obj, parseErr: "" };
     } catch (e) {
-      setError(e.message);
-      return initial;
+      return { data: initial, parseErr: String(e?.message || e) };
     }
   }, [jsonText]);
 
-  // Convert plain object -> LoadingObject (injecting `visible` from demo toggle)
+  useEffect(() => {
+    setError(parseErr);
+  }, [parseErr]);
+
+  /**
+   * Convert plain object -> LoadingObject.
+   * IMPORTANT: We do NOT override `visible` here.
+   * Whatever is in the JSON is what the component uses.
+   */
   const loadingObj = useMemo(() => {
     try {
-      return new LoadingObject({
-        ...data,
-        visible: show
-      });
+      return new LoadingObject(data);
     } catch (e) {
-      setError(e.message);
-      return new LoadingObject({
-        ...initial,
-        visible: show
-      });
+      setError(String(e?.message || e));
+      return new LoadingObject(initial);
     }
-  }, [data, show]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   // Code usage sample
   const codeSample = `<AlloyLoading loading={new LoadingObject(loadingObject)} />`;
@@ -66,6 +78,22 @@ export default function LoadingPage() {
       /* ignore bad json until user fixes it */
     }
   };
+
+  /**
+   * Toggle visible by editing the JSON (keeps playground single-source-of-truth).
+   */
+  const toggleVisibleInJson = () => {
+    try {
+      const obj = JSON.parse(jsonText || "{}");
+      const current = typeof obj.visible === "boolean" ? obj.visible : true;
+      obj.visible = !current;
+      setJsonText(JSON.stringify(obj, null, 2));
+    } catch {
+      // ignore; user can fix JSON
+    }
+  };
+
+  const isVisible = typeof data?.visible === "boolean" ? data.visible : true;
 
   return (
     <section id="loading" className="p-md-0">
@@ -89,9 +117,11 @@ export default function LoadingPage() {
             <button
               type="button"
               className="btn btn-sm btn-outline-secondary"
-              onClick={() => setShow((v) => !v)}
+              onClick={toggleVisibleInJson}
+              disabled={!!error}
+              title={error ? "Fix JSON first" : "Toggles data.visible in the JSON"}
             >
-              {show ? "Hide" : "Show"} overlay
+              {isVisible ? "Set visible=false" : "Set visible=true"}
             </button>
           </div>
 
@@ -108,7 +138,7 @@ export default function LoadingPage() {
             <div className="p-3 text-muted small">
               This is your underlying content. The <code>AlloyLoading</code>{" "}
               overlay appears on top of this area when{" "}
-              <code>loading.visible === true</code>.
+              <code>visible === true</code> in the JSON.
             </div>
           </div>
         </div>
@@ -139,35 +169,39 @@ export default function LoadingPage() {
             spellCheck={false}
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
-            placeholder='{"message":"Loading...","icon":{"iconClass":"fa-solid fa-spinner fa-3x fa-spin"},"visible":true}'
+            placeholder='{"message":"Loading...","icon":{"iconClass":"fa-solid fa-spinner fa-3x fa-spin","className":""},"visible":true}'
           />
 
           {error ? (
-            <div className="invalid-feedback">{error}</div>
+            <div className="invalid-feedback d-block">{error}</div>
           ) : (
             <div className="form-text">
-              All fields are optional. Common keys:
+              The textbox is the playground — this JSON is the source of truth.
               <ul className="mb-0">
+                <li>
+                  <code>visible</code> – set <code>false</code> to hide the overlay.
+                </li>
                 <li>
                   <code>message</code> – text under the icon (default:{" "}
                   <code>"Loading..."</code>).
                 </li>
                 <li>
-                  <code>icon.iconClass</code> – Font Awesome classes, e.g.{" "}
-                  <code>"fa-solid fa-spinner fa-3x fa-spin"</code>.
+                  <code>icon.iconClass</code> – Font Awesome classes.
+                </li>
+                <li>
+                  <code>icon.className</code> – extra icon classes (use{" "}
+                  <code>""</code> to ignore).
                 </li>
                 <li>
                   <code>overlayClass</code>, <code>contentClass</code>,{" "}
-                  <code>messageClass</code> – override Bootstrap classes used
-                  for layout and styling.
+                  <code>messageClass</code> – Bootstrap class overrides.
                 </li>
                 <li>
-                  <code>visible</code> – controls whether the overlay is
-                  rendered.
+                  <code>id</code> – optional predictable DOM id. If omitted,
+                  AlloyLoading generates an SSR-safe id internally.
                 </li>
                 <li>
-                  <code>ariaLabel</code> – accessible label for screen
-                  readers.
+                  <code>ariaLabel</code> – accessible label for screen readers.
                 </li>
               </ul>
             </div>

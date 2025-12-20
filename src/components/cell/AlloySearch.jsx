@@ -1,31 +1,11 @@
-// src/lib/components/tissue/AlloySearch.jsx
 import React, { useEffect, useMemo, useState } from "react";
 
-import { OutputObject, generateId } from "../../utils/idHelper.js";
+import { OutputObject } from "../../utils/idHelper.js";
+import { useDomId } from "../../utils/idHelper.js"; // <-- adjust path to your hook
 import AlloyInput, { InputObject } from "./AlloyInput.jsx";
 
 /* -------------------------------------------------------
  * SearchObject (model)
- *
- * Config shape:
- * {
- *   id?: string;
- *   className?: string;          // wrapper row
- *   search: InputConfig | InputObject;
- *
- *   // Behaviour tuning
- *   minChars?: number;           // default 2
- *   debounceMs?: number;         // default 400
- *
- *   // Results (injected by parent, usually from server)
- *   results?: any[];             // array of strings or objects
- *   resultConfig?: {
- *     idKey?: string;            // property for id (default "id")
- *     labelKey?: string;         // property for main label (default "label" | "name" | "title")
- *     descriptionKey?: string;   // optional property for second line
- *     iconKey?: string;          // optional property for iconClass
- *   };
- * }
  * ----------------------------------------------------- */
 export class SearchObject {
   /**
@@ -34,7 +14,8 @@ export class SearchObject {
   constructor(response = {}) {
     const cfg = response || {};
 
-    this.id = cfg.id ?? generateId("search");
+    // IMPORTANT (SSR-safe): do NOT auto-generate ids in model layer
+    this.id = cfg.id; // optional
     this.className = cfg.className ?? "row mb-3";
 
     // Normalize search → InputObject
@@ -44,8 +25,8 @@ export class SearchObject {
       this.search = new InputObject(cfg.search);
     } else {
       // SAFE DEFAULT: provide name + icon so InputObject doesn't throw
+      // NOTE: do NOT hardcode id (avoids duplicates). AlloyInput will create SSR-safe id.
       this.search = new InputObject({
-        id: "searchInput",
         name: "query",
         type: "text",
         layout: "icon",
@@ -53,6 +34,10 @@ export class SearchObject {
         placeholder: cfg.placeholder ?? "Search…",
         icon: { iconClass: "fa-solid fa-magnifying-glass" },
         className: "form-control",
+
+        // iconGroupClass exists on InputObject; empty string means "ignore extras"
+        // (InputObject always includes "input-group-text" base class)
+        iconGroupClass: cfg.iconGroupClass ?? ""
       });
     }
 
@@ -73,53 +58,18 @@ export class SearchObject {
       idKey: "id",
       labelKey: "label",
       descriptionKey: "description",
-      iconKey: "iconClass",
+      iconKey: "iconClass"
     };
 
     this.resultConfig = {
       ...defaultResultConfig,
-      ...(cfg.resultConfig || {}),
+      ...(cfg.resultConfig || {})
     };
   }
 }
 
 /* -------------------------------------------------------
  * AlloySearch (view)
- *
- * Emits:
- *   1) Debounced query:
- *      {
- *        id: search.id,
- *        type: "search-bar",
- *        action: "search",
- *        error: false,
- *        data: { [fieldName]: "query text" }
- *      }
- *
- *   1b) Clear:
- *      {
- *        id: search.id,
- *        type: "search-bar",
- *        action: "clear",
- *        error: false,
- *        data: { [fieldName]: "" }
- *      }
- *
- *   2) Result selection:
- *      {
- *        id: search.id,
- *        type: "search-bar",
- *        action: "select",
- *        error: false,
- *        data: {
- *          [fieldName]: "current query text",
- *          result: <raw result object or string>
- *        }
- *      }
- *
- * NOTE:
- *   - Component does NOT call HTTP. Parent listens for "search"/"clear",
- *     calls server, and re-renders with updated `results`.
  * ----------------------------------------------------- */
 export function AlloySearch({ search, output }) {
   if (!search || !(search instanceof SearchObject)) {
@@ -129,6 +79,9 @@ export function AlloySearch({ search, output }) {
   const emit = (out) => {
     if (typeof output === "function") output(out);
   };
+
+  // SSR/CSR-stable wrapper id
+  const domId = useDomId("search", search.id);
 
   const inputName = search.search?.name ?? "query";
 
@@ -140,44 +93,46 @@ export function AlloySearch({ search, output }) {
       : "";
   });
 
-  // When parent swaps SearchObject (e.g. different screen), sync value
+  // Sync when parent updates the configured starting value
   useEffect(() => {
     const v =
       typeof search.search?.value !== "undefined"
         ? String(search.search.value)
         : "";
     setLiveValue(v);
-  }, [search]);
+  }, [search.search?.value]);
 
   /* ----------------- Debounced search + clear emission ----------------- */
 
   useEffect(() => {
     const trimmed = (liveValue || "").trim();
 
-    // ✅ IMPORTANT: when cleared (or below minChars) emit "clear"
+    // When cleared (or below minChars) emit "clear"
     if (!trimmed || trimmed.length < search.minChars) {
-      const out = OutputObject.ok({
-        id: search.id,
-        type: "search-bar",
-        action: "clear",
-        data: { [inputName]: "" },
-      });
-      emit(out);
+      emit(
+        OutputObject.ok({
+          id: domId,
+          type: "search-bar",
+          action: "clear",
+          data: { [inputName]: "" }
+        })
+      );
       return;
     }
 
     const handle = setTimeout(() => {
-      const out = OutputObject.ok({
-        id: search.id,
-        type: "search-bar",
-        action: "search",
-        data: { [inputName]: trimmed },
-      });
-      emit(out);
+      emit(
+        OutputObject.ok({
+          id: domId,
+          type: "search-bar",
+          action: "search",
+          data: { [inputName]: trimmed }
+        })
+      );
     }, search.debounceMs);
 
     return () => clearTimeout(handle);
-  }, [liveValue, search.id, search.minChars, search.debounceMs, inputName]);
+  }, [liveValue, search.minChars, search.debounceMs, inputName, domId]);
 
   /* ----------------- Handle inner input events ----------------- */
 
@@ -207,7 +162,7 @@ export function AlloySearch({ search, output }) {
           id: String(index),
           label: String(item),
           description: "",
-          iconClass: "",
+          iconClass: ""
         };
       }
 
@@ -229,7 +184,7 @@ export function AlloySearch({ search, output }) {
         id: String(id),
         label: String(label),
         description: description ? String(description) : "",
-        iconClass: iconClass ? String(iconClass) : "",
+        iconClass: iconClass ? String(iconClass) : ""
       };
     });
   }, [search.results, search.resultConfig]);
@@ -239,27 +194,26 @@ export function AlloySearch({ search, output }) {
   /* ----------------- Result selection handler ----------------- */
 
   const handleResultClick = (resultItem) => {
-    const out = OutputObject.ok({
-      id: search.id,
-      type: "search-bar",
-      action: "select",
-      data: {
-        [inputName]: (liveValue || "").trim(),
-        result: resultItem.raw,
-      },
-    });
+    emit(
+      OutputObject.ok({
+        id: domId,
+        type: "search-bar",
+        action: "select",
+        data: {
+          [inputName]: (liveValue || "").trim(),
+          result: resultItem.raw
+        }
+      })
+    );
 
-    emit(out);
-
-    // ✅ Optional UX: clear the input after selecting a result
-    // If you DON'T want this behaviour, remove the next line.
+    // Optional UX: clear input after selecting
     setLiveValue("");
   };
 
   /* ----------------- Render ----------------- */
 
   return (
-    <div id={search.id} className={search.className}>
+    <div id={domId} className={search.className}>
       <div className="col-12">
         {/* Search input */}
         <AlloyInput input={search.search} output={handleSearchOutput} />

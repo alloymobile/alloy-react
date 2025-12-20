@@ -14,7 +14,7 @@ export function useDomId(prefix = "id", providedId) {
   const rid = useId();
 
   return useMemo(() => {
-    if (providedId) return providedId;
+    if (typeof providedId === "string" && providedId.trim() !== "") return providedId.trim();
 
     // React useId() may include ":"; it's valid in HTML, but we can clean it
     const clean = String(rid).replace(/[:]/g, "");

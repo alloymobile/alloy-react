@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+// pages/Cell/InputFloatingPage.jsx
+import React, { useMemo, useEffect, useState } from "react";
 import { AlloyInput, InputObject } from "../../../src";
 
 /**
@@ -10,6 +11,13 @@ import { AlloyInput, InputObject } from "../../../src";
  * NOTE:
  * - Canvas does NOT work well with Bootstrap floating labels.
  *   So canvas preset uses layout: "text" (or you can switch it to "icon").
+ * - File input also looks/behaves awkward in floating labels across browsers,
+ *   so file preset uses layout: "icon".
+ *
+ * NOTE (SSR-safe IDs):
+ * - InputObject should NOT auto-generate `id` (prevents Next.js SSR hydration mismatches).
+ * - If you want a predictable id for testing, add `id: "myId"` in any preset JSON.
+ * - Otherwise AlloyInput generates a stable SSR/CSR id internally via useId()/useDomId().
  */
 const DEFAULTS = {
   name: {
@@ -65,7 +73,23 @@ const DEFAULTS = {
     className: "form-control"
   },
 
-  // ✅ NEW: Canvas demo
+  // ✅ File demo (icon layout; MULTI enabled)
+  // - With fileUploader: emits string[] (multi) blob URLs in this demo
+  // - Without fileUploader: emits File[] (multi)
+  file: {
+    name: "attachments",
+    label: "Upload Files",
+    type: "file",
+    layout: "icon", // ✅ not floating
+    required: true,
+    icon: { iconClass: "fa-solid fa-paperclip" },
+    iconGroupClass: "bg-light border-0",
+    className: "form-control",
+    accept: ".pdf,.png,.jpg,.jpeg",
+    multiple: true
+  },
+
+  // ✅ Canvas demo
   // IMPORTANT: canvas uses layout "text" (floating label isn't suitable for <canvas>).
   // Emits: data.value = "data:image/png;base64,...."
   canvas: {
@@ -95,19 +119,32 @@ export default function InputFloatingPage() {
   );
   const [parseError, setParseError] = useState("");
 
-  // Build model from current JSON, fallback to tab default if broken.
-  const model = useMemo(() => {
+  /**
+   * Build model from current JSON, fallback to tab default if broken.
+   * Keep useMemo PURE (no setState inside render). Return parseErr and set it via useEffect.
+   */
+  const { model, parseErr } = useMemo(() => {
     try {
       const raw = JSON.parse(inputJson || "{}");
-      setParseError("");
-      return new InputObject(raw);
+      return { model: new InputObject(raw), parseErr: "" };
     } catch (e) {
-      setParseError(String(e.message || e));
-      return new InputObject(DEFAULTS[tab]);
+      const msg = String(e?.message || e);
+      return { model: new InputObject(DEFAULTS[tab]), parseErr: msg };
     }
   }, [inputJson, tab]);
 
-  // Now receives OutputObject from AlloyInput
+  useEffect(() => {
+    setParseError(parseErr);
+  }, [parseErr]);
+
+  // Demo-only fileUploader:
+  // returns a local blob URL so you can see URL behavior without a backend.
+  async function demoFileUploader(fieldName, file) {
+    // eslint-disable-next-line no-unused-vars
+    const _ = fieldName;
+    return URL.createObjectURL(file);
+  }
+
   function handleOutput(out) {
     const payload =
       out && typeof out.toJSON === "function" ? out.toJSON() : out;
@@ -133,7 +170,11 @@ export default function InputFloatingPage() {
   }
 
   const isCanvas = tab === "canvas" || model?.type === "canvas";
+  const isFile = tab === "file" || model?.type === "file";
   const isFloating = model?.layout === "floating";
+
+  // Enable uploader only for file tab (keeps other tabs pure)
+  const uploader = isFile ? demoFileUploader : undefined;
 
   return (
     <div className="container py-3">
@@ -146,6 +187,7 @@ export default function InputFloatingPage() {
             <button
               className={`nav-link ${key === tab ? "active" : ""}`}
               onClick={() => switchTab(key)}
+              type="button"
             >
               {key}
             </button>
@@ -176,37 +218,47 @@ export default function InputFloatingPage() {
             </div>
           )}
 
-          <AlloyInput input={model} output={handleOutput} />
+          {/* key={tab} remounts between presets (keeps demo clean; canvas won't carry state) */}
+          <AlloyInput
+            key={tab}
+            input={model}
+            output={handleOutput}
+            fileUploader={uploader}
+          />
 
           <div className="small text-secondary mt-2 text-center">
             <div className="mb-2">
-              <code>layout: "floating"</code> uses Bootstrap{" "}
-              <code>.form-floating</code>. The label floats above on focus or
-              once there's content.
+              This page demonstrates <code>layout: "floating"</code> for normal
+              inputs, and uses safer layouts for special controls.
             </div>
 
             <div className="mb-2">
               <strong>Floating requires:</strong>{" "}
-              <code>layout: "floating"</code> and an <code>icon</code> (for
-              example <code>{`{ iconClass: "fa-solid fa-user" }`}</code>).
+              <code>layout: "floating"</code> and an <code>icon</code>.
             </div>
+
+            {isFile && (
+              <div className="mb-2">
+                <strong>File note:</strong> file inputs don’t behave consistently
+                with floating labels across browsers, so this preset uses{" "}
+                <code>layout: "icon"</code>. With demo uploader +{" "}
+                <code>multiple: true</code>, <code>data.value</code> emits{" "}
+                <code>string[]</code> (blob URLs).
+              </div>
+            )}
 
             {isCanvas && (
               <div className="mb-2">
-                <strong>Canvas output:</strong> emits a DataURL string in{" "}
-                <code>data.value</code>, like{" "}
-                <code>data:image/png;base64,...</code>.
-                <br />
-                Best layouts for canvas: <code>"text"</code> or{" "}
-                <code>"icon"</code>.
+                <strong>Canvas note:</strong> canvas uses{" "}
+                <code>layout: "text"</code> (or switch to <code>"icon"</code>).
+                Output emits a DataURL string; blank stays empty so{" "}
+                <code>required</code> works correctly.
               </div>
             )}
 
             <div className="mb-0">
-              Validation (<code>required</code>, <code>pattern</code>,{" "}
-              <code>passwordStrength</code>, <code>min</code>, etc.) is reactive.
-              Edit the JSON, blur again, and watch rules change. Errors are
-              spoken with <code>aria-live="polite"</code>.
+              Validation is reactive. Edit JSON, blur again, and rules update.
+              Errors announce with <code>aria-live="polite"</code>.
             </div>
           </div>
         </div>
@@ -256,23 +308,21 @@ export default function InputFloatingPage() {
                 <code>layout: "floating"</code> requires an <code>icon</code>.
               </li>
               <li>
-                <code>className</code> customizes the control’s classes (default{" "}
-                <code>"form-control"</code>).
+                File preset uses <code>layout: "icon"</code> (recommended for{" "}
+                <code>&lt;input type="file"&gt;</code>).
               </li>
               <li>
-                Add validation knobs like{" "}
-                <code>required</code>, <code>pattern</code>,{" "}
-                <code>passwordStrength</code>, <code>min</code>, etc.
-              </li>
-              <li>
-                NEW: <code>type: "canvas"</code> supports optional{" "}
-                <code>width</code>, <code>height</code>,{" "}
-                <code>canvasStrokeWidth</code>, and <code>disabled</code>.
-              </li>
-              <li>
-                For canvas, use <code>layout: "text"</code> or{" "}
-                <code>layout: "icon"</code> (floating labels aren’t suitable for{" "}
+                Canvas preset uses <code>layout: "text"</code> (recommended for{" "}
                 <code>&lt;canvas&gt;</code>).
+              </li>
+              <li>
+                <code>type: "file"</code> supports <code>accept</code> and{" "}
+                <code>multiple</code>. With <code>fileUploader</code>, multi emits{" "}
+                <code>string[]</code>.
+              </li>
+              <li>
+                Optional: set an explicit <code>id</code> in JSON. If omitted,
+                AlloyInput generates an SSR-safe id internally.
               </li>
             </ul>
           </div>
@@ -308,7 +358,7 @@ export default function InputFloatingPage() {
             The callback gets a normalized <code>OutputObject</code>, like:
             <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
 {`{
-  "id": "input-xyz",
+  "id": "input-<stable>",
   "type": "input",
   "action": "change",
   "error": false,
@@ -319,8 +369,8 @@ export default function InputFloatingPage() {
   }
 }`}
             </pre>
-            For <code>type: "canvas"</code>, <code>data.value</code> will be a
-            DataURL string like <code>data:image/png;base64,...</code>.
+            For <code>type: "canvas"</code>, <code>data.value</code> is a DataURL string.
+            For <code>type: "file"</code> with multi enabled, <code>data.value</code> is an array.
           </div>
         </div>
       </div>

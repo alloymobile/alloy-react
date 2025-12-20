@@ -1,32 +1,12 @@
 // src/components/cell/AlloyLoading.jsx
 
-import React from "react";
+import React, { useMemo } from "react";
 
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
-import { generateId } from "../../utils/idHelper.js";
+import { useDomId } from "../../utils/idHelper.js"; // <-- adjust path to your hook
 
 /* -------------------------------------------
  * LoadingObject
- *
- * Constructor config shape:
- *
- * {
- *   id?: string;                 // optional DOM id; auto "loading-..." if missing
- *   message?: string;            // optional text under icon (default: "Loading...")
- *   visible?: boolean;           // control visibility (default: true)
- *
- *   // icon can be:
- *   //   - IconObject instance
- *   //   - plain { iconClass: string, id?: string }
- *   icon?: IconObject | { iconClass: string; id?: string };
- *
- *   // Bootstrap classes (all overridable / injectable via JSON)
- *   overlayClass?: string;       // outer overlay wrapper
- *   contentClass?: string;       // inner content container
- *   messageClass?: string;       // message text element
- *
- *   ariaLabel?: string;          // accessible label, default = message or "Loading"
- * }
  * ----------------------------------------- */
 
 export class LoadingObject {
@@ -34,67 +14,56 @@ export class LoadingObject {
    * @param {Object} cfg
    */
   constructor(cfg = {}) {
-    // Id
-    this.id = cfg.id ?? generateId("loading");
+    // IMPORTANT (SSR-safe):
+    // Do NOT auto-generate ids in the model layer.
+    // If caller wants a fixed id, they pass it.
+    this.id = cfg.id; // optional
 
-    // Message
     this.message = cfg.message ?? "Loading...";
-
-    // Visibility
     this.visible = cfg.visible ?? true;
 
-    // Accessible label
     this.ariaLabel = cfg.ariaLabel ?? this.message ?? "Loading";
 
-    // Icon: allow IconObject or plain { iconClass, id? }
+    // Icon: allow IconObject or plain { iconClass, className?, id? }
     if (cfg.icon instanceof IconObject) {
       this.icon = cfg.icon;
     } else if (cfg.icon && typeof cfg.icon === "object") {
       this.icon = new IconObject(cfg.icon);
     } else {
-      // default Font Awesome spinner
       this.icon = new IconObject({
-        iconClass: "fa-solid fa-spinner fa-3x fa-spin",
+        iconClass: "fa-solid fa-spinner fa-3x fa-spin"
       });
     }
 
-    // Bootstrap-only defaults (no custom CSS)
     this.overlayClass =
       cfg.overlayClass ??
       "position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50";
 
-    this.contentClass =
-      cfg.contentClass ?? "text-center p-4 rounded bg-white shadow";
+    this.contentClass = cfg.contentClass ?? "text-center p-4 rounded bg-white shadow";
 
-    this.messageClass =
-      cfg.messageClass ?? "mt-3 text-muted";
+    this.messageClass = cfg.messageClass ?? "mt-3 text-muted";
   }
 }
 
 /* -------------------------------------------
  * AlloyLoading
- *
- * Props:
- *   - loading: LoadingObject   (required)
- *
- * Visibility is driven by `loading.visible`.
- * If `visible === false`, component returns null.
  * ----------------------------------------- */
 
 export function AlloyLoading({ loading }) {
   if (!loading || !(loading instanceof LoadingObject)) {
-    throw new Error(
-      "AlloyLoading requires `loading` (LoadingObject instance)."
-    );
+    throw new Error("AlloyLoading requires `loading` (LoadingObject instance).");
   }
 
   if (!loading.visible) {
     return null;
   }
 
+  // SSR/CSR-stable DOM id
+  const domId = useDomId("loading", loading.id);
+
   return (
     <div
-      id={loading.id}
+      id={domId}
       className={loading.overlayClass}
       aria-busy="true"
       aria-live="polite"
@@ -103,11 +72,7 @@ export function AlloyLoading({ loading }) {
     >
       <div className={loading.contentClass}>
         <AlloyIcon icon={loading.icon} />
-        {loading.message && (
-          <div className={loading.messageClass}>
-            {loading.message}
-          </div>
-        )}
+        {loading.message && <div className={loading.messageClass}>{loading.message}</div>}
       </div>
     </div>
   );

@@ -1,9 +1,7 @@
 // demo/pages/Cell/Search.jsx
-import React, { useMemo, useState } from "react";
-// Adjust path if you re-export from src/index:
-import AlloySearch, {
-  SearchObject,
-} from "../../../src/components/cell/AlloySearch.jsx";
+import React, { useMemo, useEffect, useState } from "react";
+// Prefer re-export from src/index if you have it:
+import AlloySearch, { SearchObject } from "../../../src/components/cell/AlloySearch.jsx";
 
 /* -------------------------------------------------------
  * Mock dataset (pretend this is your server)
@@ -14,59 +12,62 @@ const MOCK_EMAILS = [
     to: "alpha@precastxchange.com",
     subject: "Welcome to PrecastXchange",
     status: "Sent",
-    tags: "welcome,onboarding",
+    tags: "welcome,onboarding"
   },
   {
     id: "e002",
     to: "beta@precastxchange.com",
     subject: "Password reset instructions",
     status: "Queued",
-    tags: "security,reset",
+    tags: "security,reset"
   },
   {
     id: "e003",
     to: "gamma@precastxchange.com",
     subject: "Your invoice #401",
     status: "Failed",
-    tags: "invoice,billing",
-  },
+    tags: "invoice,billing"
+  }
 ];
 
 /* -------------------------------------------------------
  * Default Search config (for the left JSON editor)
  *
- * This is a valid SearchObject config:
- *  - id, className
- *  - search: InputConfig (InputObject will be created inside)
- *  - minChars, debounceMs
- *  - resultConfig: how to render result objects
- *
- * NOTE: `results` are NOT in this JSON — they come from "server"
- * and are injected in code, based on the user query.
+ * NOTE (SSR-safe IDs):
+ * - SearchObject should NOT auto-generate `id`.
+ * - If you omit root `id`, AlloySearch generates a stable SSR/CSR id internally.
+ * - For the nested Input config, you can omit `search.id` as well; AlloyInput
+ *   will generate a stable SSR/CSR id internally.
  * ----------------------------------------------------- */
 const DEFAULT_SEARCH_CONFIG = {
+  // Optional: keep for predictable demos/tests. You can delete it and it still works.
   id: "emailSearchBar",
+
   className: "row my-3",
+
   search: {
+    // Optional: you can omit this too (AlloyInput generates SSR-safe id)
     id: "emailSearch",
     name: "emailSearch",
     type: "text",
     layout: "icon",
-    icon: { iconClass: "fa-solid fa-magnifying-glass" },
+    icon: { iconClass: "fa-solid fa-magnifying-glass", className: "" },
     label: "Search Emails",
     placeholder: "Search by recipient, subject, tags…",
     className: "form-control",
-    // NEW: styles the <span> that wraps the icon (merged with "input-group-text")
+    // styles the <span> that wraps the icon (merged with "input-group-text")
     iconGroupClass: "bg-light border-0"
   },
+
   minChars: 2,
   debounceMs: 400,
+
   resultConfig: {
     idKey: "id",
     labelKey: "subject",
-    descriptionKey: "to",
+    descriptionKey: "to"
     // iconKey: "iconClass" // if your results have a status icon
-  },
+  }
 };
 
 export default function SearchPage() {
@@ -88,31 +89,47 @@ export default function SearchPage() {
   const [lastQuery, setLastQuery] = useState("");
 
   /**
+   * Parse JSON safely (no setState inside useMemo).
+   */
+  const { baseConfig, parseErr } = useMemo(() => {
+    try {
+      const obj = JSON.parse(searchJson || "{}");
+      return { baseConfig: obj, parseErr: "" };
+    } catch (e) {
+      return {
+        baseConfig: DEFAULT_SEARCH_CONFIG,
+        parseErr: String(e?.message || e)
+      };
+    }
+  }, [searchJson]);
+
+  useEffect(() => {
+    setParseError(parseErr);
+  }, [parseErr]);
+
+  /**
    * Build SearchObject from JSON + current results.
-   * If JSON parse or SearchObject construction fails,
-   * fall back to DEFAULT_SEARCH_CONFIG so preview never dies.
+   * If SearchObject construction fails, fall back to defaults.
    */
   const searchModel = useMemo(() => {
     try {
-      const baseConfig = JSON.parse(searchJson || "{}");
-      setParseError("");
       return new SearchObject({
         ...baseConfig,
-        results,
+        results
       });
     } catch (e) {
-      setParseError(String(e.message || e));
+      setParseError(String(e?.message || e));
       return new SearchObject({
         ...DEFAULT_SEARCH_CONFIG,
-        results,
+        results
       });
     }
-  }, [searchJson, results]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseConfig, results]);
 
   // Handle output from AlloySearch (debounced "search" + "select")
   function handleOutput(out) {
-    const payload =
-      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+    const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
 
     // Show raw payload in the right-hand textarea
     setOutputJson(JSON.stringify(payload, null, 2));
@@ -138,12 +155,7 @@ export default function SearchPage() {
       }
 
       const filtered = MOCK_EMAILS.filter((email) => {
-        const haystack = [
-          email.to,
-          email.subject,
-          email.tags,
-          email.status,
-        ]
+        const haystack = [email.to, email.subject, email.tags, email.status]
           .join(" ")
           .toLowerCase();
         return haystack.includes(query);
@@ -153,11 +165,16 @@ export default function SearchPage() {
       return;
     }
 
+    // Clear event (input below minChars or empty)
+    if (action === "clear") {
+      setLastQuery("");
+      setResults([]);
+      return;
+    }
+
     // Result selected (user clicked a row)
     if (action === "select") {
       const result = data?.result;
-      // You could navigate, open modal, etc.
-      // For demo we just keep it in outputJson already.
       console.log("Selected search result:", result);
     }
   }
@@ -200,19 +217,26 @@ export default function SearchPage() {
               <code>minChars</code> and <code>debounceMs</code> from the JSON.
             </div>
             <div>
-              When the debounced query fires, it emits an{" "}
-              <code>action: "search"</code> event. This demo then filters a
-              mock email list and injects the results via{" "}
-              <code>SearchObject.results</code>.
+              When the debounced query fires, it emits{" "}
+              <code>action: "search"</code>. This demo filters a mock email list
+              and injects results via <code>SearchObject.results</code>.
             </div>
             <div>
-              Clicking a result row emits <code>action: "select"</code> and
-              returns the <strong>raw result object</strong> in{" "}
-              <code>data.result</code>.
+              Clearing the input (or typing below <code>minChars</code>) emits{" "}
+              <code>action: "clear"</code>, and the demo clears results.
+            </div>
+            <div>
+              Clicking a result emits <code>action: "select"</code> and returns
+              the <strong>raw result</strong> in <code>data.result</code>.
             </div>
             <div className="mt-1">
               Last query: <code>{lastQuery || "(none yet)"}</code> — Results:{" "}
               {results.length}
+            </div>
+            <div className="mt-1">
+              Tip: Remove <code>id</code> at the root or inside{" "}
+              <code>search</code> in the JSON — IDs remain stable because the
+              components generate SSR-safe DOM ids internally.
             </div>
           </div>
         </div>
@@ -251,62 +275,31 @@ export default function SearchPage() {
             spellCheck={false}
           />
           {parseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {parseError}
-            </div>
+            <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
 
           <div className="form-text">
             <ul className="mb-0 ps-3">
               <li>
-                Root shape is a <code>SearchObject</code>:
-                <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
-{`{
-  "id": "emailSearchBar",
-  "className": "row my-3",
-  "search": {
-    "id": "emailSearch",
-    "name": "emailSearch",
-    "type": "text",
-    "layout": "icon",
-    "icon": { "iconClass": "fa-solid fa-magnifying-glass" },
-    "label": "Search Emails",
-    "placeholder": "Search by recipient, subject, tags…",
-    "className": "form-control",
-    "iconGroupClass": "bg-light border-0"
-  },
-  "minChars": 2,
-  "debounceMs": 400,
-  "resultConfig": {
-    "idKey": "id",
-    "labelKey": "subject",
-    "descriptionKey": "to"
-  }
-}`}
-                </pre>
+                Root shape is a <code>SearchObject</code>.
               </li>
               <li>
-                <code>search</code> is passed into <code>new InputObject</code>, so it
-                must follow the Input schema (requires <code>name</code>;{" "}
-                <code>layout: "icon"</code> also requires <code>icon</code>).
+                <code>search</code> is passed into <code>new InputObject</code>,
+                so it must follow the Input schema (requires <code>name</code>;
+                <code>layout: "icon"</code> requires <code>icon</code>).
               </li>
               <li>
-                For <code>layout: "icon"</code>,{" "}
-                <code>iconGroupClass</code> customizes the span wrapping the icon
-                (its classes are appended to <code>"input-group-text"</code>).
+                For <code>layout: "icon"</code>, <code>iconGroupClass</code>{" "}
+                customizes the span wrapping the icon (appended to{" "}
+                <code>"input-group-text"</code>).
               </li>
               <li>
-                <code>minChars</code> controls when debounce starts;{" "}
-                <code>debounceMs</code> is the delay before a{" "}
-                <code>"search"</code> event fires.
+                SSR note: You may omit <code>id</code> fields — the components
+                generate stable ids internally using <code>useId()</code>.
               </li>
               <li>
-                <code>resultConfig</code> tells AlloySearch how to map your result
-                objects into list items (id/label/description).
-              </li>
-              <li>
-                <strong>Do not</strong> add <code>results</code> into this JSON; they
-                are injected via code after the server call.
+                <strong>Do not</strong> add <code>results</code> into this JSON;
+                they are injected via code after the server call.
               </li>
             </ul>
           </div>
@@ -341,40 +334,40 @@ export default function SearchPage() {
           />
 
           <div className="form-text">
-            The search component emits normalized <code>OutputObject</code>{" "}
-            payloads, for example:
+            AlloySearch emits normalized <code>OutputObject</code> payloads:
             <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
 {`// Debounced query:
 {
-  "id": "emailSearchBar",
+  "id": "search-<stable>",
   "type": "search-bar",
   "action": "search",
   "error": false,
-  "data": {
-    "emailSearch": "welcome"
-  }
+  "data": { "emailSearch": "welcome" }
+}
+
+// Clear:
+{
+  "id": "search-<stable>",
+  "type": "search-bar",
+  "action": "clear",
+  "error": false,
+  "data": { "emailSearch": "" }
 }
 
 // Result row clicked:
 {
-  "id": "emailSearchBar",
+  "id": "search-<stable>",
   "type": "search-bar",
   "action": "select",
   "error": false,
   "data": {
     "emailSearch": "welcome",
-    "result": {
-      "id": "e001",
-      "to": "alpha@precastxchange.com",
-      "subject": "Welcome to PrecastXchange",
-      "status": "Sent",
-      "tags": "welcome,onboarding"
-    }
+    "result": { "...raw object..." }
   }
 }`}
             </pre>
-            In a real app, listen for <code>"search"</code> to call your API and{" "}
-            feed results back into <code>SearchObject.results</code>; listen for{" "}
+            Listen for <code>"search"</code> to call your API and feed results
+            back into <code>SearchObject.results</code>; listen for{" "}
             <code>"select"</code> to handle the chosen item.
           </div>
         </div>
