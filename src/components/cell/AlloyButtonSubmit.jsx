@@ -1,50 +1,72 @@
+// src/components/cell/AlloyButtonSubmit.jsx
 import React, {
+  useMemo,
   useRef,
   useState,
   useEffect,
   forwardRef,
   useImperativeHandle,
 } from "react";
+
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
-import { generateId, OutputObject } from "../../utils/idHelper.js";
+import { OutputObject, useDomId } from "../../utils/idHelper.js";
+
+/* -------------------------------------------
+ * useActiveClass (same pattern as AlloyButton)
+ * ----------------------------------------- */
+function useActiveClass(className = "", active = "") {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const [focused, setFocused] = useState(false);
+
+  const merged = useMemo(() => {
+    const on = hovered || pressed || focused;
+    return [className, on && active].filter(Boolean).join(" ");
+  }, [className, active, hovered, pressed, focused]);
+
+  return {
+    className: merged,
+    events: {
+      onMouseEnter: () => setHovered(true),
+      onMouseLeave: () => {
+        setHovered(false);
+        setPressed(false);
+      },
+      onMouseDown: () => setPressed(true),
+      onMouseUp: () => setPressed(false),
+      onFocus: () => setFocused(true),
+      onBlur: () => setFocused(false),
+    },
+  };
+}
 
 /**
  * @typedef {Object} ButtonSubmitConfig
  * @property {string} name
- * @property {IconObject|{iconClass:string}} icon
+ * @property {IconObject|{iconClass:string, id?:string, className?:string}} icon
  * @property {string} [id]
  * @property {string} [className]
+ * @property {string} [active]
  * @property {boolean} [disabled]
  * @property {boolean} [loading]
  * @property {string} [title]
  * @property {string} [ariaLabel]
  * @property {number} [tabIndex]
  * @property {(e:any,self:ButtonSubmitObject)=>void} [onClick]
- * @property {(e:any,self:ButtonSubmitObject)=>void} [onMouseDown]
- * @property {(e:any,self:ButtonSubmitObject)=>void} [onKeyDown]
  */
 export class ButtonSubmitObject {
-  /**
-   * @param {ButtonSubmitConfig} buttonSubmit
-   */
   constructor(buttonSubmit = {}) {
-    if (!buttonSubmit.name) {
-      throw new Error("ButtonSubmitObject requires `name`.");
-    }
-    if (!buttonSubmit.icon) {
-      throw new Error("ButtonSubmitObject requires `icon`.");
-    }
+    if (!buttonSubmit.name) throw new Error("ButtonSubmitObject requires `name`.");
+    if (!buttonSubmit.icon) throw new Error("ButtonSubmitObject requires `icon`.");
 
-    const normalizedIcon =
-      buttonSubmit.icon instanceof IconObject
-        ? buttonSubmit.icon
-        : new IconObject(buttonSubmit.icon);
+    // IMPORTANT (Next.js safe): do not generate random ids in the model
+    this.id = buttonSubmit.id;
 
-    this.id = buttonSubmit.id ?? generateId("btn-submit");
     this.name = buttonSubmit.name;
-    this.icon = normalizedIcon;
 
-    this.className = buttonSubmit.className ?? "";
+    this.className = buttonSubmit.className ?? "btn btn-primary";
+    this.active = buttonSubmit.active ?? "";
+
     this.disabled = !!buttonSubmit.disabled;
     this.loading = !!buttonSubmit.loading;
 
@@ -52,12 +74,28 @@ export class ButtonSubmitObject {
     this.ariaLabel = buttonSubmit.ariaLabel ?? buttonSubmit.name;
     this.tabIndex = buttonSubmit.tabIndex;
 
+    this.icon =
+      buttonSubmit.icon instanceof IconObject
+        ? buttonSubmit.icon
+        : new IconObject(buttonSubmit.icon);
+
     this.onClick = buttonSubmit.onClick;
-    this.onMouseDown = buttonSubmit.onMouseDown;
-    this.onKeyDown = buttonSubmit.onKeyDown;
   }
 }
 
+/* -------------------------------------------
+ * AlloyButtonSubmit
+ *
+ * Behavior (your use case):
+ * - When user clicks, component "arms" immediately:
+ *    - shows rotating/loading icon
+ *    - disables to prevent double submit
+ * - Parent controls reset by toggling model.loading:
+ *    - when parent sets loading=false, component clears armed and becomes reusable
+ *
+ * Emits:
+ * - ONLY "click" (clean, consistent with AlloyButton decision)
+ * ----------------------------------------- */
 export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
   { buttonSubmit, output },
   ref
@@ -69,28 +107,34 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
   }
 
   const elRef = useRef(null);
-  const autoId = useRef(buttonSubmit.id);
 
-  // internal loading mirror, always synced from props
-  const [loading, setLoading] = useState(!!buttonSubmit.loading);
+  // SSR/CSR stable id (or provided id)
+  const domId = useDomId("btn-submit", buttonSubmit.id);
 
-  // firedRef prevents double-trigger while "in flight"
-  const firedRef = useRef(false);
+  // Internal arm: flips ON immediately on click (before parent roundtrip)
+  const [armed, setArmed] = useState(false);
 
-  // Sync internal loading with parent model every render when prop changes.
-  // ALSO: if parent sends loading=false, clear firedRef so the button is reusable.
+  // Parent-driven loading flag
+  const externalLoading = !!buttonSubmit.loading;
+
+  // Effective loading is internal OR external
+  const loading = armed || externalLoading;
+
+  // When parent says loading=false, release the arm so it can be used again
   useEffect(() => {
-    const nextLoading = !!buttonSubmit.loading;
-    setLoading(nextLoading);
-    if (!nextLoading) {
-      firedRef.current = false;
+    if (!externalLoading) {
+      setArmed(false);
     }
-  }, [buttonSubmit.loading]);
+  }, [externalLoading]);
 
-  // compute disabled for the rendered <button>
-  const isDisabled = buttonSubmit.disabled || loading;
+  // Disabled if parent disabled OR currently loading/armed
+  const isDisabled = !!buttonSubmit.disabled || loading;
 
-  // Expose ref API
+  const { className, events } = useActiveClass(
+    buttonSubmit.className,
+    buttonSubmit.active
+  );
+
   useImperativeHandle(
     ref,
     () => ({
@@ -102,63 +146,54 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
     [buttonSubmit]
   );
 
-  // arm() tries to move us into "loading". It returns true if we armed.
-  const arm = () => {
-    if (firedRef.current || isDisabled) return false;
+  // Compute a spinning icon class while loading (without mutating the model)
+  const computedIcon = useMemo(() => {
+    const base = buttonSubmit.icon;
+    const iconClass = base?.iconClass || "";
 
-    firedRef.current = true;
+    // Add fa-spin only while loading (if user didn't already include it)
+    const shouldSpin =
+      loading && iconClass && !/\bfa-spin\b/.test(iconClass) && !/\bfa-pulse\b/.test(iconClass);
 
-    // reflect "in-flight" on the current model snapshot
-    buttonSubmit.loading = true;
-    buttonSubmit.disabled = true;
+    const nextClass = shouldSpin ? `${iconClass} fa-spin` : iconClass;
 
-    // update our local mirror right away
-    setLoading(true);
-
-    return true;
-  };
-
-  // emit helper: build OutputObject and fire parent + model handler
-  const emit = (e, handler, action) => {
-    if (typeof output === "function") {
-      const out = new OutputObject({
-        id: buttonSubmit.id,
-        type: "button-submit",
-        action,
-        error: false,
-        data: {
-          name: buttonSubmit.name,
-        },
-      });
-      output(out);
-    }
-    handler?.(e, buttonSubmit);
-  };
+    return new IconObject({
+      id: base?.id,
+      iconClass: nextClass,
+      className: base?.className, // wrapper styling supported by AlloyIcon now
+    });
+  }, [buttonSubmit.icon, loading]);
 
   const handleClick = (e) => {
-    if (arm()) emit(e, buttonSubmit.onClick, "click");
-  };
+    // If already disabled/loading, do nothing (prevents double submit)
+    if (isDisabled) return;
 
-  const handleMouseDown = (e) => {
-    if (arm()) emit(e, buttonSubmit.onMouseDown, "mousedown");
-  };
+    // Arm immediately so the UI reacts instantly
+    setArmed(true);
 
-  const handleKeyDown = (e) => {
-    const key = e.key;
-    if (key === "Enter" || key === " ") {
-      if (arm()) emit(e, buttonSubmit.onKeyDown, "keydown");
+    // Emit "click" only
+    if (typeof output === "function") {
+      output(
+        OutputObject.ok({
+          id: domId,
+          type: "button-submit",
+          action: "click",
+          data: {
+            name: buttonSubmit.name,
+          },
+        })
+      );
     }
-  };
 
-  // spinner shows while loading === true (either internal arm() OR parent prop)
-  const showIcon = loading;
+    buttonSubmit.onClick?.(e, buttonSubmit);
+  };
 
   return (
     <button
-      id={autoId.current}
+      id={domId}
       ref={elRef}
       type="submit"
-      className={buttonSubmit.className}
+      className={className}
       title={buttonSubmit.title}
       aria-label={buttonSubmit.ariaLabel}
       aria-busy={loading || undefined}
@@ -166,16 +201,16 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
       disabled={isDisabled}
       tabIndex={buttonSubmit.tabIndex}
       onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onKeyDown={handleKeyDown}
+      {...events}
     >
-      {showIcon && (
+      {/* Icon is ONLY visible while communicating/loading (your requirement) */}
+      {loading && (
         <span className="d-inline-flex align-middle">
-          <AlloyIcon icon={buttonSubmit.icon} />
+          <AlloyIcon icon={computedIcon} />
         </span>
       )}
 
-      <span className={showIcon ? "px-2 align-middle" : "align-middle"}>
+      <span className={loading ? "px-2 align-middle" : "align-middle"}>
         {buttonSubmit.name}
       </span>
 
@@ -187,3 +222,5 @@ export const AlloyButtonSubmit = forwardRef(function AlloyButtonSubmit(
     </button>
   );
 });
+
+export default AlloyButtonSubmit;

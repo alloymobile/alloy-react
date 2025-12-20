@@ -1,21 +1,21 @@
+// src/components/cell/AlloyIcon.jsx
 import React from "react";
-import { generateId } from "../../utils/idHelper.js";
+import { useDomId } from "../../utils/idHelper.js";
 
 /**
  * @typedef {Object} IconConfig
- * @property {string} iconClass             - Required. Font Awesome class string
- *                                            e.g. "fa-solid fa-user fa-2x".
- * @property {string} [id]                  - Optional. If not provided, a unique
- *                                            id will be generated like
- *                                            "icon-1730145329012-x8f3k".
+ * @property {string} iconClass       - Required. Font Awesome class string (for <i>).
+ *                                     e.g. "fa-solid fa-user" or "fa-solid fa-user fa-2x"
+ * @property {string} [id]            - Optional DOM id. If omitted, stable id via useDomId().
+ *
+ * @property {string} [className]     - Optional wrapper <span> className.
+ *                                     Defaults to "d-inline-flex align-items-center justify-content-center".
  */
 
 export class IconObject {
   /**
    * Build a new IconObject.
-   *
-   * Consumers pass one config object (IconConfig). We normalize it
-   * and guarantee it has an id.
+   * Normalizes config and supports SSR-safe DOM id generation via AlloyIcon.
    *
    * @param {IconConfig} icon
    */
@@ -24,17 +24,41 @@ export class IconObject {
       throw new Error("IconObject requires `iconClass`.");
     }
 
-    this.id = icon.id ?? generateId("icon");
+    // IMPORTANT for Next.js: do not generate random ids here
+    this.id = icon.id;
+
+    // <i> classes (Font Awesome + sizing)
     this.iconClass = icon.iconClass;
+
+    // <span> wrapper classes (background/padding/rounding/etc.)
+    this.className =
+      icon.className ??
+      "d-inline-flex align-items-center justify-content-center";
   }
 }
+
 /**
- * AlloyIcon: accepts ONLY an `icon` prop (instance of Icon).
- * Renders an <i> with the provided id and classes.
+ * AlloyIcon: accepts ONLY an `icon` prop (IconObject instance).
+ * Renders:
+ *   <span id="..." class="...">
+ *     <i class="..."></i>
+ *   </span>
+ *
+ * NOTE: id is on the <span>.
  */
 export function AlloyIcon({ icon }) {
-  if (!icon) throw new Error("AlloyIcon requires `icon` prop (Icon instance).");
-  return <i id={icon.id} className={icon.iconClass} aria-hidden="true" />;
+  if (!icon || !(icon instanceof IconObject)) {
+    throw new Error("AlloyIcon requires `icon` prop (IconObject instance).");
+  }
+
+  // Reminder: stable id across SSR/CSR (or provided id)
+  const domId = useDomId("icon", icon.id);
+
+  return (
+    <span id={domId} className={icon.className} aria-hidden="true">
+      <i className={icon.iconClass} aria-hidden="true" />
+    </span>
+  );
 }
 
 export default AlloyIcon;

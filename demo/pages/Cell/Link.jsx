@@ -1,10 +1,8 @@
 // demo/pages/tissue/LinkPage.jsx
-
 import React, { useMemo, useState } from "react";
-import { AlloyLink, LinkObject } from "../../../src"; // make sure ../../../src re-exports both
+import { AlloyLink, LinkObject } from "../../../src";
 
 export default function LinkPage() {
-  // Starting example the user can edit in the textarea
   const initial = {
     id: "alloyLink1",
     name: "Open Docs",
@@ -12,45 +10,53 @@ export default function LinkPage() {
     className: "link px-2 py-1 rounded",
     active: "bg-light",
     target: "_blank",
-    title: "Vite documentation"
+    title: "Vite documentation",
   };
 
-  // Textarea value as string
   const [jsonText, setJsonText] = useState(JSON.stringify(initial, null, 2));
   const [error, setError] = useState("");
 
-  // Parse the textarea into a plain object `data`
-  const data = useMemo(() => {
-    try {
-      const obj = JSON.parse(jsonText || "{}");
-      setError("");
-      return obj;
-    } catch (e) {
-      setError(e.message);
-      return initial;
-    }
-  }, [jsonText]);
+  // Keep the last valid parsed object so the demo still renders while typing invalid JSON
+  const [parsed, setParsed] = useState(initial);
 
-  // Convert plain object -> LinkObject (validated, normalized)
+  function handleChange(e) {
+    const val = e.target.value;
+    setJsonText(val);
+
+    try {
+      const obj = JSON.parse(val || "{}");
+      if (!obj || typeof obj !== "object") {
+        throw new Error("JSON must be an object.");
+      }
+      setParsed(obj);
+      setError("");
+    } catch (err) {
+      setError(err.message || "Invalid JSON.");
+      // do NOT change parsed here; keep last valid
+    }
+  }
+
   const linkObj = useMemo(() => {
     try {
-      return new LinkObject(data);
-    } catch (e) {
-      // Example: user deleted required 'href' or 'name'
-      setError(e.message);
+      return new LinkObject(parsed);
+    } catch (err) {
+      // Missing required fields: keep demo alive with fallback
+      setError(err.message || "Invalid LinkObject config.");
       return new LinkObject(initial);
     }
-  }, [data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parsed]);
 
-  // Just for showing code usage in the demo UI
   const codeSample = `<AlloyLink link={new LinkObject(linkObject)} />`;
 
-  // Pretty-print the editor JSON
   const formatJson = () => {
     try {
-      setJsonText(JSON.stringify(JSON.parse(jsonText), null, 2));
+      const obj = JSON.parse(jsonText);
+      setJsonText(JSON.stringify(obj, null, 2));
+      setError("");
+      setParsed(obj);
     } catch {
-      /* ignore bad json until user fixes it */
+      // ignore
     }
   };
 
@@ -101,7 +107,7 @@ export default function LinkPage() {
             rows={10}
             spellCheck={false}
             value={jsonText}
-            onChange={(e) => setJsonText(e.target.value)}
+            onChange={handleChange}
             placeholder='{"name":"Open Docs","href":"https://vitejs.dev/"}'
           />
 
@@ -111,8 +117,7 @@ export default function LinkPage() {
             <div className="form-text">
               Required: <code>href</code>, <code>name</code>. Optional:{" "}
               <code>id</code>, <code>className</code>, <code>active</code>,{" "}
-              <code>target</code>, <code>rel</code>, <code>title</code>,{" "}
-              <code>onClick</code>.
+              <code>target</code>, <code>rel</code>, <code>title</code>.
             </div>
           )}
         </div>

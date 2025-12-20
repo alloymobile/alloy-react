@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import { AlloyLinkLogo, LinkLogoObject } from "../../../src";
 
 export default function LinkLogoPage() {
-  // Initial config shown in the editor textarea
   const initial = {
     id: "alloyLinkLogo1",
     name: "Alloy UI",
@@ -12,55 +11,57 @@ export default function LinkLogoPage() {
     height: 32,
     className: "px-2 py-1 rounded d-inline-block",
     active: "bg-light",
-    title: "Homepage"
+    title: "Homepage",
   };
 
   const [jsonText, setJsonText] = useState(JSON.stringify(initial, null, 2));
   const [error, setError] = useState("");
 
-  // Parse raw textarea JSON into a plain object (`data`)
-  const data = useMemo(() => {
-    try {
-      const obj = JSON.parse(jsonText || "{}");
-      setError("");
-      return obj;
-    } catch (e) {
-      // invalid JSON while typing
-      setError(e.message);
-      return initial;
-    }
-  }, [jsonText]);
+  // Keep last valid parsed object so live preview stays stable while typing
+  const [parsed, setParsed] = useState(initial);
 
-  // Build a LinkLogoObject from `data`
-  // - normalize href fallback to "/"
-  // - keep whatever logo the user provided
-  // - catch missing required fields so the playground doesn't crash
+  function handleChange(e) {
+    const val = e.target.value;
+    setJsonText(val);
+
+    try {
+      const obj = JSON.parse(val || "{}");
+      if (!obj || typeof obj !== "object") throw new Error("JSON must be an object.");
+      setParsed(obj);
+      setError("");
+    } catch (err) {
+      setError(err.message || "Invalid JSON.");
+      // keep last valid parsed
+    }
+  }
+
+  // Build LinkLogoObject from parsed
   const brand = useMemo(() => {
     try {
-      const safeHref = data?.href ?? "/";
-      const safeLogo = data?.logo ?? "";
+      const safeHref = parsed?.href ?? "/";
 
+      // NOTE: logo is required; if user deletes it, LinkLogoObject throws
       return new LinkLogoObject({
-        ...data,
+        ...parsed,
         href: safeHref,
-        logo: safeLogo
       });
-    } catch (e) {
-      // For example: if user deletes "logo" completely, constructor will throw.
-      setError(e.message);
+    } catch {
+      // fallback so preview doesn't crash
       return new LinkLogoObject(initial);
     }
-  }, [data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parsed]);
 
-  // Shown in "Code sample" box
   const codeSample = `<AlloyLinkLogo linkLogo={new LinkLogoObject(linkLogoObject)} />`;
 
-  // Pretty-print / format button
   const formatJson = () => {
     try {
-      setJsonText(JSON.stringify(JSON.parse(jsonText), null, 2));
+      const obj = JSON.parse(jsonText);
+      setJsonText(JSON.stringify(obj, null, 2));
+      setParsed(obj);
+      setError("");
     } catch {
-      // ignore if it's invalid during editing
+      // ignore if invalid
     }
   };
 
@@ -110,7 +111,7 @@ export default function LinkLogoPage() {
             rows={10}
             spellCheck={false}
             value={jsonText}
-            onChange={(e) => setJsonText(e.target.value)}
+            onChange={handleChange}
             placeholder='{"name":"Alloy UI","href":"/","logo":"https://sellcallput.com/assets/images/sellcallput.svg"}'
           />
 
@@ -118,32 +119,10 @@ export default function LinkLogoPage() {
             <div className="invalid-feedback">{error}</div>
           ) : (
             <div className="form-text">
-              Required:
-              {" "}
-              <code>href</code>,
-              {" "}
-              <code>logo</code>.
-              {" "}
-              Optional:
-              {" "}
-              <code>id</code>,
-              {" "}
-              <code>name</code>,
-              {" "}
-              <code>width</code>,
-              {" "}
-              <code>height</code>,
-              {" "}
-              <code>className</code>,
-              {" "}
-              <code>active</code>,
-              {" "}
-              <code>target</code>,
-              {" "}
-              <code>rel</code>,
-              {" "}
-              <code>title</code>,
-              {" "}
+              Required: <code>href</code>, <code>logo</code>. Optional:{" "}
+              <code>id</code>, <code>name</code>, <code>width</code>,{" "}
+              <code>height</code>, <code>className</code>, <code>active</code>,{" "}
+              <code>target</code>, <code>rel</code>, <code>title</code>,{" "}
               <code>onClick</code>.
             </div>
           )}

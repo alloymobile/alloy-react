@@ -1,5 +1,28 @@
 // src/utils/idHelper.js
 import { IconObject } from "../components/cell/AlloyIcon.jsx";
+import { useId, useMemo } from "react";
+
+/**
+ * SSR/CSR-consistent DOM id.
+ * - If providedId exists, return it.
+ * - Otherwise generate a stable id using React's useId().
+ *
+ * Usage:
+ *   const id = useDomId("icon", icon.id);
+ */
+export function useDomId(prefix = "id", providedId) {
+  const rid = useId();
+
+  return useMemo(() => {
+    if (providedId) return providedId;
+
+    // React useId() may include ":"; it's valid in HTML, but we can clean it
+    const clean = String(rid).replace(/[:]/g, "");
+    return `${prefix}-${clean}`;
+  }, [prefix, providedId, rid]);
+}
+
+
 
 /**
  * Generate a unique ID string with a given prefix.
