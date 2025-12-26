@@ -117,11 +117,7 @@ function validateTab(tab, tabValues) {
           messages.push("This field is required.");
         }
       } else {
-        if (
-          value === "" ||
-          value === null ||
-          typeof value === "undefined"
-        ) {
+        if (value === "" || value === null || typeof value === "undefined") {
           messages.push("This field is required.");
         }
       }
@@ -147,7 +143,7 @@ function validateTab(tab, tabValues) {
  * AlloyTabForm
  * ----------------------------------------------------- */
 
-export function AlloyTabForm({ tabForm, output, fileUploader }) {
+export function AlloyTabForm({ tabForm, output }) {
   if (!tabForm || !(tabForm instanceof TabFormObject)) {
     throw new Error("AlloyTabForm requires `tabForm` (TabFormObject instance).");
   }
@@ -182,8 +178,7 @@ export function AlloyTabForm({ tabForm, output, fileUploader }) {
 
   // Consume AlloyInput's OutputObject to update values + field-level errors.
   function handleFieldOutput(tabKey, out) {
-    const payload =
-      out && typeof out.toJSON === "function" ? out.toJSON() : out;
+    const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
 
     const name = payload?.data?.name;
     const nextVal = payload?.data?.value;
@@ -197,6 +192,10 @@ export function AlloyTabForm({ tabForm, output, fileUploader }) {
       const perTab = { ...(clone[tabKey] || {}) };
       perTab[name] = nextVal;
       clone[tabKey] = perTab;
+
+      // ✅ propagate the SAME AlloyInput event upwards (change/blur)
+      output?.(out);
+
       return clone;
     });
 
@@ -382,10 +381,7 @@ export function AlloyTabForm({ tabForm, output, fileUploader }) {
       )}
 
       {/* Form body: one row / one column / inputs[] */}
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        noValidate
-      >
+      <form onSubmit={(e) => e.preventDefault()} noValidate>
         <div className="row g-3">
           <div className="col-12 col-md-6 col-lg-5 mx-auto">
             {currentTab.inputs.map((inputConfig, iIdx) => {
@@ -411,7 +407,6 @@ export function AlloyTabForm({ tabForm, output, fileUploader }) {
                   key={`inp-${iIdx}`}
                   input={model}
                   output={(out) => handleFieldOutput(currentTab.key, out)}
-                  fileUploader={fileUploader}
                 />
               );
             })}

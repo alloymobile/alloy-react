@@ -513,7 +513,6 @@ function CrudSection({
       out instanceof OutputObject && typeof out.toJSON === "function"
         ? out.toJSON()
         : out;
-
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 

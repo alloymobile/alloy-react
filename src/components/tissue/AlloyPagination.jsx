@@ -2,10 +2,7 @@
 
 import React, { useMemo } from "react";
 
-import AlloyButtonIcon, {
-  ButtonIconObject,
-} from "../cell/AlloyButtonIcon.jsx";
-
+import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* -------------------------------------------------------
@@ -56,18 +53,14 @@ export class PaginationObject {
 
     this.size = typeof size === "number" ? size : 0;
 
-    this.pageNumber =
-      typeof number === "number" && number >= 0 ? number : 0;
+    this.pageNumber = typeof number === "number" && number >= 0 ? number : 0;
 
     this.numberOfElements =
       typeof numberOfElements === "number" ? numberOfElements : 0;
 
     this.empty = !!empty;
 
-    this.first =
-      typeof first === "boolean"
-        ? first
-        : this.pageNumber === 0;
+    this.first = typeof first === "boolean" ? first : this.pageNumber === 0;
 
     this.last =
       typeof last === "boolean"
@@ -119,9 +112,16 @@ function buildPageWindow(current, total) {
 }
 
 /* -------------------------------------------------------
- * AlloyPagination (emits OutputObject from button)
+ * AlloyPagination
+ *
+ * Emits ONLY:
+ *   OutputObject.ok({
+ *     id: pagination.id,
+ *     type: "pagination",
+ *     action: "Page",
+ *     data: { pageNumber: <number> }
+ *   })
  * ----------------------------------------------------- */
-
 export function AlloyPagination({ pagination, output }) {
   if (!pagination || !(pagination instanceof PaginationObject)) {
     throw new Error(
@@ -136,8 +136,6 @@ export function AlloyPagination({ pagination, output }) {
     name,
     className,
     totalPages,
-    totalElements,
-    size,
     pageNumber,
     first,
     last,
@@ -152,31 +150,23 @@ export function AlloyPagination({ pagination, output }) {
     [pageNumber, totalPages]
   );
 
-  function emitPage(nav, target, childOut) {
-    if (!childOut) return;
+  function clampTarget(target) {
+    let t = typeof target === "number" ? target : 0;
+    if (t < 0) t = 0;
+    if (totalPages > 0 && t > totalPages - 1) t = totalPages - 1;
+    return t;
+  }
 
-    if (target < 0) target = 0;
-    if (totalPages > 0 && target > totalPages - 1)
-      target = totalPages - 1;
-
-    const btnPayload =
-      childOut instanceof OutputObject && typeof childOut.toJSON === "function"
-        ? childOut.toJSON()
-        : childOut;
+  // ✅ ONLY payload server needs
+  function emitPage(target) {
+    const t = clampTarget(target);
 
     const out = OutputObject.ok({
       id,
       type: "pagination",
-      action: "page",
+      action: "Page", // Capital P (library standard)
       data: {
-        nav, // first | prev | page | next | last
-        pageNumber: target,
-        size,
-        totalPages,
-        totalElements,
-        first: target === 0,
-        last: totalPages > 0 ? target === totalPages - 1 : true,
-        button: btnPayload, // original button output
+        pageNumber: t, // ONLY field required
       },
     });
 
@@ -193,7 +183,7 @@ export function AlloyPagination({ pagination, output }) {
     });
   }
 
-  function renderBtn(nav, target, label, ariaLabel, icon, disabled, active) {
+  function renderBtn(target, label, ariaLabel, icon, disabled, active) {
     const liClass = [
       itemClassName,
       disabled ? disabledClassName : "",
@@ -205,11 +195,11 @@ export function AlloyPagination({ pagination, output }) {
     const model = makeBtn(label, ariaLabel, icon);
 
     return (
-      <li key={`${nav}-${label}`} className={liClass}>
+      <li key={`pg-${label}-${target}`} className={liClass}>
         <AlloyButtonIcon
           buttonIcon={model}
-          output={(childOut) => {
-            if (!disabled) emitPage(nav, target, childOut);
+          output={() => {
+            if (!disabled) emitPage(target);
           }}
         />
       </li>
@@ -241,7 +231,6 @@ export function AlloyPagination({ pagination, output }) {
           style={{ listStyle: "none", paddingLeft: 0, marginBottom: 0 }}
         >
           {renderBtn(
-            "first",
             0,
             "First",
             "Go to first page",
@@ -251,7 +240,6 @@ export function AlloyPagination({ pagination, output }) {
           )}
 
           {renderBtn(
-            "prev",
             pageNumber - 1,
             "Previous",
             "Go to previous page",
@@ -264,7 +252,6 @@ export function AlloyPagination({ pagination, output }) {
             it.type === "ellipsis"
               ? renderEllipsis(it.key)
               : renderBtn(
-                  "page",
                   it.index,
                   String(it.index + 1),
                   `Go to page ${it.index + 1}`,
@@ -275,7 +262,6 @@ export function AlloyPagination({ pagination, output }) {
           )}
 
           {renderBtn(
-            "next",
             pageNumber + 1,
             "Next",
             "Go to next page",
@@ -285,7 +271,6 @@ export function AlloyPagination({ pagination, output }) {
           )}
 
           {renderBtn(
-            "last",
             totalPages - 1,
             "Last",
             "Go to last page",

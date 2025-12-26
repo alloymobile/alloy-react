@@ -206,7 +206,15 @@ function validateField(fieldDef, value, allValues) {
  *         }
  *       }
  * ------------------------------------------------------------------ */
-export function AlloyForm({ form, output, fileUploader }) {
+/**
+ * @typedef {Object} AlloyFormProps
+ * @property {FormObject | any} form
+ * @property {(out: any) => void | Promise<void>} [output]
+ */
+/**
+ * @param {AlloyFormProps} props
+ */
+export function AlloyForm({ form, output }) {
   //
   // 1. Hydrate prop -> FormObject with consistent IDs.
   //
@@ -311,6 +319,9 @@ export function AlloyForm({ form, output, fileUploader }) {
         value
       };
 
+      // ✅ propagate the SAME AlloyInput "change"/"blur" event upwards
+      output?.(out);
+
       return recomputeAllValidity(draft);
     });
   }
@@ -400,7 +411,6 @@ export function AlloyForm({ form, output, fileUploader }) {
               key={fld.id}
               input={fld}
               output={handleFieldOutput}
-              fileUploader={fileUploader}
             />
           ))}
 

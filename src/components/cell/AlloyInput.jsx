@@ -176,17 +176,21 @@ export class InputObject {
  * Props:
  *   - input: InputObject (required)
  *   - output?: (out: OutputObject) => void
- *   - fileUploader?: (fieldName: string, file: File, context?: any) => Promise<string>
- *     - If input.multiple === true, uploader will be called once per file and value becomes string[]
  */
-export function AlloyInput({ input, output, fileUploader }) {
+/**
+ * @typedef {Object} AlloyInputProps
+ * @property {InputObject} input
+ * @property {(out: any) => void | Promise<void>} [output]
+ */
+/**
+ * @param {AlloyInputProps} props
+ */
+export function AlloyInput({ input, output }) {
   // SSR/CSR-stable DOM id (React useId-based)
   const domId = useDomId("input", input.id);
 
   const [val, setVal] = useState(input.value);
   const [touched, setTouched] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
 
   // Canvas refs/state
   const canvasRef = useRef(null);
@@ -297,8 +301,6 @@ export function AlloyInput({ input, output, fileUploader }) {
   useEffect(() => {
     setVal(input.value);
     setTouched(false);
-    setUploading(false);
-    setUploadError("");
 
     if (input.type === "canvas") {
       hasDrawnRef.current = Boolean(input.value);
@@ -336,7 +338,7 @@ export function AlloyInput({ input, output, fileUploader }) {
       }
     }
 
-    // minLength / maxLength
+    // minLength / maxLength (strings only)
     if (
       typeof trimmed === "string" &&
       input.minLength != null &&
@@ -376,15 +378,14 @@ export function AlloyInput({ input, output, fileUploader }) {
     return errs;
   };
 
-  const baseErrors = validate(val);
-  const combinedErrors = uploadError ? [...baseErrors, uploadError] : baseErrors;
-  const showError = touched && combinedErrors.length > 0;
+  const errors = validate(val);
+  const showError = touched && errors.length > 0;
 
   const errorBlock =
     showError &&
-    combinedErrors.length > 0 && (
+    errors.length > 0 && (
       <div className="mt-2" aria-live="polite">
-        {combinedErrors.map((msg, i) => (
+        {errors.map((msg, i) => (
           <div key={i} className="alert alert-danger py-2 mb-2" role="alert">
             {msg}
           </div>
@@ -393,12 +394,8 @@ export function AlloyInput({ input, output, fileUploader }) {
     );
 
   // Emit via OutputObject (demo + AlloyForm)
-  // extraError avoids stale-state issues when setUploadError() then emit() immediately.
-  const emit = (nextVal, action = "change", extraError) => {
+  const emit = (nextVal, action = "change") => {
     const errs = validate(nextVal);
-    const ue = extraError ?? uploadError;
-    if (ue) errs.push(ue);
-
     const hasError = errs.length > 0;
 
     if (typeof output === "function") {
@@ -418,52 +415,19 @@ export function AlloyInput({ input, output, fileUploader }) {
   };
 
   // file-specific change handler (single + multiple)
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
 
     const files = Array.from(fileList);
     const isMulti = !!input.multiple;
 
-    // No uploader: emit File or File[]
-    if (!fileUploader) {
-      const nextVal = isMulti ? files : files[0];
-      setVal(nextVal);
-      setUploadError("");
-      emit(nextVal, "change");
-      // allow re-selecting same file(s)
-      e.target.value = "";
-      return;
-    }
+    const nextVal = isMulti ? files : files[0];
+    setVal(nextVal);
+    emit(nextVal, "change");
 
-    try {
-      setUploading(true);
-      setUploadError("");
-
-      if (isMulti) {
-        // Upload each file, store URL[]
-        const urls = await Promise.all(
-          files.map((f) => fileUploader(input.name, f, { input }))
-        );
-        setVal(urls);
-        emit(urls, "change");
-      } else {
-        // Upload one file, store URL
-        const url = await fileUploader(input.name, files[0], { input });
-        setVal(url);
-        emit(url, "change");
-      }
-    } catch (err) {
-      console.error("File upload failed", err);
-      const msg =
-        (err && err.message) || "File upload failed. Please try again.";
-      setUploadError(msg);
-      emit(val, "change", msg);
-    } finally {
-      setUploading(false);
-      // allow re-selecting same file(s)
-      e.target.value = "";
-    }
+    // allow re-selecting same file(s)
+    e.target.value = "";
   };
 
   // shared change handler
@@ -653,8 +617,7 @@ export function AlloyInput({ input, output, fileUploader }) {
         accept={input.accept}
         multiple={!!input.multiple}
       />
-      {uploading && <div className="form-text mt-1">Uploading...</div>}
-      {!uploading && renderFileValuePreview()}
+      {renderFileValuePreview()}
       {showError && errorBlock}
     </div>
   );

@@ -56,6 +56,13 @@ export class SigninObject {
 
     this.signupText = signupText;
     this.termsAndPrivacy = termsAndPrivacy;
+
+    // In SigninObject constructor, after signup/privacy/terms
+    this.forgetPassword = new LinkObject({
+      href: res.forgetPassword?.forgetPasswordHref || "/forget",
+      name: res.forgetPassword?.forgetPasswordText || "Forgot Password",
+      className: "fw-semibold text-primary text-decoration-underline",
+    });
   }
 }
 
@@ -90,10 +97,13 @@ export function AlloySignin({ signin, output }) {
         <AlloyForm form={model.form} output={handleFormOutput} />
       </div>
 
-      {/* Signup row */}
+      {/* Signup row + Forgot Password*/}
       <div className="mt-4 text-center small text-muted">
         {model.signupText}{" "}
         <AlloyLink link={model.signup} />
+      </div>
+      <div className="mt-2 text-center small text-muted">
+        <AlloyLink link={model.forgetPassword} />
       </div>
 
       {/* Terms + Privacy row */}
