@@ -150,28 +150,93 @@ const CARD_IMAGE_TEXT = {
   }
 };
 
+/** 4) Card with Tags stack (new feature) */
+const CARD_TAGS_STACK = {
+  id: "demoTagsCard01",
+  className: "card border m-2 shadow",
+
+  header: {
+    id: "demoTagsHeader",
+    className: "card-header fw-semibold",
+    name: "Tags Stack Card"
+  },
+
+  body: {
+    id: "demoTagsBody",
+    className: "card-body p-3",
+    name: "Layout: image left, stacked lines right"
+  },
+
+  fields: [
+    // Left column: image
+    {
+      id: "tags-img",
+      colClass: "col-4",
+      className: "d-flex align-items-start",
+      logo: {
+        imageUrl:
+          "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+        alt: "Alloymobile logo",
+        className: "img-fluid rounded"
+      }
+    },
+
+    // Right column: stacked lines via tags[]
+    {
+      id: "tags-lines",
+      colClass: "col-8",
+      className: "d-flex flex-column",
+      tags: [
+        {
+          id: "tags-title",
+          name: "Alloymobile",
+          className: "fw-semibold"
+        },
+        {
+          id: "tags-sub",
+          name: "Design system components",
+          className: "text-secondary small"
+        },
+        {
+          id: "tags-meta",
+          name: "Image left • 3 lines right (tags stack)",
+          className: "text-secondary small"
+        }
+      ]
+    }
+  ],
+
+  footer: {
+    id: "demoTagsFooter",
+    className: "card-footer text-muted small",
+    name: "New: fields can render `tags` (TagObject[]) as a vertical stack."
+  }
+};
+
 /* pretty-print defaults */
 const DEFAULT_TEXT_ONLY_JSON = JSON.stringify(CARD_TEXT_ONLY, null, 2);
 const DEFAULT_ICON_TEXT_JSON = JSON.stringify(CARD_ICON_TEXT, null, 2);
 const DEFAULT_IMAGE_TEXT_JSON = JSON.stringify(CARD_IMAGE_TEXT, null, 2);
+const DEFAULT_TAGS_STACK_JSON = JSON.stringify(CARD_TAGS_STACK, null, 2);
 
 /* code snippet for docs */
 const TAG_SNIPPET = `<AlloyCard card={new CardObject(cardObject)} />`;
 
 export default function CardPage() {
-  // which tab are we looking at: "text" | "icontext" | "imagetext"
+  // which tab are we looking at: "text" | "icontext" | "imagetext" | "tags"
   const [activeTab, setActiveTab] = useState("text");
 
   // each tab has its own editable JSON text
   const [jsonText, setJsonText] = useState(DEFAULT_TEXT_ONLY_JSON);
   const [jsonIconText, setJsonIconText] = useState(DEFAULT_ICON_TEXT_JSON);
-  const [jsonImageText, setJsonImageText] =
-    useState(DEFAULT_IMAGE_TEXT_JSON);
+  const [jsonImageText, setJsonImageText] = useState(DEFAULT_IMAGE_TEXT_JSON);
+  const [jsonTags, setJsonTags] = useState(DEFAULT_TAGS_STACK_JSON);
 
   // each tab tracks its own parse error
   const [errorText, setErrorText] = useState("");
   const [errorIconText, setErrorIconText] = useState("");
   const [errorImageText, setErrorImageText] = useState("");
+  const [errorTags, setErrorTags] = useState("");
 
   // choose which JSON string + error is active right now
   const activeJson =
@@ -179,6 +244,8 @@ export default function CardPage() {
       ? jsonIconText
       : activeTab === "imagetext"
       ? jsonImageText
+      : activeTab === "tags"
+      ? jsonTags
       : jsonText;
 
   const activeError =
@@ -186,6 +253,8 @@ export default function CardPage() {
       ? errorIconText
       : activeTab === "imagetext"
       ? errorImageText
+      : activeTab === "tags"
+      ? errorTags
       : errorText;
 
   // parse the active JSON to build preview model
@@ -193,6 +262,7 @@ export default function CardPage() {
     let rawText = jsonText;
     if (activeTab === "icontext") rawText = jsonIconText;
     if (activeTab === "imagetext") rawText = jsonImageText;
+    if (activeTab === "tags") rawText = jsonTags;
 
     try {
       const raw = JSON.parse(rawText);
@@ -202,6 +272,8 @@ export default function CardPage() {
         setErrorIconText("");
       } else if (activeTab === "imagetext") {
         setErrorImageText("");
+      } else if (activeTab === "tags") {
+        setErrorTags("");
       } else {
         setErrorText("");
       }
@@ -214,6 +286,8 @@ export default function CardPage() {
         setErrorIconText(msg);
       } else if (activeTab === "imagetext") {
         setErrorImageText(msg);
+      } else if (activeTab === "tags") {
+        setErrorTags(msg);
       } else {
         setErrorText(msg);
       }
@@ -243,7 +317,7 @@ export default function CardPage() {
         }
       });
     }
-  }, [activeTab, jsonText, jsonIconText, jsonImageText]);
+  }, [activeTab, jsonText, jsonIconText, jsonImageText, jsonTags]);
 
   function handleTabClick(tab) {
     setActiveTab(tab);
@@ -255,6 +329,8 @@ export default function CardPage() {
       setJsonIconText(next);
     } else if (activeTab === "imagetext") {
       setJsonImageText(next);
+    } else if (activeTab === "tags") {
+      setJsonTags(next);
     } else {
       setJsonText(next);
     }
@@ -267,6 +343,9 @@ export default function CardPage() {
     } else if (activeTab === "imagetext") {
       setJsonImageText(DEFAULT_IMAGE_TEXT_JSON);
       setErrorImageText("");
+    } else if (activeTab === "tags") {
+      setJsonTags(DEFAULT_TAGS_STACK_JSON);
+      setErrorTags("");
     } else {
       setJsonText(DEFAULT_TEXT_ONLY_JSON);
       setErrorText("");
@@ -276,6 +355,7 @@ export default function CardPage() {
   function headerTitle() {
     if (activeTab === "icontext") return "Icon + Text Card";
     if (activeTab === "imagetext") return "Image + Text Card";
+    if (activeTab === "tags") return "Tags Stack Card";
     return "Text-only Card";
   }
 
@@ -299,9 +379,7 @@ export default function CardPage() {
           <ul className="nav nav-tabs mb-3">
             <li className="nav-item">
               <button
-                className={
-                  "nav-link " + (activeTab === "text" ? "active" : "")
-                }
+                className={"nav-link " + (activeTab === "text" ? "active" : "")}
                 onClick={() => handleTabClick("text")}
                 type="button"
               >
@@ -311,9 +389,7 @@ export default function CardPage() {
 
             <li className="nav-item">
               <button
-                className={
-                  "nav-link " + (activeTab === "icontext" ? "active" : "")
-                }
+                className={"nav-link " + (activeTab === "icontext" ? "active" : "")}
                 onClick={() => handleTabClick("icontext")}
                 type="button"
               >
@@ -323,13 +399,21 @@ export default function CardPage() {
 
             <li className="nav-item">
               <button
-                className={
-                  "nav-link " + (activeTab === "imagetext" ? "active" : "")
-                }
+                className={"nav-link " + (activeTab === "imagetext" ? "active" : "")}
                 onClick={() => handleTabClick("imagetext")}
                 type="button"
               >
                 Image + Text
+              </button>
+            </li>
+
+            <li className="nav-item">
+              <button
+                className={"nav-link " + (activeTab === "tags" ? "active" : "")}
+                onClick={() => handleTabClick("tags")}
+                type="button"
+              >
+                Tags Stack
               </button>
             </li>
           </ul>
@@ -367,6 +451,10 @@ export default function CardPage() {
                   <strong>Logo / Image</strong> — when <code>logo</code> is
                   present (renders a responsive image).
                 </li>
+                <li>
+                  <strong>Tags stack</strong> — when <code>tags</code> is
+                  present (renders a vertical stack of <code>TagObject[]</code>).
+                </li>
               </ul>
             </div>
 
@@ -397,9 +485,7 @@ export default function CardPage() {
           </div>
 
           <textarea
-            className={`form-control font-monospace ${
-              activeError ? "is-invalid" : ""
-            }`}
+            className={`form-control font-monospace ${activeError ? "is-invalid" : ""}`}
             rows={18}
             value={activeJson}
             onChange={handleTextareaChange}
@@ -407,9 +493,7 @@ export default function CardPage() {
           />
 
           {activeError && (
-            <div className="invalid-feedback d-block mt-1">
-              {activeError}
-            </div>
+            <div className="invalid-feedback d-block mt-1">{activeError}</div>
           )}
 
           <div className="form-text">
@@ -446,6 +530,10 @@ export default function CardPage() {
                     Else if it has <code>icon</code> /{" "}
                     <code>iconClass</code> → it renders only the icon via{" "}
                     <code>&lt;AlloyIcon/&gt;</code>.
+                  </li>
+                  <li>
+                    Else if it has <code>tags</code> → it renders a vertical
+                    stack of <code>TagObject[]</code>.
                   </li>
                   <li>
                     Else if it has <code>name</code> → it renders text.

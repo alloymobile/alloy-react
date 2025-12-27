@@ -17,33 +17,6 @@ import AlloyModalToast, { ModalToastObject } from "../tissue/AlloyModalToast.jsx
 
 /* -------------------------------------------------------
  * CrudObject
- *
- * Unified config for BOTH table + card CRUD:
- *
- * {
- *   id?: string;
- *   className?: string;         // outer container ("container-fluid" etc.)
- *
- *   type: "table" | "card";     // REQUIRED – decides which document renderer
- *
- *   documentClass?: string;     // defaults: "col-12" for table, "col-sm-6 col-md-4 col-lg-3 mb-3" for card
- *
- *   modal: ModalConfig;
- *   toast?: ModalToastConfig | ModalToastObject;
- *
- *   // IMPORTANT:
- *   // search can be:
- *   //  1) Wrapper config:
- *   //     { id, className, search:{ name, ... }, minChars, debounceMs, resultConfig }
- *   //  2) Old style input-only config:
- *   //     { name, type, layout, icon, ... }
- *   search?: SearchConfig | SearchObject;
- *
- *   add?: ButtonIconConfig | ButtonIconObject;
- *
- *   document: TableActionConfig | Array<CardActionConfig>;
- *   page?: PaginationConfig | PaginationObject;
- * }
  * ----------------------------------------------------- */
 export class CrudObject {
   constructor(cfg = {}) {
@@ -51,9 +24,9 @@ export class CrudObject {
       id,
       className = "container-fluid",
       type = "table",
-      documentClass, // optional; default depends on type
+      documentClass,
       modal,
-      toast, // optional: confirmation toast modal
+      toast,
       search,
       add,
       document,
@@ -71,8 +44,7 @@ export class CrudObject {
     if (this.type === "table") {
       this.documentClass = documentClass || "col-12";
     } else {
-      this.documentClass =
-        documentClass || "col-sm-6 col-md-4 col-lg-3 mb-3";
+      this.documentClass = documentClass || "col-sm-6 col-md-4 col-lg-3 mb-3";
     }
 
     // Modal
@@ -87,18 +59,12 @@ export class CrudObject {
         ? new ModalToastObject(toast)
         : null;
 
-    // ✅ FIXED: Search → supports BOTH wrapper + old input-only shape
+    // ✅ Search → supports BOTH wrapper + old input-only shape
     if (search instanceof SearchObject) {
       this.search = search;
     } else if (search) {
-      // New wrapper: has nested "search"
-      if (search.search) {
-        this.search = new SearchObject(search);
-      }
-      // Old style: is the input config directly (must have name)
-      else {
-        this.search = new SearchObject({ search });
-      }
+      if (search.search) this.search = new SearchObject(search); // wrapper
+      else this.search = new SearchObject({ search }); // old input-only
     } else {
       this.search = null;
     }
@@ -113,13 +79,11 @@ export class CrudObject {
 
     // Document (table or cards)
     if (this.type === "table") {
-      // TableActionObject
       this.document =
         document instanceof TableActionObject
           ? document
           : new TableActionObject(document || {});
     } else {
-      // array of CardActionObject
       const rawCards = Array.isArray(document) ? document : [];
       this.document = rawCards.map((card) =>
         card instanceof CardActionObject
@@ -171,6 +135,14 @@ function openModalById(id) {
  *   - crud: CrudObject
  *   - output?: (out: OutputObject) => void
  * ----------------------------------------------------- */
+/**
+ * @typedef {Object} AlloyCrudProps
+ * @property {CrudObject} crud
+ * @property {(out: any) => void | Promise<void>} [output]
+ */
+/**
+ * @param {AlloyCrudProps} props
+ */
 export function AlloyCrud({ crud, output }) {
   if (!crud || !(crud instanceof CrudObject)) {
     throw new Error("AlloyCrud requires `crud` (CrudObject instance).");
@@ -182,9 +154,9 @@ export function AlloyCrud({ crud, output }) {
     }
   };
 
-  // Hidden trigger button for Bootstrap's data-api (form modal)
+  const hasAdd = !!crud.add;
+
   const hiddenTriggerRef = useRef(null);
-  // Hidden trigger for toast modal (confirm delete)
   const hiddenToastTriggerRef = useRef(null);
 
   const doOpenModal = () => {
@@ -195,13 +167,9 @@ export function AlloyCrud({ crud, output }) {
       hiddenTriggerRef.current.click();
       return;
     }
-
-    if (crud.modal?.id) {
-      openModalById(crud.modal.id);
-    }
+    if (crud.modal?.id) openModalById(crud.modal.id);
   };
 
-  // Optional: open toast modal (if configured)
   const doOpenToastModal = () => {
     if (
       hiddenToastTriggerRef.current &&
@@ -210,65 +178,31 @@ export function AlloyCrud({ crud, output }) {
       hiddenToastTriggerRef.current.click();
       return;
     }
-
-    if (crud.toast?.id) {
-      openModalById(crud.toast.id);
-    }
+    if (crud.toast?.id) openModalById(crud.toast.id);
   };
 
-  /* ----------------- Helpers ----------------- */
-
-  function mapRowToModalData(row = {}) {
-    const result = {};
-    const modalCfg = crud.modal || {};
-    const defaultData = modalCfg.data || {};
-    const fields = Array.isArray(modalCfg.fields) ? modalCfg.fields : [];
-
-    fields.forEach((f) => {
-      const key = f?.name;
-      if (!key) return;
-
-      if (Object.prototype.hasOwnProperty.call(row, key)) {
-        result[key] = row[key];
-      } else if (Object.prototype.hasOwnProperty.call(defaultData, key)) {
-        result[key] = defaultData[key];
-      } else {
-        result[key] = "";
-      }
-    });
-
-    return result;
-  }
-
-  /* ----------------- Modal state (mode + data + version) ----------------- */
-
+  /* ----------------- Modal state ----------------- */
   const [modalState, setModalState] = useState(() => ({
     mode: "create", // "create" | "edit" | "delete"
-    data: mapRowToModalData({}),
+    data: crud.modal?.data || {},
     disabled: false,
-    version: 0, // bump to force rebuild ModalObject
+    version: 0,
   }));
 
-  // Store row selected for delete (for toast)
   const [deleteRow, setDeleteRow] = useState(null);
-
-  // Only open the modal when explicitly requested
   const [shouldOpen, setShouldOpen] = useState(false);
 
-  // If crud changes from outside, reset modal state (but do NOT open)
   useEffect(() => {
     setModalState((prev) => ({
       mode: "create",
-      data: mapRowToModalData({}),
+      data: crud.modal?.data || {},
       disabled: false,
       version: prev.version + 1,
     }));
     setShouldOpen(false);
     setDeleteRow(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [crud]);
 
-  // When version changes AND we explicitly requested opening, open modal
   useEffect(() => {
     if (!shouldOpen) return;
     if (!crud.modal?.id) return;
@@ -278,18 +212,13 @@ export function AlloyCrud({ crud, output }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalState.version, shouldOpen, crud.modal?.id]);
 
-  // Build ModalObject based on mode + data
   const modalModel = useMemo(() => {
     const base = crud.modal;
 
     let actionLabel;
-    if (modalState.mode === "edit") {
-      actionLabel = "Edit";
-    } else if (modalState.mode === "delete") {
-      actionLabel = "Delete";
-    } else {
-      actionLabel = base.action || "Create";
-    }
+    if (modalState.mode === "edit") actionLabel = "Edit";
+    else if (modalState.mode === "delete") actionLabel = "Delete";
+    else actionLabel = base.action || "Create";
 
     const valuesMap = modalState.data || {};
 
@@ -298,12 +227,8 @@ export function AlloyCrud({ crud, output }) {
           const plain = f ? { ...f } : {};
           const key = plain.name;
 
-          if (key) {
-            // IMPORTANT: always override value for ALL modes to avoid stale field values
-            plain.value =
-              Object.prototype.hasOwnProperty.call(valuesMap, key)
-                ? valuesMap[key]
-                : "";
+          if (key && Object.prototype.hasOwnProperty.call(valuesMap, key)) {
+            plain.value = valuesMap[key];
           }
 
           if (modalState.disabled) {
@@ -326,7 +251,7 @@ export function AlloyCrud({ crud, output }) {
       action: actionLabel,
       submit,
       fields,
-      data: valuesMap,
+      data: modalState.data,
     });
   }, [
     crud.modal,
@@ -336,33 +261,89 @@ export function AlloyCrud({ crud, output }) {
     modalState.version,
   ]);
 
+  /* ----------------- Helpers ----------------- */
+  function mapRowToModalData(row = {}) {
+    const result = {};
+    const modalCfg = crud.modal || {};
+    const defaultData = modalCfg.data || {};
+    const fields = Array.isArray(modalCfg.fields) ? modalCfg.fields : [];
+
+    fields.forEach((f) => {
+      const key = f?.name;
+      if (!key) return;
+
+      if (Object.prototype.hasOwnProperty.call(row, key)) result[key] = row[key];
+      else if (Object.prototype.hasOwnProperty.call(defaultData, key))
+        result[key] = defaultData[key];
+      else result[key] = "";
+    });
+
+    return result;
+  }
+
+  function mapDefaultsToEmpty() {
+    const result = {};
+    const modalCfg = crud.modal || {};
+    const fields = Array.isArray(modalCfg.fields) ? modalCfg.fields : [];
+    const defaultData = modalCfg.data || {};
+
+    fields.forEach((f) => {
+      const key = f?.name;
+      if (!key) return;
+
+      // For Create: ALWAYS empty, never reuse old values.
+      // Keep checkbox groups sane.
+      if (f?.type === "checkbox") result[key] = false;
+      else if (Array.isArray(defaultData[key])) result[key] = [];
+      else result[key] = "";
+    });
+
+    return result;
+  }
+
   /* ----------------- Handlers ----------------- */
 
-  // SEARCH (via AlloySearch) → re-emit as CRUD-level events
+  // ✅ SEARCH → forward ONLY "Search" and "Clear" (capitalized)
   const handleSearchOutput = (searchOut) => {
     if (!searchOut) return;
 
     const base =
-      searchOut instanceof OutputObject &&
-      typeof searchOut.toJSON === "function"
+      searchOut instanceof OutputObject && typeof searchOut.toJSON === "function"
         ? searchOut.toJSON()
         : searchOut;
 
-    const action = base?.action || "search";
+    if (base?.type && base.type !== "search-bar") return;
+
+    const rawAction = String(base?.action || "");
+    const lower = rawAction.toLowerCase();
     const data = base?.data || {};
 
-    if (action === "search" || action === "select") {
-      const out = OutputObject.ok({
-        id: crud.id,
-        type: "crud",
-        action: action === "select" ? "search-select" : "search",
-        data,
-      });
-      emit(out);
+    if (lower === "search") {
+      emit(
+        OutputObject.ok({
+          id: crud.id,
+          type: "crud",
+          action: "Search",
+          data,
+        })
+      );
+      return;
+    }
+
+    if (lower === "clear") {
+      emit(
+        OutputObject.ok({
+          id: crud.id,
+          type: "crud",
+          action: "Clear",
+          data,
+        })
+      );
+      return;
     }
   };
 
-  // TABLE (AlloyTableAction) → Sort / Edit / Delete / navigate / other actions
+  // TABLE → Sort / Edit / Delete / navigate / other actions
   const handleTableOutput = (tableOut) => {
     if (!tableOut) return;
 
@@ -373,14 +354,14 @@ export function AlloyCrud({ crud, output }) {
       const data =
         column && typeof column === "string" ? { [column]: dir } : {};
 
-      const out = OutputObject.ok({
-        id: crud.id,
-        type: "crud",
-        action: "Sort",
-        data,
-      });
-
-      emit(out);
+      emit(
+        OutputObject.ok({
+          id: crud.id,
+          type: "crud",
+          action: "Sort",
+          data,
+        })
+      );
       return;
     }
 
@@ -388,30 +369,25 @@ export function AlloyCrud({ crud, output }) {
     if (tableOut.type === "row" && tableOut.action === "navigate") {
       const { to, ...restRow } = tableOut.data || {};
 
-      const out = OutputObject.ok({
-        id: crud.id,
-        type: "crud",
-        action: "navigate",
-        data: {
-          to,
-          ...restRow,
-        },
-      });
-
-      emit(out);
+      emit(
+        OutputObject.ok({
+          id: crud.id,
+          type: "crud",
+          action: "navigate",
+          data: { to, ...restRow },
+        })
+      );
       return;
     }
 
-    // ROW ACTION (Edit / Delete / custom buttons)
+    // ROW ACTIONS
     if (tableOut.type === "table") {
       const row = tableOut.data || {};
       const btnName = tableOut.action || "";
       const lower = (btnName || "").toLowerCase();
 
-      // EDIT
       if (lower.includes("edit")) {
         const mappedData = mapRowToModalData(row);
-
         setModalState((prev) => ({
           mode: "edit",
           data: { ...row, ...mappedData },
@@ -422,14 +398,12 @@ export function AlloyCrud({ crud, output }) {
         return;
       }
 
-      // DELETE
       if (lower.includes("delete")) {
         if (crud.toast) {
           setDeleteRow(row);
           doOpenToastModal();
         } else {
           const mappedData = mapRowToModalData(row);
-
           setModalState((prev) => ({
             mode: "delete",
             data: { ...row, ...mappedData },
@@ -441,45 +415,39 @@ export function AlloyCrud({ crud, output }) {
         return;
       }
 
-      // Other custom actions → flat emit
       if (btnName) {
-        const out = OutputObject.ok({
-          id: crud.id,
-          type: "crud",
-          action: btnName,
-          data: {
-            ...row,
-          },
-        });
-        emit(out);
+        emit(
+          OutputObject.ok({
+            id: crud.id,
+            type: "crud",
+            action: btnName,
+            data: { ...row },
+          })
+        );
       }
       return;
     }
 
-    // Fallback
-    const out = OutputObject.ok({
-      id: crud.id,
-      type: "crud",
-      action: tableOut.action || "table",
-      data: { ...(tableOut.data || {}) },
-    });
-    emit(out);
+    emit(
+      OutputObject.ok({
+        id: crud.id,
+        type: "crud",
+        action: tableOut.action || "table",
+        data: { ...(tableOut.data || {}) },
+      })
+    );
   };
 
-  // CARD (AlloyCardAction) → Edit / Delete / custom actions
+  // CARD → Edit / Delete / custom actions
   const handleCardOutput = (cardOut) => {
-    if (!cardOut || cardOut.type !== "card-action") {
-      return;
-    }
+    if (!cardOut || cardOut.type !== "card-action") return;
 
     const row = cardOut.data || {};
     const btnName = cardOut.action || "";
     const lower = btnName.toLowerCase();
 
-    // EDIT
     if (lower.includes("edit")) {
       const mappedData = mapRowToModalData(row);
-
       setModalState((prev) => ({
         mode: "edit",
         data: { ...row, ...mappedData },
@@ -490,14 +458,12 @@ export function AlloyCrud({ crud, output }) {
       return;
     }
 
-    // DELETE
     if (lower.includes("delete")) {
       if (crud.toast) {
         setDeleteRow(row);
         doOpenToastModal();
       } else {
         const mappedData = mapRowToModalData(row);
-
         setModalState((prev) => ({
           mode: "delete",
           data: { ...row, ...mappedData },
@@ -509,38 +475,40 @@ export function AlloyCrud({ crud, output }) {
       return;
     }
 
-    // Other custom actions → flat emit
     if (btnName) {
-      const out = OutputObject.ok({
-        id: crud.id,
-        type: "crud",
-        action: btnName,
-        data: {
-          ...row,
-        },
-      });
-      emit(out);
-    }
-  };
-
-  // MODAL OUTPUT → bubble change + submit
-  const handleModalOutput = (modalOut) => {
-    if (!modalOut || modalOut.type !== "modal") return;
-
-    // Bubble change
-    if (String(modalOut.action || "").toLowerCase() === "change") {
       emit(
         OutputObject.ok({
           id: crud.id,
           type: "crud",
+          action: btnName,
+          data: { ...row },
+        })
+      );
+    }
+  };
+
+  // MODAL → propagate change + handle submit
+  const handleModalOutput = (modalOut) => {
+    if (!modalOut || modalOut.type !== "modal") return;
+
+    // ✅ bubble modal "change" upwards so parent can react (file upload / server calls)
+    if (String(modalOut.action || "").toLowerCase() === "change") {
+      emit(
+        new OutputObject({
+          id: crud.id,
+          type: "crud",
           action: "change",
-          data: modalOut.data || {},
+          error: !!modalOut.error,
+          data: {
+            mode: modalState.mode,
+            ...(modalOut.data || {}),
+          },
         })
       );
       return;
     }
 
-    // Submit only
+    // Submit handling remains the same
     if (modalOut.error) return;
 
     const fields = modalOut.data || {};
@@ -551,34 +519,26 @@ export function AlloyCrud({ crud, output }) {
     else if (modalState.mode === "delete") action = "Delete";
     else action = crud.modal?.submit?.name || "Create";
 
-    const merged = {
-      ...baseData,
-      ...fields,
-    };
+    const merged = { ...baseData, ...fields };
 
     if (!Object.prototype.hasOwnProperty.call(merged, "id")) {
       merged.id = baseData.id ?? fields.id ?? "";
     }
 
-    const out = OutputObject.ok({
-      id: crud.id,
-      type: "crud",
-      action,
-      data: merged,
-    });
-
-    emit(out);
+    emit(
+      OutputObject.ok({
+        id: crud.id,
+        type: "crud",
+        action,
+        data: merged,
+      })
+    );
   };
 
-  // TOAST MODAL → confirm delete, emit full row with Delete action
+  // TOAST MODAL → confirm delete
   const handleToastOutput = (toastOut) => {
-    if (
-      !toastOut ||
-      toastOut.type !== "modal-toast" ||
-      toastOut.action !== "click"
-    ) {
+    if (!toastOut || toastOut.type !== "modal-toast" || toastOut.action !== "click")
       return;
-    }
 
     const payload =
       deleteRow && typeof deleteRow === "object" ? { ...deleteRow } : null;
@@ -588,20 +548,22 @@ export function AlloyCrud({ crud, output }) {
       return;
     }
 
-    const out = OutputObject.ok({
-      id: crud.id,
-      type: "crud",
-      action: "Delete",
-      data: payload,
-    });
+    emit(
+      OutputObject.ok({
+        id: crud.id,
+        type: "crud",
+        action: "Delete",
+        data: payload,
+      })
+    );
 
-    emit(out);
     setDeleteRow(null);
   };
 
-  // ADD BUTTON → open create modal with EMPTY/default values
+  // ADD BUTTON → open create modal with defaults
   const handleAddOutput = () => {
-    const emptyData = mapRowToModalData({});
+    // ✅ Create must always be clean/empty (no stale values)
+    const emptyData = mapDefaultsToEmpty();
 
     setModalState((prev) => ({
       mode: "create",
@@ -612,39 +574,45 @@ export function AlloyCrud({ crud, output }) {
     setShouldOpen(true);
   };
 
-  // PAGINATION → forward page navigation
+  // ✅ PAGINATION → forward EXACT "page" event upwards
+  // AlloyPagination now emits: type="pagination", action="Page", data={ pageNumber }
+  // We forward to parent as: type="crud", action="page", data={ pageNumber }
   const handlePageOutput = (pageOut) => {
     if (!pageOut) return;
 
     const base =
-      pageOut instanceof OutputObject &&
-      typeof pageOut.toJSON === "function"
+      pageOut instanceof OutputObject && typeof pageOut.toJSON === "function"
         ? pageOut.toJSON()
         : pageOut;
 
-    const data = base?.data || {};
+    // Accept only pagination "Page"
+    if (base?.type && base.type !== "pagination") return;
 
-    const out = OutputObject.ok({
-      id: crud.id,
-      type: "crud",
-      action: "page",
-      data,
-    });
+    const actionLower = String(base?.action || "").toLowerCase();
+    if (actionLower !== "page") return;
 
-    emit(out);
+    const pageNumber = base?.data?.pageNumber;
+
+    // Only forward when it is a valid number
+    if (typeof pageNumber !== "number" || Number.isNaN(pageNumber)) return;
+
+    emit(
+      OutputObject.ok({
+        id: crud.id,
+        type: "crud",
+        action: "Page", // parent expects "page"
+        data: { pageNumber }, // ONLY what is needed
+      })
+    );
   };
 
   /* ----------------- Render helpers ----------------- */
-
   const renderDocument = () => {
     if (crud.type === "table") {
       return (
         <div className="row mt-3">
           <div className={crud.documentClass}>
-            <AlloyTableAction
-              tableAction={crud.document}
-              output={handleTableOutput}
-            />
+            <AlloyTableAction tableAction={crud.document} output={handleTableOutput} />
           </div>
         </div>
       );
@@ -664,38 +632,33 @@ export function AlloyCrud({ crud, output }) {
   };
 
   /* ----------------- Render ----------------- */
-
   return (
     <>
       <div className={crud.className}>
         {/* Search + Add row */}
         <div className="row input-group mt-2">
-          <div className="col-sm-8">
+          <div className={hasAdd ? "col-sm-8" : "col-12 col-sm-8 offset-sm-2"}>
             {crud.search && (
               <AlloySearch search={crud.search} output={handleSearchOutput} />
             )}
           </div>
-          <div className="col-sm-4 d-flex align-items-center justify-content-end">
-            {crud.add && (
-              <AlloyButtonIcon
-                buttonIcon={crud.add}
-                output={handleAddOutput}
-              />
-            )}
-          </div>
+          {hasAdd && (
+            <div className="col-sm-4 d-flex align-items-center justify-content-end">
+              {crud.add && (
+                <AlloyButtonIcon buttonIcon={crud.add} output={handleAddOutput} />
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Document (table or cards) */}
+        {/* Document */}
         {renderDocument()}
 
-        {/* Pagination (optional) */}
+        {/* Pagination */}
         {crud.page && crud.page instanceof PaginationObject && (
           <div className="row mt-3">
             <div className="col-12 d-flex justify-content-end">
-              <AlloyPagination
-                pagination={crud.page}
-                output={handlePageOutput}
-              />
+              <AlloyPagination pagination={crud.page} output={handlePageOutput} />
             </div>
           </div>
         )}
@@ -722,12 +685,10 @@ export function AlloyCrud({ crud, output }) {
       )}
 
       {/* Main form modal */}
-      <AlloyModal modal={modalModel} output={handleModalOutput} />
+      <AlloyModal key={modalState.version} modal={modalModel} output={handleModalOutput} />
 
-      {/* Optional Toast Modal for confirm-delete */}
-      {crud.toast && (
-        <AlloyModalToast modalToast={crud.toast} output={handleToastOutput} />
-      )}
+      {/* Toast modal */}
+      {crud.toast && <AlloyModalToast modalToast={crud.toast} output={handleToastOutput} />}
     </>
   );
 }

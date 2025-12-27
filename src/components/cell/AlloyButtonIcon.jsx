@@ -156,12 +156,14 @@ export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
 
       // 2) normalized OutputObject for parent (ONLY click emits)
       if (shouldEmit && typeof output === "function") {
+        const eventName = buttonIcon.name || buttonIcon.title;
+
         const out = OutputObject.ok({
           id: domId,
           type: "button-icon",
           action,
           data: {
-            name: buttonIcon.name,
+            name: eventName,
           },
         });
 

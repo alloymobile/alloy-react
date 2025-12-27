@@ -4,7 +4,8 @@ import { AlloyButtonIcon, ButtonIconObject } from "../../../src";
 
 const DEFAULT_INPUT_OBJ = {
   id: "alloyBtnIcon01", // optional; stable via useDomId() if omitted
-  name: "Sync", // remove this to see icon-only
+  name: "Sync", // remove this to see icon-only (event will use `title`)
+  title: "Sync", // used as fallback event name when `name` is missing (also tooltip)
   className: "btn btn-primary",
   active: "active",
   disabled: false,
@@ -14,7 +15,8 @@ const DEFAULT_INPUT_OBJ = {
   // ButtonIcon -> AlloyIcon (icon wrapper styling supported)
   icon: {
     iconClass: "fa-solid fa-rotate",
-    className: "d-inline-flex align-items-center justify-content-center bg-light rounded-circle p-2",
+    className:
+      "d-inline-flex align-items-center justify-content-center bg-light rounded-circle p-2",
   },
 };
 
@@ -23,7 +25,9 @@ const DEFAULT_INPUT = JSON.stringify(DEFAULT_INPUT_OBJ, null, 2);
 export default function ButtonIconPage() {
   const [inputJson, setInputJson] = useState(DEFAULT_INPUT);
   const [parseError, setParseError] = useState("");
-  const [outputJson, setOutputJson] = useState("// Click the button to see output here…");
+  const [outputJson, setOutputJson] = useState(
+    "// Click the button to see output here…"
+  );
 
   const btnRef = useRef(null);
 
@@ -36,7 +40,8 @@ export default function ButtonIconPage() {
 
     try {
       const obj = JSON.parse(val || "{}");
-      if (!obj || typeof obj !== "object") throw new Error("JSON must be an object.");
+      if (!obj || typeof obj !== "object")
+        throw new Error("JSON must be an object.");
       setParsed(obj);
       setParseError("");
     } catch (err) {
@@ -109,7 +114,9 @@ export default function ButtonIconPage() {
         <div className="col-12 text-center">
           <AlloyButtonIcon ref={btnRef} buttonIcon={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
-            If <code>name</code> is missing ⇒ icon-only button.{" "}
+            If <code>name</code> is missing ⇒ icon-only button (no visible label).{" "}
+            On click, output sends <code>data.name</code> as{" "}
+            <code>name</code> if present, otherwise <code>title</code>.{" "}
             <strong>Only click emits</strong> an <code>OutputObject</code>:{" "}
             <code>{`{ id, type: "button-icon", action: "click", error, data: { name } }`}</code>.
           </div>
@@ -137,7 +144,10 @@ export default function ButtonIconPage() {
                 onClick={handleFormat}
                 title="Format JSON"
               >
-                <i className="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true" />
+                <i
+                  className="fa-solid fa-wand-magic-sparkles me-2"
+                  aria-hidden="true"
+                />
                 Format
               </button>
 
@@ -153,27 +163,32 @@ export default function ButtonIconPage() {
           </div>
 
           <textarea
-            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
+            className={`form-control font-monospace ${
+              parseError ? "is-invalid" : ""
+            }`}
             rows={18}
             value={inputJson}
             onChange={handleInputChange}
             spellCheck={false}
           />
-          {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
+          {parseError && (
+            <div className="invalid-feedback d-block mt-1">{parseError}</div>
+          )}
 
           <div className="form-text">
-            Required: <code>icon.iconClass</code>. Optional: <code>name</code>, <code>id</code>,{" "}
-            <code>className</code>, <code>active</code>, <code>disabled</code>,{" "}
-            <code>title</code>, <code>ariaLabel</code>, <code>tabIndex</code>.
+            Required: <code>icon.iconClass</code>. Optional: <code>name</code>,{" "}
+            <code>id</code>, <code>className</code>, <code>active</code>,{" "}
+            <code>disabled</code>, <code>title</code>, <code>ariaLabel</code>,{" "}
+            <code>tabIndex</code>.
+            <br />
+            For icon-only buttons, set <code>title</code> so the click event has a
+            reliable identifier (used when <code>name</code> is missing).
             <br />
             If you omit <code>id</code>, the component generates a stable one via{" "}
             <code>useDomId()</code> (SSR-safe).
             <br />
-            Icon wrapper styling:
-            {" "}
-            <code>icon.className</code>
-            {" "}
-            (applied to the wrapper <code>{"<span>"}</code> inside <code>AlloyIcon</code>).
+            Icon wrapper styling: <code>icon.className</code> (applied to the
+            wrapper <code>{"<span>"}</code> inside <code>AlloyIcon</code>).
           </div>
         </div>
 
@@ -204,6 +219,9 @@ export default function ButtonIconPage() {
             Output is an <code>OutputObject</code> (only on click):
             <br />
             <code>{`{ id, type, action, error, data: { name } }`}</code>
+            <br />
+            Where <code>data.name</code> = <code>name</code> (if provided) else{" "}
+            <code>title</code>.
           </div>
         </div>
       </div>

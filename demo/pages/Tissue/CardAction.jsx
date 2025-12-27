@@ -23,6 +23,7 @@ import { AlloyCardAction, CardActionObject } from "../../../src";
          colClass  : string (Bootstrap grid size, defaults to "col-12")
          icon      : IconConfig  (optional; renders with AlloyIcon)
          logo      : LogoConfig  (optional; renders <img>)
+         tags      : TagObject[] (optional; renders a vertical stack)
          ariaLabel : string (optional)
 
    - footer: BlockObject (required conceptually; always normalized)
@@ -454,6 +455,85 @@ const DEFAULT_LINK_ICON_ONLY = JSON.stringify(
   2
 );
 
+/* 7) NEW - Tags stack inside fields[] */
+const DEFAULT_TAGS_STACK = JSON.stringify(
+  {
+    id: "cardTagsStack01",
+    className: "card border m-2 shadow",
+    link: "/products/7001",
+
+    header: {
+      id: "cardTagsHeader",
+      className: "card-header py-2 fw-semibold",
+      name: "Product Card (Tags Stack)"
+    },
+
+    body: {
+      id: "cardTagsBody",
+      className: "card-body",
+      ariaLabel: "Product card"
+    },
+
+    fields: [
+      {
+        id: "prodImg",
+        colClass: "col-4",
+        className: "d-flex align-items-start",
+        logo: {
+          imageUrl:
+            "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+          alt: "Alloymobile",
+          className: "img-fluid rounded"
+        }
+      },
+      {
+        id: "prodMeta",
+        colClass: "col-8",
+        className: "d-flex flex-column",
+        name: "Alloymobile · Design system · Updated", // keeps OutputObject.data meaningful
+        tags: [
+          { id: "t1", name: "Alloymobile", className: "fw-semibold" },
+          { id: "t2", name: "Design system components", className: "text-muted small" },
+          { id: "t3", name: "Image left • stacked tags right", className: "text-muted small" }
+        ]
+      }
+    ],
+
+    footer: {
+      id: "cardTagsFooter",
+      className:
+        "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+      name: "Product actions"
+    },
+
+    type: "AlloyButtonBar",
+    action: {
+      type: "AlloyButtonIcon",
+      className: "nav gap-2",
+      buttonClass: "nav-item",
+      barName: { show: false },
+      buttons: [
+        {
+          id: "viewBtn",
+          name: "View",
+          className:
+            "btn btn-sm btn-outline-secondary d-flex align-items-center gap-1",
+          icon: { iconClass: "fa-regular fa-eye" }
+        },
+        {
+          id: "saveBtn",
+          ariaLabel: "Save",
+          title: "Save",
+          className: "btn btn-sm btn-outline-primary",
+          icon: { iconClass: "fa-regular fa-bookmark" }
+        }
+      ]
+    }
+  },
+  null,
+  2
+);
+
 /* ---------------------- Tag snippet (display only) ---------------------- */
 const TAG_SNIPPET = `<AlloyCardAction cardAction={new CardActionObject(cardActionObject)} output={handleOutput} />`;
 
@@ -464,7 +544,8 @@ export default function CardActionPage() {
     { key: "BtnIcon", label: "Button (icon only)" },
     { key: "LinkText", label: "Link (text)" },
     { key: "LinkIconText", label: "Link (icon+text)" },
-    { key: "LinkIcon", label: "Link (icon only)" }
+    { key: "LinkIcon", label: "Link (icon only)" },
+    { key: "Tags", label: "Tags stack" }
   ];
 
   const [active, setActive] = useState("BtnText");
@@ -474,9 +555,9 @@ export default function CardActionPage() {
   const [jsonBtnIconText, setJsonBtnIconText] = useState(DEFAULT_BTN_ICON_TEXT);
   const [jsonBtnIcon, setJsonBtnIcon] = useState(DEFAULT_BTN_ICON_ONLY);
   const [jsonLinkText, setJsonLinkText] = useState(DEFAULT_LINK_TEXT);
-  const [jsonLinkIconText, setJsonLinkIconText] =
-    useState(DEFAULT_LINK_ICON_TEXT);
+  const [jsonLinkIconText, setJsonLinkIconText] = useState(DEFAULT_LINK_ICON_TEXT);
   const [jsonLinkIcon, setJsonLinkIcon] = useState(DEFAULT_LINK_ICON_ONLY);
+  const [jsonTags, setJsonTags] = useState(DEFAULT_TAGS_STACK);
 
   // parse errors
   const [errBtnText, setErrBtnText] = useState("");
@@ -485,6 +566,7 @@ export default function CardActionPage() {
   const [errLinkText, setErrLinkText] = useState("");
   const [errLinkIconText, setErrLinkIconText] = useState("");
   const [errLinkIcon, setErrLinkIcon] = useState("");
+  const [errTags, setErrTags] = useState("");
 
   // Output per tab
   const defaultOutputMsg =
@@ -501,9 +583,9 @@ export default function CardActionPage() {
   const [emitBtnIconText, setEmitBtnIconText] = useState(defaultOutputMsg);
   const [emitBtnIcon, setEmitBtnIcon] = useState(defaultOutputMsg);
   const [emitLinkText, setEmitLinkText] = useState(defaultOutputMsg);
-  const [emitLinkIconText, setEmitLinkIconText] =
-    useState(defaultOutputMsg);
+  const [emitLinkIconText, setEmitLinkIconText] = useState(defaultOutputMsg);
   const [emitLinkIcon, setEmitLinkIcon] = useState(defaultOutputMsg);
+  const [emitTags, setEmitTags] = useState(defaultOutputMsg);
 
   /* ---------------- model builders per tab ---------------- */
 
@@ -735,6 +817,44 @@ export default function CardActionPage() {
     }
   }, [jsonLinkIcon]);
 
+  const modelTags = useMemo(() => {
+    try {
+      setErrTags("");
+      return new CardActionObject(JSON.parse(jsonTags));
+    } catch (e) {
+      setErrTags(String(e.message || e));
+      return new CardActionObject({
+        className: "card border m-2 shadow",
+        header: {
+          className: "card-header py-2 fw-semibold text-danger",
+          name: "Invalid JSON (Tags stack)"
+        },
+        body: {
+          className: "card-body",
+          ariaLabel: "Error card"
+        },
+        fields: [
+          {
+            className: "text-danger",
+            name: "Fix JSON to preview tags + actions",
+            colClass: "col-12"
+          }
+        ],
+        footer: {
+          className:
+            "card-footer d-flex align-items-center justify-content-between flex-wrap gap-2 py-2",
+          name: "Product actions"
+        },
+        type: "AlloyButtonBar",
+        action: {
+          type: "AlloyButtonIcon",
+          className: "nav gap-2",
+          buttons: []
+        }
+      });
+    }
+  }, [jsonTags]);
+
   /* ---------------- active tab bindings ---------------- */
 
   const tabBindings =
@@ -828,15 +948,28 @@ export default function CardActionPage() {
           setEmitLinkIcon(defaultOutputMsg);
           setErrLinkIcon("");
         }
+      },
+      Tags: {
+        label: "Tags stack",
+        model: modelTags,
+        inputJson: jsonTags,
+        setInputJson: setJsonTags,
+        parseError: errTags,
+        setParseError: setErrTags,
+        outputJson: emitTags,
+        setOutputJson: setEmitTags,
+        resetJson: () => {
+          setJsonTags(DEFAULT_TAGS_STACK);
+          setEmitTags(defaultOutputMsg);
+          setErrTags("");
+        }
       }
     }[active] || {};
 
   /* ---------------- handleOutput: normalize OutputObject ---------------- */
 
   function handleOutput(out) {
-    const payload =
-      out && typeof out.toJSON === "function" ? out.toJSON() : out;
-
+    const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
     tabBindings.setOutputJson(JSON.stringify(payload, null, 2));
   }
 
@@ -873,27 +1006,20 @@ export default function CardActionPage() {
         <div className="row mb-4 justify-content-center">
           <div className="col-12 col-lg-10 col-xl-8">
             {tabBindings.model && (
-              <AlloyCardAction
-                cardAction={tabBindings.model}
-                output={handleOutput}
-              />
+              <AlloyCardAction cardAction={tabBindings.model} output={handleOutput} />
             )}
             <div className="small text-secondary mt-2 text-center text-lg-start">
               <div className="mb-1">
-                <strong>Navigation behavior:</strong>{" "}
-                <code>link</code> is optional.
-                If present (like <code>"/users/101"</code>), ONLY the{" "}
-                <code>body</code> area becomes clickable (React Router{" "}
+                <strong>Navigation behavior:</strong> <code>link</code> is optional.
+                If present, ONLY the <code>body</code> area becomes clickable (React Router{" "}
                 <code>&lt;Link/&gt;</code>).
               </div>
               <div className="mb-1">
-                Header, footer, and the footer action bar are never part of that
-                link. Footer actions still work and emit{" "}
-                <code>output()</code>.
+                Header, footer, and the footer action bar are never part of that link.
+                Footer actions still work and emit <code>output()</code>.
               </div>
               <div className="text-muted">
-                Remove <code>link</code> (or set it to <code>""</code>) to make
-                the card body non-clickable.
+                New: fields can render <code>tags</code> (vertical stack of TagObject[]).
               </div>
             </div>
           </div>
@@ -917,30 +1043,24 @@ export default function CardActionPage() {
             </div>
 
             <textarea
-              className={`form-control font-monospace ${
-                tabBindings.parseError ? "is-invalid" : ""
-              }`}
+              className={`form-control font-monospace ${tabBindings.parseError ? "is-invalid" : ""}`}
               rows={18}
               value={tabBindings.inputJson}
               onChange={(e) => tabBindings.setInputJson(e.target.value)}
               spellCheck={false}
             />
             {tabBindings.parseError && (
-              <div className="invalid-feedback d-block mt-1">
-                {tabBindings.parseError}
-              </div>
+              <div className="invalid-feedback d-block mt-1">{tabBindings.parseError}</div>
             )}
 
             <div className="form-text">
               <ul className="mb-0 ps-3">
                 <li>
-                  <code>header</code>, <code>body</code>,{" "}
-                  <code>fields[]</code>, and <code>footer</code> are{" "}
-                  <strong>BlockObject configs</strong> (
-                  <code>id</code>, <code>className</code>,{" "}
-                  <code>name</code>, <code>colClass</code>,{" "}
-                  <code>icon</code>, <code>logo</code>,{" "}
-                  <code>ariaLabel</code>).
+                  <code>header</code>, <code>body</code>, <code>fields[]</code>, and{" "}
+                  <code>footer</code> are <strong>BlockObject configs</strong> (
+                  <code>id</code>, <code>className</code>, <code>name</code>,{" "}
+                  <code>colClass</code>, <code>icon</code>, <code>logo</code>,{" "}
+                  <code>tags</code>, <code>ariaLabel</code>).
                 </li>
                 <li>
                   <code>fields[]</code> drive the visible body content. Use{" "}
@@ -949,17 +1069,12 @@ export default function CardActionPage() {
                   <code>"col-md-6"</code>).
                 </li>
                 <li>
-                  <code>type</code> determines footer bar (
-                  <code>"AlloyButtonBar"</code> vs{" "}
-                  <code>"AlloyLinkBar"</code>).{" "}
-                  <code>action</code> is REQUIRED and is hydrated into a{" "}
-                  <code>ButtonBarObject</code> or{" "}
-                  <code>LinkBarObject</code>.
+                  <code>type</code> determines footer bar (<code>"AlloyButtonBar"</code>{" "}
+                  vs <code>"AlloyLinkBar"</code>). <code>action</code> is REQUIRED.
                 </li>
                 <li>
-                  When an action is clicked, <code>fields[]</code> with both{" "}
-                  <code>id</code> and <code>name</code> become a key/value map
-                  in <code>OutputObject.data</code>.
+                  New: if a field has <code>tags</code>, it renders a vertical stack
+                  (TagObject[]).
                 </li>
               </ul>
             </div>
@@ -968,15 +1083,11 @@ export default function CardActionPage() {
           {/* Right: Output payload */}
           <div className="col-12 col-lg-6">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="fw-semibold">
-                Output (from action click)
-              </span>
+              <span className="fw-semibold">Output (from action click)</span>
               <button
                 type="button"
                 className="btn btn-sm btn-outline-danger"
-                onClick={() =>
-                  tabBindings.setOutputJson(defaultOutputMsg)
-                }
+                onClick={() => tabBindings.setOutputJson(defaultOutputMsg)}
               >
                 Clear
               </button>
@@ -989,9 +1100,9 @@ export default function CardActionPage() {
               readOnly
               spellCheck={false}
             />
+
             <div className="form-text">
-              Standard <code>OutputObject</code> shape from{" "}
-              <code>AlloyCardAction</code>:
+              Standard <code>OutputObject</code> shape from <code>AlloyCardAction</code>:
               <pre className="mt-2 mb-1 small bg-light border rounded-3 p-2">
 {`{
   id: "<card-id>",
@@ -1007,15 +1118,11 @@ export default function CardActionPage() {
               Typical usage:
               <ul className="mb-0 ps-3">
                 <li>
-                  Branch on <code>action</code> (e.g.{" "}
-                  <code>"Edit"</code>, <code>"Delete"</code>,{" "}
-                  <code>"Restart"</code>, <code>"Docs"</code>,{" "}
-                  <code>"Chat"</code>).
+                  Branch on <code>action</code> (e.g. <code>"Edit"</code>,{" "}
+                  <code>"Delete"</code>, <code>"Restart"</code>, <code>"Docs"</code>).
                 </li>
                 <li>
-                  Use <code>data</code> as a pre-normalized payload of the
-                  card’s field values (e.g. <code>role</code>,{" "}
-                  <code>status</code>, etc.).
+                  Use <code>data</code> as a pre-normalized payload of the card’s field values.
                 </li>
               </ul>
             </div>
