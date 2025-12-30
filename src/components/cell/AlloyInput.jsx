@@ -21,8 +21,11 @@ import { useDomId, OutputObject } from "../../utils/idHelper.js";
  *                                              "password",
  *                                              "number",
  *                                              "date",
+ *                                              "datetime-local",
+ *                                              "time",
  *                                              "textarea",
  *                                              "select",
+ *                                              "multiselect",
  *                                              "radio",
  *                                              "checkbox",
  *                                              "file",
@@ -31,6 +34,7 @@ import { useDomId, OutputObject } from "../../utils/idHelper.js";
  * @property {string} [label]                - Human label for the field or group
  * @property {string|string[]|File|File[]} [value]
  *                                            - checkbox group: string[]
+ *                                            - multiselect: string[]
  *                                            - file (single): File | string(url)
  *                                            - file (multi):  File[] | string[](urls)
  *                                            - canvas: DataURL string
@@ -65,6 +69,8 @@ import { useDomId, OutputObject } from "../../utils/idHelper.js";
  * @property {number} [height]               - canvas height (default 180)
  * @property {number} [canvasStrokeWidth]    - canvas stroke width (default 2)
  *
+ * @property {number} [size]                 - multiselect: visible rows (default 4)
+ *
  * @property {any} [rest]
  */
 export class InputObject {
@@ -93,6 +99,7 @@ export class InputObject {
       options = [],
       validators = [],
       iconGroupClass,
+      size,
       ...rest
     } = config;
 
@@ -108,11 +115,12 @@ export class InputObject {
 
     // default starting value:
     // - checkbox group => []
+    // - multiselect => []
     // - everything else => ""
     let initialValue;
     if (typeof value !== "undefined") {
       initialValue = value;
-    } else if (type === "checkbox") {
+    } else if (type === "checkbox" || type === "multiselect") {
       initialValue = [];
     } else {
       initialValue = "";
@@ -150,11 +158,14 @@ export class InputObject {
     this.matchWith = matchWith;
     this.passwordStrength = passwordStrength;
 
+    // multiselect size (visible rows)
+    this.size = size;
+
     // control classes
     if (typeof className === "string" && className.trim() !== "") {
       this.className = className.trim();
     } else {
-      if (type === "select") {
+      if (type === "select" || type === "multiselect") {
         this.className = "form-select";
       } else if (type === "radio" || type === "checkbox") {
         this.className = "form-check-input";
@@ -211,11 +222,34 @@ export function AlloyInput({ input, output }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = strokeWidth;
     ctx.strokeStyle = "#000";
+  };
+
+  const clearCanvasSurface = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const drawCanvasDataUrl = (dataUrl) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const img = new Image();
+    img.onload = () => {
+      clearCanvasSurface();
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      initCanvas();
+    };
+    img.src = dataUrl;
   };
 
   const getCanvasDataUrl = () => {
@@ -291,6 +325,7 @@ export function AlloyInput({ input, output }) {
   };
 
   const clearCanvas = () => {
+    clearCanvasSurface();
     initCanvas();
     hasDrawnRef.current = false;
     setVal("");
@@ -304,7 +339,20 @@ export function AlloyInput({ input, output }) {
 
     if (input.type === "canvas") {
       hasDrawnRef.current = Boolean(input.value);
-      requestAnimationFrame(() => initCanvas());
+
+      requestAnimationFrame(() => {
+        initCanvas();
+
+        if (
+          input.value &&
+          typeof input.value === "string" &&
+          input.value.startsWith("data:image/")
+        ) {
+          drawCanvasDataUrl(input.value);
+        } else {
+          clearCanvasSurface();
+        }
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -430,10 +478,21 @@ export function AlloyInput({ input, output }) {
     e.target.value = "";
   };
 
+  // multiselect change handler
+  const handleMultiSelectChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions).map((opt) => opt.value);
+    setVal(selectedOptions);
+    emit(selectedOptions, "change");
+  };
+
   // shared change handler
   const handleChange = (e) => {
     if (input.type === "file") {
       return handleFileChange(e);
+    }
+
+    if (input.type === "multiselect") {
+      return handleMultiSelectChange(e);
     }
 
     const v = e.target.value;
@@ -504,6 +563,29 @@ export function AlloyInput({ input, output }) {
       ))}
     </select>
   );
+
+  // NEW: Multiselect renderer
+  const renderMultiSelect = () => {
+    const selectedValues = Array.isArray(val) ? val : [];
+    const visibleSize = input.size ?? 4;
+
+    return (
+      <select
+        {...commonControlProps}
+        multiple
+        size={visibleSize}
+        value={selectedValues}
+        onChange={handleMultiSelectChange}
+        className={withInvalid(input.className)}
+      >
+        {input.options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    );
+  };
 
   const renderRadioGroup = () => (
     <div>
@@ -667,6 +749,32 @@ export function AlloyInput({ input, output }) {
     </div>
   );
 
+  // datetime-local renderer
+  const renderDateTimeLocal = () => (
+    <input
+      {...commonControlProps}
+      type="datetime-local"
+      value={val}
+      onChange={handleChange}
+      className={withInvalid(input.className)}
+      min={input.min}
+      max={input.max}
+    />
+  );
+
+  // NEW: time renderer
+  const renderTime = () => (
+    <input
+      {...commonControlProps}
+      type="time"
+      value={val}
+      onChange={handleChange}
+      className={withInvalid(input.className)}
+      min={input.min}
+      max={input.max}
+    />
+  );
+
   const renderTextLike = () => (
     <input
       {...commonControlProps}
@@ -683,6 +791,8 @@ export function AlloyInput({ input, output }) {
         return renderTextarea();
       case "select":
         return renderSelect();
+      case "multiselect":
+        return renderMultiSelect();
       case "radio":
         return renderRadioGroup();
       case "checkbox":
@@ -691,6 +801,10 @@ export function AlloyInput({ input, output }) {
         return renderFile();
       case "canvas":
         return renderCanvas();
+      case "datetime-local":
+        return renderDateTimeLocal();
+      case "time":
+        return renderTime();
       default:
         return renderTextLike();
     }
@@ -734,10 +848,16 @@ export function AlloyInput({ input, output }) {
             ? renderTextarea()
             : input.type === "select"
             ? renderSelect()
+            : input.type === "multiselect"
+            ? renderMultiSelect()
             : input.type === "file"
             ? renderFile()
             : input.type === "canvas"
             ? renderCanvas()
+            : input.type === "datetime-local"
+            ? renderDateTimeLocal()
+            : input.type === "time"
+            ? renderTime()
             : renderTextLike()}
         </div>
 
@@ -747,23 +867,29 @@ export function AlloyInput({ input, output }) {
   }
 
   // layout: "text" (default)
+  // Types that show label above the input
+  const labelTypes = [
+    "text",
+    "textarea",
+    "number",
+    "email",
+    "password",
+    "date",
+    "datetime-local",
+    "time",
+    "file",
+    "canvas",
+    "select",
+    "multiselect"
+  ];
+
   return (
     <div className="mb-3">
-      {[
-        "text",
-        "textarea",
-        "number",
-        "email",
-        "password",
-        "date",
-        "file",
-        "canvas"
-      ].includes(input.type) &&
-        input.label && (
-          <label htmlFor={domId} className="form-label">
-            {input.label}
-          </label>
-        )}
+      {labelTypes.includes(input.type) && input.label && (
+        <label htmlFor={domId} className="form-label">
+          {input.label}
+        </label>
+      )}
 
       {renderControl()}
 

@@ -94,6 +94,28 @@ const DEFAULT_INPUTS = {
     ]
   },
 
+  // ✅ Multiselect demo (NEW)
+  // - Renders as <select multiple>
+  // - Value is string[] (array of selected values)
+  // - Use `size` to control visible rows (default 4)
+  multiselect: {
+    name: "permissions",
+    label: "Permissions",
+    type: "multiselect",
+    layout: "text",
+    required: true,
+    className: "form-select",
+    size: 5,
+    options: [
+      { value: "read", label: "Read" },
+      { value: "write", label: "Write" },
+      { value: "delete", label: "Delete" },
+      { value: "admin", label: "Admin" },
+      { value: "export", label: "Export" },
+      { value: "import", label: "Import" }
+    ]
+  },
+
   date: {
     name: "dob",
     label: "Date of Birth",
@@ -101,6 +123,35 @@ const DEFAULT_INPUTS = {
     layout: "text",
     required: true,
     className: "form-control"
+  },
+
+  // ✅ Datetime-local demo (NEW)
+  // - Renders as <input type="datetime-local">
+  // - Value format: "YYYY-MM-DDTHH:mm" (e.g., "2024-01-15T14:30")
+  // - Use `min` and `max` to constrain date/time range
+  "datetime-local": {
+    name: "appointmentTime",
+    label: "Appointment Date & Time",
+    type: "datetime-local",
+    layout: "text",
+    required: true,
+    className: "form-control",
+    min: "2024-01-01T00:00",
+    max: "2025-12-31T23:59"
+  },
+
+  // ✅ Time demo (NEW)
+  // - Renders as <input type="time">
+  // - Value format: "HH:mm" (e.g., "14:30")
+  time: {
+    name: "preferredTime",
+    label: "Preferred Time",
+    type: "time",
+    layout: "text",
+    required: true,
+    className: "form-control",
+    min: "09:00",
+    max: "17:00"
   },
 
   radio: {
@@ -227,7 +278,7 @@ export default function InputPage() {
       <h3 className="mb-4 text-center">AlloyInput</h3>
 
       {/* Tabs for each field type */}
-      <ul className="nav nav-underline nav-fill mb-3">
+      <ul className="nav nav-underline nav-fill mb-3 flex-wrap">
         {TABS.map((key) => (
           <li className="nav-item" key={key}>
             <button
@@ -283,6 +334,30 @@ export default function InputPage() {
                 Canvas value emits as a <strong>DataURL string</strong> (includes{" "}
                 <code>data:image/png;base64,</code> prefix). Use the output panel
                 to copy it.
+              </div>
+            )}
+
+            {tab === "datetime-local" && (
+              <div className="mt-1">
+                Datetime-local emits value in <strong>ISO format</strong>:{" "}
+                <code>YYYY-MM-DDTHH:mm</code> (e.g., <code>2024-01-15T14:30</code>).
+                Use <code>min</code> and <code>max</code> to constrain the date/time range.
+              </div>
+            )}
+
+            {tab === "time" && (
+              <div className="mt-1">
+                Time emits value in <strong>24-hour format</strong>:{" "}
+                <code>HH:mm</code> (e.g., <code>14:30</code>).
+                Use <code>min</code> and <code>max</code> to constrain the time range.
+              </div>
+            )}
+
+            {tab === "multiselect" && (
+              <div className="mt-1">
+                Multiselect emits <code>data.value</code> as a <strong>string[]</strong>{" "}
+                (array of selected values). Hold <code>Ctrl</code> (or <code>Cmd</code> on Mac)
+                to select multiple options. Use <code>size</code> to control visible rows.
               </div>
             )}
 
@@ -349,6 +424,14 @@ export default function InputPage() {
                 <code>
                   options: [ &#123;value:"news", label:"News"&#125;, ... ]
                 </code>
+              </li>
+              <li>
+                For <code>multiselect</code>, pass <code>options</code> array and
+                optionally <code>size</code> (visible rows, default 4).
+              </li>
+              <li>
+                For <code>datetime-local</code> and <code>time</code>, use{" "}
+                <code>min</code> and <code>max</code> to constrain values.
               </li>
               <li>
                 To enforce strong password rules, set{" "}
@@ -426,6 +509,14 @@ export default function InputPage() {
               For <code>type: "file"</code> with <code>multiple: true</code>,{" "}
               <code>data.value</code> will be an array (e.g. <code>string[]</code>{" "}
               when uploader is used).
+            </div>
+            <div className="mt-1">
+              For <code>type: "multiselect"</code>,{" "}
+              <code>data.value</code> will be a <code>string[]</code> of selected values.
+            </div>
+            <div className="mt-1">
+              For <code>type: "datetime-local"</code>,{" "}
+              <code>data.value</code> will be <code>"YYYY-MM-DDTHH:mm"</code> format.
             </div>
           </div>
         </div>

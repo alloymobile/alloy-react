@@ -16,7 +16,7 @@ const DEFAULT_CRUD_TABLE_JSON = JSON.stringify(
     className: "container-fluid",
 
     type: "table",
-    documentClass: "col-12",
+    documentClass: "col-6 col-md-4 col-lg-3 col-xl-2 mb-3",
 
     modal: {
       id: "vendorModal",
@@ -444,7 +444,7 @@ function CrudSection({
       return new CrudObject({
         className: "container-fluid",
         type: label === "Table" ? "table" : "card",
-        documentClass: label === "Table" ? "col-12" : "col-sm-6 col-md-4",
+        documentClass: label === "Table" ? "col-12" : "col-6 col-md-4 col-lg-3 col-xl-2 mb-3",
         modal: {
           title: `Invalid JSON (${label})`,
           action: "",

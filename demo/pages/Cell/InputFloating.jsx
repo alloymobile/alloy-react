@@ -13,6 +13,8 @@ import { AlloyInput, InputObject } from "../../../src";
  *   So canvas preset uses layout: "text" (or you can switch it to "icon").
  * - File input also looks/behaves awkward in floating labels across browsers,
  *   so file preset uses layout: "icon".
+ * - Multiselect does NOT work well with floating labels due to the multi-row nature,
+ *   so multiselect preset uses layout: "icon".
  *
  * NOTE (SSR-safe IDs):
  * - InputObject should NOT auto-generate `id` (prevents Next.js SSR hydration mismatches).
@@ -71,6 +73,62 @@ const DEFAULTS = {
     required: true,
     icon: { iconClass: "fa-solid fa-calendar" },
     className: "form-control"
+  },
+
+  // ✅ Datetime-local demo (NEW)
+  // - Works with floating layout
+  // - Value format: "YYYY-MM-DDTHH:mm" (e.g., "2024-01-15T14:30")
+  // - Use `min` and `max` to constrain date/time range
+  "datetime-local": {
+    name: "appointmentTime",
+    label: "Appointment Date & Time",
+    type: "datetime-local",
+    layout: "floating",
+    required: true,
+    icon: { iconClass: "fa-solid fa-calendar-check" },
+    className: "form-control",
+    min: "2024-01-01T00:00",
+    max: "2025-12-31T23:59"
+  },
+
+  // ✅ Time demo (NEW)
+  // - Works with floating layout
+  // - Value format: "HH:mm" (e.g., "14:30")
+  time: {
+    name: "preferredTime",
+    label: "Preferred Time",
+    type: "time",
+    layout: "floating",
+    required: true,
+    icon: { iconClass: "fa-solid fa-clock" },
+    className: "form-control",
+    min: "09:00",
+    max: "17:00"
+  },
+
+  // ✅ Multiselect demo (NEW)
+  // - Does NOT work well with floating labels due to multi-row select
+  // - Uses layout: "icon" instead
+  // - Value is string[] (array of selected values)
+  // - Use `size` to control visible rows (default 4)
+  multiselect: {
+    name: "permissions",
+    label: "Permissions",
+    type: "multiselect",
+    layout: "icon", // ✅ not floating (multi-row select doesn't fit floating pattern)
+    required: true,
+    icon: { iconClass: "fa-solid fa-list-check" },
+    iconGroupClass: "bg-light border-0",
+    className: "form-select",
+    size: 5,
+    options: [
+      { value: "read", label: "Read" },
+      { value: "write", label: "Write" },
+      { value: "delete", label: "Delete" },
+      { value: "admin", label: "Admin" },
+      { value: "export", label: "Export" },
+      { value: "import", label: "Import" }
+    ]
   },
 
   // ✅ File demo (icon layout; MULTI enabled)
@@ -172,6 +230,9 @@ export default function InputFloatingPage() {
   const isCanvas = tab === "canvas" || model?.type === "canvas";
   const isFile = tab === "file" || model?.type === "file";
   const isFloating = model?.layout === "floating";
+  const isDateTimeLocal = tab === "datetime-local" || model?.type === "datetime-local";
+  const isTime = tab === "time" || model?.type === "time";
+  const isMultiselect = tab === "multiselect" || model?.type === "multiselect";
 
   // Enable uploader only for file tab (keeps other tabs pure)
   const uploader = isFile ? demoFileUploader : undefined;
@@ -181,7 +242,7 @@ export default function InputFloatingPage() {
       <h3 className="mb-4 text-center">AlloyInput (layout: "floating")</h3>
 
       {/* Tabs */}
-      <ul className="nav nav-underline nav-fill mb-3">
+      <ul className="nav nav-underline nav-fill mb-3 flex-wrap">
         {TABS.map((key) => (
           <li className="nav-item" key={key}>
             <button
@@ -211,10 +272,18 @@ export default function InputFloatingPage() {
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
           {isCanvas && isFloating && (
             <div className="alert alert-warning py-2">
-              <strong>Note:</strong> Canvas doesn’t work well with{" "}
+              <strong>Note:</strong> Canvas doesn't work well with{" "}
               <code>layout: "floating"</code>. Switch canvas to{" "}
               <code>layout: "text"</code> or <code>layout: "icon"</code> in the
               JSON.
+            </div>
+          )}
+
+          {isMultiselect && isFloating && (
+            <div className="alert alert-warning py-2">
+              <strong>Note:</strong> Multiselect doesn't work well with{" "}
+              <code>layout: "floating"</code>. Switch multiselect to{" "}
+              <code>layout: "icon"</code> in the JSON.
             </div>
           )}
 
@@ -237,9 +306,35 @@ export default function InputFloatingPage() {
               <code>layout: "floating"</code> and an <code>icon</code>.
             </div>
 
+            {isDateTimeLocal && (
+              <div className="mb-2">
+                <strong>Datetime-local note:</strong> emits value in{" "}
+                <code>YYYY-MM-DDTHH:mm</code> format (e.g., <code>2024-01-15T14:30</code>).
+                Use <code>min</code> and <code>max</code> to constrain the date/time range.
+              </div>
+            )}
+
+            {isTime && (
+              <div className="mb-2">
+                <strong>Time note:</strong> emits value in <code>HH:mm</code> format
+                (e.g., <code>14:30</code>). Use <code>min</code> and <code>max</code> to
+                constrain the time range.
+              </div>
+            )}
+
+            {isMultiselect && (
+              <div className="mb-2">
+                <strong>Multiselect note:</strong> multiselect uses{" "}
+                <code>layout: "icon"</code> because multi-row selects don't fit the
+                floating label pattern. <code>data.value</code> emits{" "}
+                <code>string[]</code> (array of selected values). Hold{" "}
+                <code>Ctrl</code>/<code>Cmd</code> to select multiple.
+              </div>
+            )}
+
             {isFile && (
               <div className="mb-2">
-                <strong>File note:</strong> file inputs don’t behave consistently
+                <strong>File note:</strong> file inputs don't behave consistently
                 with floating labels across browsers, so this preset uses{" "}
                 <code>layout: "icon"</code>. With demo uploader +{" "}
                 <code>multiple: true</code>, <code>data.value</code> emits{" "}
@@ -308,6 +403,14 @@ export default function InputFloatingPage() {
                 <code>layout: "floating"</code> requires an <code>icon</code>.
               </li>
               <li>
+                <code>datetime-local</code> and <code>time</code> work with floating layout.
+                Use <code>min</code> and <code>max</code> to constrain values.
+              </li>
+              <li>
+                Multiselect preset uses <code>layout: "icon"</code> (recommended for
+                multi-row selects). Pass <code>options</code> and optionally <code>size</code>.
+              </li>
+              <li>
                 File preset uses <code>layout: "icon"</code> (recommended for{" "}
                 <code>&lt;input type="file"&gt;</code>).
               </li>
@@ -371,6 +474,8 @@ export default function InputFloatingPage() {
             </pre>
             For <code>type: "canvas"</code>, <code>data.value</code> is a DataURL string.
             For <code>type: "file"</code> with multi enabled, <code>data.value</code> is an array.
+            For <code>type: "multiselect"</code>, <code>data.value</code> is a <code>string[]</code>.
+            For <code>type: "datetime-local"</code>, <code>data.value</code> is <code>"YYYY-MM-DDTHH:mm"</code>.
           </div>
         </div>
       </div>

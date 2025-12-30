@@ -29,7 +29,7 @@ export class CrudFormObject {
       add,
       type = "table",
       document,
-      documentClass = "col-12",
+      documentClass = "col-6 col-md-4 col-lg-3 col-xl-2 mb-3",
       form,
       pagination,
       modalToast,
@@ -77,7 +77,7 @@ export class CrudFormObject {
       );
     }
 
-    this.documentClass = documentClass || "col-12";
+    this.documentClass = documentClass || "col-6 col-md-4 col-lg-3 col-xl-2 mb-3";
 
     // Base TabForm config – ALWAYS a TabFormObject
     this.form =
@@ -547,7 +547,7 @@ export function AlloyCrudForm({ crudForm, output }) {
       return (
         <>
           <div className="row mt-2">
-            <div className={crudForm.documentClass}>
+            <div className="col-12">
               <AlloyTableAction
                 tableAction={crudForm.document}
                 output={handleTableOutput}
@@ -557,7 +557,7 @@ export function AlloyCrudForm({ crudForm, output }) {
 
           {crudForm.pagination && (
             <div className="row mt-2">
-              <div className={crudForm.documentClass}>
+              <div className="col-12">
                 <AlloyPagination
                   pagination={crudForm.pagination}
                   output={handlePaginationOutput}
@@ -573,20 +573,15 @@ export function AlloyCrudForm({ crudForm, output }) {
       return (
         <>
           <div className="row mt-2">
-            <div className={crudForm.documentClass}>
-              <div className="row">
-                {crudForm.document.map((card) => (
-                  <div key={card.id} className="col-sm-6 col-md-4 col-lg-3 mb-3">
-                    <AlloyCardAction cardAction={card} output={handleCardOutput} />
-                  </div>
-                ))}
+            {crudForm.document.map((card) => (
+              <div key={card.id} className={crudForm.documentClass}>
+                <AlloyCardAction cardAction={card} output={handleCardOutput} />
               </div>
-            </div>
+            ))}
           </div>
-
           {crudForm.pagination && (
             <div className="row mt-2">
-              <div className={crudForm.documentClass}>
+              <div className="col-12">
                 <AlloyPagination
                   pagination={crudForm.pagination}
                   output={handlePaginationOutput}
@@ -600,7 +595,7 @@ export function AlloyCrudForm({ crudForm, output }) {
 
     return (
       <div className="row mt-2">
-        <div className={crudForm.documentClass}>
+        <div className="col-12">
           <div className="alert alert-warning mt-3">No document configured for this CrudForm.</div>
         </div>
       </div>

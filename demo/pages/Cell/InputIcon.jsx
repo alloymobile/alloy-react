@@ -80,6 +80,63 @@ const DEFAULTS = {
     className: "form-control"
   },
 
+  // ✅ Datetime-local demo (NEW)
+  // - Renders as <input type="datetime-local">
+  // - Value format: "YYYY-MM-DDTHH:mm" (e.g., "2024-01-15T14:30")
+  // - Use `min` and `max` to constrain date/time range
+  "datetime-local": {
+    name: "appointmentTime",
+    label: "Appointment Date & Time",
+    type: "datetime-local",
+    layout: "icon",
+    required: true,
+    icon: { iconClass: "fa-solid fa-calendar-check" },
+    iconGroupClass: "bg-light border-0",
+    className: "form-control",
+    min: "2024-01-01T00:00",
+    max: "2025-12-31T23:59"
+  },
+
+  // ✅ Time demo (NEW)
+  // - Renders as <input type="time">
+  // - Value format: "HH:mm" (e.g., "14:30")
+  time: {
+    name: "preferredTime",
+    label: "Preferred Time",
+    type: "time",
+    layout: "icon",
+    required: true,
+    icon: { iconClass: "fa-solid fa-clock" },
+    iconGroupClass: "bg-light border-0",
+    className: "form-control",
+    min: "09:00",
+    max: "17:00"
+  },
+
+  // ✅ Multiselect demo (NEW)
+  // - Renders as <select multiple>
+  // - Value is string[] (array of selected values)
+  // - Use `size` to control visible rows (default 4)
+  multiselect: {
+    name: "permissions",
+    label: "Permissions",
+    type: "multiselect",
+    layout: "icon",
+    required: true,
+    icon: { iconClass: "fa-solid fa-list-check" },
+    iconGroupClass: "bg-light border-0",
+    className: "form-select",
+    size: 5,
+    options: [
+      { value: "read", label: "Read" },
+      { value: "write", label: "Write" },
+      { value: "delete", label: "Delete" },
+      { value: "admin", label: "Admin" },
+      { value: "export", label: "Export" },
+      { value: "import", label: "Import" }
+    ]
+  },
+
   // ✅ File demo in icon layout (MULTI enabled)
   // - With fileUploader: emits string[] (multi) blob URLs in this demo
   // - Without fileUploader: emits File[] (multi)
@@ -179,6 +236,9 @@ export default function InputIconPage() {
 
   const isCanvas = tab === "canvas" || model?.type === "canvas";
   const isFile = tab === "file" || model?.type === "file";
+  const isDateTimeLocal = tab === "datetime-local" || model?.type === "datetime-local";
+  const isTime = tab === "time" || model?.type === "time";
+  const isMultiselect = tab === "multiselect" || model?.type === "multiselect";
 
   // Enable uploader only for file tab (keeps other tabs pure)
   const uploader = isFile ? demoFileUploader : undefined;
@@ -188,7 +248,7 @@ export default function InputIconPage() {
       <h3 className="mb-4 text-center">AlloyInput (layout: "icon")</h3>
 
       {/* Tabs for the different icon-field presets */}
-      <ul className="nav nav-underline nav-fill mb-3">
+      <ul className="nav nav-underline nav-fill mb-3 flex-wrap">
         {TABS.map((key) => (
           <li className="nav-item" key={key}>
             <button
@@ -237,9 +297,34 @@ export default function InputIconPage() {
 
             <div className="mt-1">
               You can style the icon wrapper span using <code>iconGroupClass</code>.
-              It’s appended to <code>"input-group-text"</code>. If you want no extra
+              It's appended to <code>"input-group-text"</code>. If you want no extra
               styling, set <code>iconGroupClass: ""</code>.
             </div>
+
+            {isDateTimeLocal && (
+              <div className="mt-1">
+                <strong>Datetime-local output:</strong> emits value in{" "}
+                <code>YYYY-MM-DDTHH:mm</code> format (e.g., <code>2024-01-15T14:30</code>).
+                Use <code>min</code> and <code>max</code> to constrain the date/time range.
+              </div>
+            )}
+
+            {isTime && (
+              <div className="mt-1">
+                <strong>Time output:</strong> emits value in <code>HH:mm</code> format
+                (e.g., <code>14:30</code>). Use <code>min</code> and <code>max</code> to
+                constrain the time range.
+              </div>
+            )}
+
+            {isMultiselect && (
+              <div className="mt-1">
+                <strong>Multiselect output:</strong> emits <code>data.value</code> as a{" "}
+                <code>string[]</code> (array of selected values). Hold{" "}
+                <code>Ctrl</code> (or <code>Cmd</code> on Mac) to select multiple options.
+                Use <code>size</code> to control visible rows.
+              </div>
+            )}
 
             {isFile && (
               <div className="mt-1">
@@ -317,6 +402,14 @@ export default function InputIconPage() {
                 <code>""</code> to ignore extra span styling.
               </li>
               <li>
+                For <code>datetime-local</code> and <code>time</code>, use{" "}
+                <code>min</code> and <code>max</code> to constrain values.
+              </li>
+              <li>
+                For <code>multiselect</code>, pass <code>options</code> array and
+                optionally <code>size</code> (visible rows, default 4).
+              </li>
+              <li>
                 You can customize validation: <code>required</code>,{" "}
                 <code>pattern</code>, <code>passwordStrength</code>, <code>min</code>, etc.
               </li>
@@ -378,6 +471,8 @@ export default function InputIconPage() {
 
             For <code>type: "canvas"</code>, <code>data.value</code> is a DataURL string.
             For <code>type: "file"</code> with multi enabled, <code>data.value</code> is an array.
+            For <code>type: "multiselect"</code>, <code>data.value</code> is a <code>string[]</code>.
+            For <code>type: "datetime-local"</code>, <code>data.value</code> is <code>"YYYY-MM-DDTHH:mm"</code>.
           </div>
         </div>
       </div>

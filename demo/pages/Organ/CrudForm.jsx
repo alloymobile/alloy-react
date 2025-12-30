@@ -14,8 +14,7 @@ const DEFAULT_TABLE_CRUD_FORM_JSON = JSON.stringify(
     name: "Vendor (Table Demo)",
     className: "container-fluid",
 
-    // Wrapper for the whole document area (table)
-    documentClass: "col-12",
+    documentClass: "col-6 col-md-4 col-lg-3 col-xl-2 mb-3",
 
     // List type → table
     type: "table",
@@ -236,7 +235,7 @@ const DEFAULT_CARD_CRUD_FORM_JSON = JSON.stringify(
     id: "vendorCrudFormCard",
     name: "Vendor (Card Demo)",
     className: "container-fluid",
-    documentClass: "col-12",
+    documentClass: "col-6 col-md-4 col-lg-3 col-xl-2 mb-3",
 
     // List type → card
     type: "card",

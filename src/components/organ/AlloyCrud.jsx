@@ -44,7 +44,7 @@ export class CrudObject {
     if (this.type === "table") {
       this.documentClass = documentClass || "col-12";
     } else {
-      this.documentClass = documentClass || "col-sm-6 col-md-4 col-lg-3 mb-3";
+      this.documentClass = documentClass || "col-6 col-md-4 col-lg-3 col-xl-2 mb-3";
     }
 
     // Modal
@@ -611,7 +611,7 @@ export function AlloyCrud({ crud, output }) {
     if (crud.type === "table") {
       return (
         <div className="row mt-3">
-          <div className={crud.documentClass}>
+          <div className="col-12">
             <AlloyTableAction tableAction={crud.document} output={handleTableOutput} />
           </div>
         </div>
@@ -657,7 +657,7 @@ export function AlloyCrud({ crud, output }) {
         {/* Pagination */}
         {crud.page && crud.page instanceof PaginationObject && (
           <div className="row mt-3">
-            <div className="col-12 d-flex justify-content-end">
+            <div className="col-12">
               <AlloyPagination pagination={crud.page} output={handlePageOutput} />
             </div>
           </div>
