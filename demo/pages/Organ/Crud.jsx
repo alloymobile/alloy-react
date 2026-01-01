@@ -30,6 +30,12 @@ const DEFAULT_CRUD_TABLE_JSON = JSON.stringify(
       },
       fields: [
         {
+          name: "id",
+          label: "Vendor ID",
+          type: "hidden",
+          layout: "text",
+        },
+        {
           name: "vendorName",
           label: "Vendor Name",
           type: "text",
@@ -68,6 +74,7 @@ const DEFAULT_CRUD_TABLE_JSON = JSON.stringify(
         },
       ],
       data: {
+        id: "",
         vendorName: "",
         email: "",
         city: "",
@@ -125,14 +132,14 @@ const DEFAULT_CRUD_TABLE_JSON = JSON.stringify(
           vendorName: "Alpha Precast Ltd.",
           email: "info@alphaprecast.com",
           city: "Toronto",
-          status: "Active",
+          status: "active",
         },
         {
           id: "v002",
           vendorName: "Beta Concrete Inc.",
           email: "contact@betaconcrete.com",
           city: "Hamilton",
-          status: "Pending",
+          status: "pending",
         },
       ],
       actions: {
@@ -205,6 +212,12 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
       },
       fields: [
         {
+          name: "id",
+          label: "Vendor ID",
+          type: "hidden",
+          layout: "text",
+        },
+        {
           name: "vendorName",
           label: "Vendor Name",
           type: "text",
@@ -243,6 +256,7 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
         },
       ],
       data: {
+        id: "",
         vendorName: "",
         email: "",
         city: "",
@@ -287,9 +301,12 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
     },
 
     // DOCUMENT (card variant) → array of CardActionConfig
+    // IMPORTANT: card objects must carry values keyed by modal field names.
+    // Here we do that using fields[].id = modal field name (id/vendorName/email/city/status)
+    // and fields[].name = the display/value.
     document: [
       {
-        id: "vendorCard001",
+        id: "v001",
         className: "card border shadow-sm h-100",
         link: "",
         header: {
@@ -301,17 +318,21 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
           className: "card-body pb-2",
         },
         fields: [
+          { name: "v001", className: "d-none", tag: "div", id: "id" },
+          { name: "Alpha Precast Ltd.", className: "d-none", tag: "div", id: "vendorName" },
+          { name: "active", className: "d-none", tag: "div", id: "status" },
+
           {
-            name: "email",
+            name: "info@alphaprecast.com",
             className: "small text-muted",
             tag: "div",
-            id: "vendorCard001-email",
+            id: "email",
           },
           {
-            name: "city",
+            name: "Toronto",
             className: "small",
             tag: "div",
-            id: "vendorCard001-city",
+            id: "city",
           },
         ],
         footer: {
@@ -341,7 +362,7 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
         },
       },
       {
-        id: "vendorCard002",
+        id: "v002",
         className: "card border shadow-sm h-100",
         link: "",
         header: {
@@ -353,17 +374,21 @@ const DEFAULT_CRUD_CARD_JSON = JSON.stringify(
           className: "card-body pb-2",
         },
         fields: [
+          { name: "v002", className: "d-none", tag: "div", id: "id" },
+          { name: "Beta Concrete Inc.", className: "d-none", tag: "div", id: "vendorName" },
+          { name: "pending", className: "d-none", tag: "div", id: "status" },
+
           {
-            name: "email",
+            name: "contact@betaconcrete.com",
             className: "small text-muted",
             tag: "div",
-            id: "vendorCard002-email",
+            id: "email",
           },
           {
-            name: "city",
+            name: "Hamilton",
             className: "small",
             tag: "div",
-            id: "vendorCard002-city",
+            id: "city",
           },
         ],
         footer: {
@@ -562,8 +587,7 @@ function CrudSection({
             <br />
             <strong>Add</strong> and <strong>Edit</strong> use the shared form
             modal; <strong>Delete</strong> can use the toast confirmation modal
-            (when <code>toast</code> is configured) and emits only the{" "}
-            <code>id</code> of the row to delete.
+            (when <code>toast</code> is configured).
             <br />
             <strong>Pagination</strong> emits{" "}
             <code>action="page"</code> with <code>nav</code>,{" "}
@@ -636,9 +660,10 @@ function CrudSection({
                 keys that match <code>modal.fields[].name</code>.
               </li>
               <li>
-                For <code>card</code>, <code>document</code> is an array of{" "}
-                <code>CardActionConfig</code> (same schema as{" "}
-                <code>AlloyCardAction</code>).
+                For <code>card</code>, ensure each card carries values keyed by
+                <code>modal.fields[].name</code> (commonly via{" "}
+                <code>fields[].id</code> matching the modal field name, and{" "}
+                <code>fields[].name</code> holding the value).
               </li>
               <li>
                 Optional <code>toast</code> for delete confirmation using{" "}
@@ -711,6 +736,7 @@ function CrudSection({
   "action": "Create",
   "error": false,
   "data": {
+    "id": "",
     "vendorName": "New Vendor Inc.",
     "email": "new@vendor.com",
     "city": "Toronto",

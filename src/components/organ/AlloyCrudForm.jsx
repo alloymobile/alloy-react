@@ -483,6 +483,15 @@ export function AlloyCrudForm({ crudForm, output }) {
 
   const handleAddOutput = () => {
     openForm("create", null);
+
+    emit(
+      OutputObject.ok({
+        id: crudForm.id,
+        type: "crud-form",
+        action: "createInit",
+        data: {},
+      })
+    );
   };
 
   // TabForm output: check in lowercase; emit normalized lowercase for pass-through
@@ -511,6 +520,27 @@ export function AlloyCrudForm({ crudForm, output }) {
         );
 
         backToTable();
+        return;
+      }
+
+      case "draft": {
+        const data = base.data || {};
+        const valuesByTab = data.values || {};
+        const flatValues = flattenValues(valuesByTab);
+
+        emit(
+          OutputObject.ok({
+            id: crudForm.id,
+            type: "crud-form",
+            action: "draft",
+            data: {
+              currentIndex: data.currentIndex,
+              currentTabKey: data.currentTabKey,
+              values: valuesByTab,
+              ...flatValues,
+            },
+          })
+        );
         return;
       }
 
