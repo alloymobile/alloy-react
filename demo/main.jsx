@@ -48,6 +48,7 @@ import ImagePage from "./pages/Tissue/Image.jsx";
 import VideoPage from "./pages/Tissue/Video.jsx";
 import PostPage from "./pages/Organ/Post.jsx";
 import LoadingPage from "./pages/Cell/Loading.jsx";
+import MarqueePage from "./pages/Organ/Marquee.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -103,6 +104,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="crud-form" element={<CrudFormPage />} />   
           <Route path="crud" element={<CrudPage />} />                  
           <Route path="post" element={<PostPage />} />   
+          <Route path="marquee" element={<MarqueePage />} />  
         </Route>
       </Route>
     </Routes>

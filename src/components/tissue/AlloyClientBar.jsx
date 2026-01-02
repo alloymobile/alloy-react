@@ -1,5 +1,4 @@
 // src/lib/components/organ/AlloyClientBar.jsx
-
 import React from "react";
 
 import AlloyButtonIcon, {
@@ -14,12 +13,6 @@ import { generateId } from "../../utils/idHelper.js";
 
 /* ---------------------------------------------------------
  * ClientBarObject
- *
- * React equivalent of AlloyClientBar (Angular):
- *  - id
- *  - className
- *  - backButton : ButtonIconObject
- *  - client     : ButtonDropDownObject
  * ------------------------------------------------------- */
 
 export class ClientBarObject {
@@ -29,12 +22,15 @@ export class ClientBarObject {
       className = "client-topbar border-bottom bg-white",
       backButton,
       client,
+      sidebarId = "mobileSidebar",
     } = res;
 
     this.id = id ?? generateId("clientBar");
     this.className = className;
 
-    // normalize backButton
+    // Offcanvas id to toggle (must match SideBarObject.close/offcanvasId)
+    this.sidebarId = String(sidebarId || "mobileSidebar").replace(/^#/, "");
+
     if (backButton instanceof ButtonIconObject) {
       this.backButton = backButton;
     } else {
@@ -48,7 +44,6 @@ export class ClientBarObject {
       );
     }
 
-    // normalize client dropdown
     if (client instanceof ButtonDropDownObject) {
       this.client = client;
     } else {
@@ -64,38 +59,21 @@ export class ClientBarObject {
   }
 }
 
-/* ---------------------------------------------------------
- * AlloyClientBar
- *
- * Props:
- *  - clientBar : ClientBarObject | plain config
- *  - output?   : (out: any) => void
- *
- * Behavior:
- *  - Renders a header with:
- *      - mobile sidebar toggle (targets #mobileSidebar)
- *      - back button (AlloyButtonIcon)
- *      - client dropdown (AlloyButtonDropDown)
- *  - When the back button is clicked, calls `output(out)`
- *  - When dropdown items are clicked, `AlloyButtonDropDown` will call
- *    its own `output(link)` which we forward to this `output` as well.
- * ------------------------------------------------------- */
-
 export function AlloyClientBar({ clientBar, output }) {
   const model =
     clientBar instanceof ClientBarObject
       ? clientBar
       : new ClientBarObject(clientBar || {});
 
-  // Back button handler (bubble up)
   function handleBackOutput(out) {
     output?.(out);
   }
 
-  // Dropdown selection handler (bubble up link or model)
   function handleClientDropdownOutput(out) {
     output?.(out);
   }
+
+  const sidebarId = model.sidebarId || "mobileSidebar";
 
   return (
     <header id={model.id} className={model.className}>
@@ -103,13 +81,13 @@ export function AlloyClientBar({ clientBar, output }) {
         <div className="container-fluid justify-content-between py-2">
           {/* Left: mobile sidebar toggle + back button */}
           <div className="mx-2 d-flex align-items-center">
-            {/* Mobile sidebar toggle (matches #mobileSidebar offcanvas id) */}
+            {/* Mobile sidebar toggle */}
             <button
               className="btn d-lg-none me-2"
               type="button"
               data-bs-toggle="offcanvas"
-              data-bs-target="#mobileSidebar"
-              aria-controls="mobileSidebar"
+              data-bs-target={`#${sidebarId}`}
+              aria-controls={sidebarId}
               aria-label="Toggle sidebar"
             >
               <i className="fa-solid fa-bars" />

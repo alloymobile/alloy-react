@@ -49,6 +49,7 @@ export default function Sidebar({ active }) {
           { label: "AlloyCrudForm", to: "/organ/crud-form", icon: "fa-solid fa-bars-progress" },  
           { label: "AlloyCrud", to: "/organ/crud", icon: "fa-solid fa-bars-progress" },          
           { label: "AlloyPost", to: "/organ/post", icon: "fa-solid fa-bars-progress" }, 
+          { label: "AlloyMarquee", to: "/organ/marquee", icon: "fa-solid fa-bars-progress" },           
         ]:
       [];
 

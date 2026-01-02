@@ -79,6 +79,16 @@ const DEFAULT_INPUTS = {
     ]
   },
 
+  switch: {
+    name: "isActive",
+    label: "Active",
+    type: "switch",
+    layout: "text",
+    required: false,
+    className: "form-check-input",
+    value: true
+  },
+
   select: {
     name: "role",
     label: "Role",
@@ -358,6 +368,13 @@ export default function InputPage() {
                 Multiselect emits <code>data.value</code> as a <strong>string[]</strong>{" "}
                 (array of selected values). Hold <code>Ctrl</code> (or <code>Cmd</code> on Mac)
                 to select multiple options. Use <code>size</code> to control visible rows.
+              </div>
+            )}
+
+            {tab === "switch" && (
+              <div className="mt-1">
+                Switch emits <code>data.value</code> as a <strong>boolean</strong>{" "}
+                (<code>true</code>/<code>false</code>).
               </div>
             )}
 

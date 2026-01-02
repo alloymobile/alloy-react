@@ -9,17 +9,13 @@ import { generateId } from "../../utils/idHelper.js";
 
 /* ---------------------------------------------------------
  * SideBarObject
- *
- * React equivalent of your Angular AlloySideBar model:
- *   - close: string (offcanvas id)
- *   - selected: LinkObject (optional, not used for state yet)
- *   - categories: LinkBarObject[]
  * ------------------------------------------------------- */
 
 export class SideBarObject {
   constructor(res = {}) {
     const {
       close = "mobileSidebar",
+      offcanvasId,
       selected,
       categories,
     } = res;
@@ -27,16 +23,13 @@ export class SideBarObject {
     this.id = res.id ?? generateId("sidebar");
 
     // Offcanvas id (used as #id for mobile)
-    this.close = close;
+    this.close = offcanvasId ?? close;
 
-    // Optional selected link; we keep it for parity with Angular,
-    // even if selection is actually handled by AlloyLinkBar internally.
     this.selected =
       selected instanceof LinkObject
         ? selected
         : null;
 
-    // Normalize categories into LinkBarObject[]
     const rawCategories = Array.isArray(categories) ? categories : [];
     this.categories = rawCategories.map((bar) =>
       bar instanceof LinkBarObject ? bar : new LinkBarObject(bar)
@@ -44,38 +37,17 @@ export class SideBarObject {
   }
 }
 
-/* ---------------------------------------------------------
- * AlloySideBar
- *
- * Props:
- *   - sideBar : SideBarObject | plain config
- *   - output? : (link: LinkObject | LinkIconObject | LinkLogoObject) => void
- *
- * Behavior:
- *   - Renders a DESKTOP sidebar + MOBILE offcanvas sidebar.
- *   - Uses AlloyLinkBar for each category.
- *   - Injects a wrapped onClick into each link so `output(link)`
- *     is called whenever user clicks a sidebar item.
- *
- * NOTE:
- *   Selection highlight is handled by AlloyLinkBar itself,
- *   via its own internal `selectedId` state.
- * ------------------------------------------------------- */
-
 export function AlloySideBar({ sideBar, output }) {
   const model =
     sideBar instanceof SideBarObject
       ? sideBar
       : new SideBarObject(sideBar || {});
 
-  // Build categories where each link has an onClick that
-  // both calls any existing link.onClick and also emits to `output`.
   const enhancedCategories = useMemo(() => {
     return model.categories.map((bar) => {
       const baseBar =
         bar instanceof LinkBarObject ? bar : new LinkBarObject(bar);
 
-      // Clone into a new LinkBarObject config so we don't mutate the original
       const clonedBar = new LinkBarObject({
         id: baseBar.id,
         className: baseBar.className,
@@ -83,18 +55,14 @@ export function AlloySideBar({ sideBar, output }) {
         linkClass: baseBar.linkClass,
         selected: baseBar.selected,
         title: baseBar.title,
-        // We'll rewire links below
         links: baseBar.links.map((link) => {
           const original = link.onClick;
 
           const wrappedClick = (e) => {
-            // let the link's own handler run first if it exists
             original?.(e);
-            // then bubble up to parent (like Angular EventEmitter)
             output?.(link);
           };
 
-          // Rebuild according to the actual link type
           if (link instanceof LinkIconObject) {
             return new LinkIconObject({
               ...link,
@@ -109,7 +77,6 @@ export function AlloySideBar({ sideBar, output }) {
             });
           }
 
-          // Default: plain LinkObject
           if (link instanceof LinkObject) {
             return new LinkObject({
               ...link,
@@ -117,7 +84,6 @@ export function AlloySideBar({ sideBar, output }) {
             });
           }
 
-          // Unknown type – return as-is
           return link;
         }),
       });
@@ -132,11 +98,9 @@ export function AlloySideBar({ sideBar, output }) {
     <>
       {/* DESKTOP SIDEBAR */}
       <aside className="desktop-sidebar d-none d-lg-block">
-        <div className="p-3">
           {enhancedCategories.map((bar) => (
             <AlloyLinkBar key={bar.id} linkBar={bar} />
           ))}
-        </div>
       </aside>
 
       {/* MOBILE SIDEBAR (Bootstrap offcanvas) */}

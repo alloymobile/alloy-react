@@ -28,13 +28,15 @@ import { useDomId, OutputObject } from "../../utils/idHelper.js";
  *                                              "multiselect",
  *                                              "radio",
  *                                              "checkbox",
+ *                                              "switch",
  *                                              "file",
  *                                              "canvas"
  *
  * @property {string} [label]                - Human label for the field or group
- * @property {string|string[]|File|File[]} [value]
+ * @property {string|string[]|File|File[]|boolean} [value]
  *                                            - checkbox group: string[]
  *                                            - multiselect: string[]
+ *                                            - switch: boolean
  *                                            - file (single): File | string(url)
  *                                            - file (multi):  File[] | string[](urls)
  *                                            - canvas: DataURL string
@@ -116,12 +118,15 @@ export class InputObject {
     // default starting value:
     // - checkbox group => []
     // - multiselect => []
+    // - switch => false
     // - everything else => ""
     let initialValue;
     if (typeof value !== "undefined") {
       initialValue = value;
     } else if (type === "checkbox" || type === "multiselect") {
       initialValue = [];
+    } else if (type === "switch") {
+      initialValue = false;
     } else {
       initialValue = "";
     }
@@ -167,7 +172,7 @@ export class InputObject {
     } else {
       if (type === "select" || type === "multiselect") {
         this.className = "form-select";
-      } else if (type === "radio" || type === "checkbox") {
+      } else if (type === "radio" || type === "checkbox" || type === "switch") {
         this.className = "form-check-input";
       } else {
         this.className = "form-control";
@@ -495,6 +500,13 @@ export function AlloyInput({ input, output }) {
       return handleMultiSelectChange(e);
     }
 
+    if (input.type === "switch") {
+      const checked = !!e.target.checked;
+      setVal(checked);
+      emit(checked, "change");
+      return;
+    }
+
     const v = e.target.value;
 
     if (input.type === "checkbox") {
@@ -611,6 +623,28 @@ export function AlloyInput({ input, output }) {
           </label>
         </div>
       ))}
+      {errorBlock}
+    </div>
+  );
+
+  const renderSwitch = () => (
+    <div className="form-check form-switch">
+      <input
+        type="checkbox"
+        id={domId}
+        className={withInvalid(input.className)}
+        name={input.name}
+        checked={!!val}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        aria-invalid={showError || undefined}
+        disabled={!!input.disabled}
+      />
+      {input.label && (
+        <label className="form-check-label" htmlFor={domId}>
+          {input.label}
+        </label>
+      )}
       {errorBlock}
     </div>
   );
@@ -797,6 +831,8 @@ export function AlloyInput({ input, output }) {
         return renderRadioGroup();
       case "checkbox":
         return renderCheckboxGroup();
+      case "switch":
+        return renderSwitch();
       case "file":
         return renderFile();
       case "canvas":
@@ -823,7 +859,7 @@ export function AlloyInput({ input, output }) {
             {input.label}
           </label>
         </div>
-        {!(input.type === "radio" || input.type === "checkbox") && errorBlock}
+        {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
       </div>
     );
   }
@@ -842,7 +878,7 @@ export function AlloyInput({ input, output }) {
             <AlloyIcon icon={input.icon} />
           </span>
 
-          {["radio", "checkbox"].includes(input.type)
+          {["radio", "checkbox", "switch"].includes(input.type)
             ? renderControl()
             : input.type === "textarea"
             ? renderTextarea()
@@ -861,7 +897,7 @@ export function AlloyInput({ input, output }) {
             : renderTextLike()}
         </div>
 
-        {!(input.type === "radio" || input.type === "checkbox") && errorBlock}
+        {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
       </div>
     );
   }
@@ -893,7 +929,7 @@ export function AlloyInput({ input, output }) {
 
       {renderControl()}
 
-      {!(input.type === "radio" || input.type === "checkbox") && errorBlock}
+      {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
     </div>
   );
 }
