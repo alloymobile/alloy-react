@@ -267,7 +267,9 @@ export function AlloyCrudForm({ crudForm, output }) {
   };
 
   // Keep search mounted; ignore first init clear if any
-  const ignoreFirstSearchClearRef = useRef(false);
+
+  // Keep search mounted; ignore first init clear if any
+  // const ignoreFirstSearchClearRef = useRef(false);
 
   const handleSearchOutput = (searchOut) => {
     const base = normalizeEvent(searchOut);
@@ -277,12 +279,6 @@ export function AlloyCrudForm({ crudForm, output }) {
 
     const action = base.action; // already lowercase
     const data = base.data || {};
-
-    // Ignore ONLY the first init "clear" (if any)
-    if (action === "clear" && !ignoreFirstSearchClearRef.current) {
-      ignoreFirstSearchClearRef.current = true;
-      return;
-    }
 
     switch (action) {
       case "search":
@@ -311,6 +307,7 @@ export function AlloyCrudForm({ crudForm, output }) {
         return;
     }
   };
+
 
   const handlePaginationOutput = (pageOut) => {
     const base = normalizeEvent(pageOut);
@@ -488,7 +485,7 @@ export function AlloyCrudForm({ crudForm, output }) {
       OutputObject.ok({
         id: crudForm.id,
         type: "crud-form",
-        action: "createInit",
+        action: "createinit",
         data: {},
       })
     );

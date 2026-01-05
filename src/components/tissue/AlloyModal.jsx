@@ -245,13 +245,18 @@ export function AlloyModal({ modal, output }) {
 
           {/* Body: render each InputObject */}
           <div className="modal-body">
-            {modal.fields.map((inputObj) => (
-              <AlloyInput
-                key={inputObj.id}
-                input={inputObj}
-                output={handleInputOutput}
-              />
-            ))}
+            {modal.fields.map((inputObj, i) => {
+              const id = String(inputObj?.id ?? "").trim();
+              const name = String(inputObj?.name ?? "").trim();
+              const keyBase = id || name || "field";
+              return (
+                <AlloyInput
+                  key={`${modal.id}:${keyBase}:${i}`}
+                  input={inputObj}
+                  output={handleInputOutput}
+                />
+              );
+            })}
           </div>
 
           {/* Footer */}
