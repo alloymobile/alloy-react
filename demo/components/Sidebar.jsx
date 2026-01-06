@@ -15,7 +15,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyInputIcon", to: "/cell/input-icon", icon: "fa-solid fa-box-open" },
           { label: "AlloyInputFloating", to: "/cell/input-floating", icon: "fa-solid fa-calendar-days" },
           { label: "AlloySearch", to: "/cell/search", icon: "fa-solid fa-calendar-days" },   
-          { label: "AlloyLoading", to: "/cell/loading", icon: "fa-solid fa-calendar-days" },         
+          { label: "AlloyLoading", to: "/cell/loading", icon: "fa-solid fa-calendar-days" },   
+          { label: "AlloyMedia", to: "/cell/media", icon: "fa-solid fa-calendar-days" },         
         ]
       : active === "tissue"
       ? [
@@ -34,7 +35,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyCarousel", to: "/tissue/carousel", icon: "fa-solid fa-bars-progress" },      
           { label: "AlloyPagination", to: "/tissue/pagination", icon: "fa-solid fa-bars-progress" },      
           { label: "AlloyImage", to: "/tissue/image", icon: "fa-solid fa-bars-progress" },    
-          { label: "AlloyVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },                                     
+          { label: "AlloyVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyProductAction", to: "/tissue/product-action", icon: "fa-solid fa-bars-progress" },                                    
         ]
       : active === "organ"
       ? [
@@ -49,7 +51,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyCrudForm", to: "/organ/crud-form", icon: "fa-solid fa-bars-progress" },  
           { label: "AlloyCrud", to: "/organ/crud", icon: "fa-solid fa-bars-progress" },          
           { label: "AlloyPost", to: "/organ/post", icon: "fa-solid fa-bars-progress" }, 
-          { label: "AlloyMarquee", to: "/organ/marquee", icon: "fa-solid fa-bars-progress" },           
+          { label: "AlloyMarquee", to: "/organ/marquee", icon: "fa-solid fa-bars-progress" },   
+          { label: "AlloyMosaic", to: "/organ/mosaic", icon: "fa-solid fa-bars-progress" },         
         ]:
       [];
 

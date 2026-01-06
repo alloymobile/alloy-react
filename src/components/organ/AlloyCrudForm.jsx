@@ -8,6 +8,7 @@ import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 
 import AlloyTableAction, { TableActionObject } from "../tissue/AlloyTableAction.jsx";
 import AlloyCardAction, { CardActionObject } from "../tissue/AlloyCardAction.jsx";
+import AlloyProductAction, { ProductActionObject } from "../tissue/AlloyProductAction.jsx";
 
 import AlloyPagination, { PaginationObject } from "../tissue/AlloyPagination.jsx";
 
@@ -28,6 +29,7 @@ export class CrudFormObject {
       search,
       add,
       type = "table",
+      renderer,
       document,
       documentClass = "col-6 col-md-4 col-lg-3 col-xl-2 mb-3",
       form,
@@ -56,8 +58,9 @@ export class CrudFormObject {
     this.add =
       add instanceof ButtonIconObject ? add : add ? new ButtonIconObject(add) : null;
 
-    // List type: "table" or "card"
-    this.type = type === "card" ? "card" : "table";
+    // List type: "table" or "card" or "product" (backward compatible)
+    const effectiveType = renderer === "product" ? "product" : type;
+    this.type = effectiveType === "product" ? "product" : effectiveType === "card" ? "card" : "table";
 
     // document:
     if (this.type === "table") {
@@ -66,7 +69,7 @@ export class CrudFormObject {
         rawTable instanceof TableActionObject
           ? rawTable
           : new TableActionObject(rawTable || {});
-    } else {
+    } else if (this.type === "card") {
       const rawCards = Array.isArray(document)
         ? document
         : Array.isArray(cfg.cards)
@@ -74,6 +77,15 @@ export class CrudFormObject {
         : [];
       this.document = rawCards.map((card) =>
         card instanceof CardActionObject ? card : new CardActionObject(card || {})
+      );
+    } else {
+      const rawProducts = Array.isArray(document)
+        ? document
+        : Array.isArray(cfg.products)
+        ? cfg.products
+        : [];
+      this.document = rawProducts.map((p) =>
+        p instanceof ProductActionObject ? p : new ProductActionObject(p || {})
       );
     }
 
@@ -252,6 +264,7 @@ export function AlloyCrudForm({ crudForm, output }) {
   const inTableView = view === "table";
   const isTable = crudForm.type === "table";
   const isCard = crudForm.type === "card";
+  const isProduct = crudForm.type === "product";
 
   const hiddenToastTriggerRef = useRef(null);
 
@@ -478,6 +491,50 @@ export function AlloyCrudForm({ crudForm, output }) {
     }
   };
 
+  const handleProductOutput = (prodOut) => {
+    const base = normalizeEvent(prodOut);
+    if (!base) return;
+
+    if (base.type !== "product-action") return;
+
+    const row = base.data || {};
+    const btnNameLower = base.action;
+
+    if (btnNameLower.includes("edit")) {
+      openForm("edit", row);
+
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: "editinit",
+          data: { ...row },
+        })
+      );
+      return;
+    }
+
+    if (btnNameLower.includes("delete")) {
+      setActiveRow(row || null);
+
+      if (crudForm.modalToast) doOpenToastModal();
+      else openForm("delete", row);
+
+      return;
+    }
+
+    if (btnNameLower) {
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: btnNameLower, // ✅ emit lowercase action
+          data: { ...row },
+        })
+      );
+    }
+  };
+
   const handleAddOutput = () => {
     openForm("create", null);
 
@@ -603,6 +660,30 @@ export function AlloyCrudForm({ crudForm, output }) {
             {crudForm.document.map((card) => (
               <div key={card.id} className={crudForm.documentClass}>
                 <AlloyCardAction cardAction={card} output={handleCardOutput} />
+              </div>
+            ))}
+          </div>
+          {crudForm.pagination && (
+            <div className="row mt-2">
+              <div className="col-12">
+                <AlloyPagination
+                  pagination={crudForm.pagination}
+                  output={handlePaginationOutput}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (isProduct && Array.isArray(crudForm.document)) {
+      return (
+        <>
+          <div className="row mt-2">
+            {crudForm.document.map((p) => (
+              <div key={p.id} className={crudForm.documentClass}>
+                <AlloyProductAction productAction={p} output={handleProductOutput} />
               </div>
             ))}
           </div>

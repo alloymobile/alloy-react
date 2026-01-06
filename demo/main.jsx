@@ -49,6 +49,9 @@ import VideoPage from "./pages/Tissue/Video.jsx";
 import PostPage from "./pages/Organ/Post.jsx";
 import LoadingPage from "./pages/Cell/Loading.jsx";
 import MarqueePage from "./pages/Organ/Marquee.jsx";
+import ProductActionPage from "./pages/Tissue/ProductAction.jsx";
+import MediaPage from "./pages/Cell/Media.jsx";
+import MosaicPage from "./pages/Organ/Mosaic.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -70,7 +73,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="input-icon" element={<InputIconPage />} /> 
           <Route path="input-floating" element={<InputFloatingPage />} />         
           <Route path="search" element={<SearchPage />} />     
-          <Route path="loading" element={<LoadingPage />} />           
+          <Route path="loading" element={<LoadingPage />} />       
+          <Route path="media" element={<MediaPage/>} />         
         </Route>
 
         {/* Others (blank for now) */}
@@ -90,7 +94,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="carousel" element={<CarouselPage />} />   
           <Route path="video" element={<VideoPage />} />   
           <Route path="pagination" element={<PaginationPage />} />      
-          <Route path="image" element={<ImagePage />} />            
+          <Route path="image" element={<ImagePage />} />      
+          <Route path="product-action" element={<ProductActionPage />} />         
         </Route>
         <Route path="/organ" element={<Organ />}> 
           <Route path="email" element={<EmailPage />} />   
@@ -105,6 +110,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="crud" element={<CrudPage />} />                  
           <Route path="post" element={<PostPage />} />   
           <Route path="marquee" element={<MarqueePage />} />  
+          <Route path="mosaic" element={<MosaicPage />} />            
         </Route>
       </Route>
     </Routes>
