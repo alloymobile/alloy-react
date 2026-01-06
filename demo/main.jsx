@@ -52,6 +52,7 @@ import MarqueePage from "./pages/Organ/Marquee.jsx";
 import ProductActionPage from "./pages/Tissue/ProductAction.jsx";
 import MediaPage from "./pages/Cell/Media.jsx";
 import MosaicPage from "./pages/Organ/Mosaic.jsx";
+import QuantityPage from "./pages/Cell/Quantity.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -74,7 +75,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="input-floating" element={<InputFloatingPage />} />         
           <Route path="search" element={<SearchPage />} />     
           <Route path="loading" element={<LoadingPage />} />       
-          <Route path="media" element={<MediaPage/>} />         
+          <Route path="media" element={<MediaPage/>} />    
+          <Route path="quantity" element={<QuantityPage/>} />        
         </Route>
 
         {/* Others (blank for now) */}

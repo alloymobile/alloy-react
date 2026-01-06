@@ -9,6 +9,7 @@ export { AlloyInput, InputObject } from "./components/cell/AlloyInput.jsx";
 export { AlloySearch, SearchObject } from "./components/cell/AlloySearch.jsx";
 export { AlloyLoading, LoadingObject } from "./components/cell/AlloyLoading.jsx";
 export { AlloyMedia, MediaObject } from "./components/cell/AlloyMedia.jsx";
+export { AlloyQuantity, QuantityObject } from "./components/cell/AlloyQuantity.jsx";
 
 export { AlloyLinkBar, LinkBarObject } from "./components/tissue/AlloyLinkBar.jsx"
 export { AlloyButtonBar, ButtonBarObject } from "./components/tissue/AlloyButtonBar.jsx"

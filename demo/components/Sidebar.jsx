@@ -16,7 +16,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyInputFloating", to: "/cell/input-floating", icon: "fa-solid fa-calendar-days" },
           { label: "AlloySearch", to: "/cell/search", icon: "fa-solid fa-calendar-days" },   
           { label: "AlloyLoading", to: "/cell/loading", icon: "fa-solid fa-calendar-days" },   
-          { label: "AlloyMedia", to: "/cell/media", icon: "fa-solid fa-calendar-days" },         
+          { label: "AlloyMedia", to: "/cell/media", icon: "fa-solid fa-calendar-days" },   
+          { label: "AlloyQuantity", to: "/cell/quantity", icon: "fa-solid fa-bars-progress" },                   
         ]
       : active === "tissue"
       ? [
@@ -52,7 +53,7 @@ export default function Sidebar({ active }) {
           { label: "AlloyCrud", to: "/organ/crud", icon: "fa-solid fa-bars-progress" },          
           { label: "AlloyPost", to: "/organ/post", icon: "fa-solid fa-bars-progress" }, 
           { label: "AlloyMarquee", to: "/organ/marquee", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyMosaic", to: "/organ/mosaic", icon: "fa-solid fa-bars-progress" },         
+          { label: "AlloyMosaic", to: "/organ/mosaic", icon: "fa-solid fa-bars-progress" },                  
         ]:
       [];
 
