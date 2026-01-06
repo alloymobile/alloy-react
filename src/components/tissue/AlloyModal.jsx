@@ -121,7 +121,15 @@ function dismissModalById(id) {
 /* -------------------------------------------
  * AlloyModal
  * ----------------------------------------- */
-export function AlloyModal({ modal, output, fileUploader }) {
+/**
+ * @typedef {Object} AlloyModalProps
+ * @property {ModalObject} modal
+ * @property {(out: any) => void | Promise<void>} [output]
+ */
+/**
+ * @param {AlloyModalProps} props
+ */
+export function AlloyModal({ modal, output }) {
   if (!modal || !(modal instanceof ModalObject)) {
     throw new Error("AlloyModal requires `modal` (ModalObject instance).");
   }
@@ -158,6 +166,23 @@ export function AlloyModal({ modal, output, fileUploader }) {
       ...prev,
       [name]: error ? errors : [],
     }));
+
+    // ✅ Propagate modal-level change event (type="modal") so parent can catch it
+    if (typeof output === "function") {
+      output(
+        new OutputObject({
+          id: modal.id,
+          type: "modal",
+          action: "change",
+          error: !!error,
+          data: {
+            name,
+            value,
+            errors: error ? errors : []
+          }
+        })
+      );
+    }
   };
 
   const handleSubmit = () => {
@@ -220,14 +245,18 @@ export function AlloyModal({ modal, output, fileUploader }) {
 
           {/* Body: render each InputObject */}
           <div className="modal-body">
-            {modal.fields.map((inputObj) => (
-              <AlloyInput
-                key={inputObj.id}
-                input={inputObj}
-                output={handleInputOutput}
-                fileUploader={fileUploader}
-              />
-            ))}
+            {modal.fields.map((inputObj, i) => {
+              const id = String(inputObj?.id ?? "").trim();
+              const name = String(inputObj?.name ?? "").trim();
+              const keyBase = id || name || "field";
+              return (
+                <AlloyInput
+                  key={`${modal.id}:${keyBase}:${i}`}
+                  input={inputObj}
+                  output={handleInputOutput}
+                />
+              );
+            })}
           </div>
 
           {/* Footer */}

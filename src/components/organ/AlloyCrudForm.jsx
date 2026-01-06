@@ -7,8 +7,8 @@ import AlloySearch, { SearchObject } from "../cell/AlloySearch.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 
 import AlloyTableAction, { TableActionObject } from "../tissue/AlloyTableAction.jsx";
-
 import AlloyCardAction, { CardActionObject } from "../tissue/AlloyCardAction.jsx";
+import AlloyProductAction, { ProductActionObject } from "../tissue/AlloyProductAction.jsx";
 
 import AlloyPagination, { PaginationObject } from "../tissue/AlloyPagination.jsx";
 
@@ -29,11 +29,12 @@ export class CrudFormObject {
       search,
       add,
       type = "table",
+      renderer,
       document,
-      documentClass = "col-12", // wrapper for the whole document area
+      documentClass = "col-6 col-md-4 col-lg-3 col-xl-2 mb-3",
       form,
       pagination,
-      modalToast, // optional delete toast modal config
+      modalToast,
       ...rest
     } = cfg || {};
 
@@ -43,9 +44,7 @@ export class CrudFormObject {
 
     // ✅ Search → supports BOTH shapes:
     // 1) Old: search is InputConfig/InputObject (no wrapper)
-    //    "search": { "name": "...", "type": "text", ... }
-    // 2) New: search is wrapper SearchObject config:
-    //    "search": { "id": "...", "className": "...", "search": { "name": "...", ... }, "minChars": 2, ... }
+    // 2) New: wrapper SearchObject config
     this.search =
       search instanceof SearchObject
         ? search
@@ -57,46 +56,44 @@ export class CrudFormObject {
 
     // Add button → ButtonIconObject
     this.add =
-      add instanceof ButtonIconObject
-        ? add
-        : add
-        ? new ButtonIconObject(add)
-        : null;
+      add instanceof ButtonIconObject ? add : add ? new ButtonIconObject(add) : null;
 
-    // List type: "table" or "card"
-    this.type = type === "card" ? "card" : "table";
+    // List type: "table" or "card" or "product" (backward compatible)
+    const effectiveType = renderer === "product" ? "product" : type;
+    this.type = effectiveType === "product" ? "product" : effectiveType === "card" ? "card" : "table";
 
     // document:
-    //  - table → single TableActionObject
-    //  - card  → array of CardActionObject
     if (this.type === "table") {
-      const rawTable =
-        document && !Array.isArray(document) ? document : cfg.table || {};
+      const rawTable = document && !Array.isArray(document) ? document : cfg.table || {};
       this.document =
         rawTable instanceof TableActionObject
           ? rawTable
           : new TableActionObject(rawTable || {});
-    } else {
+    } else if (this.type === "card") {
       const rawCards = Array.isArray(document)
         ? document
         : Array.isArray(cfg.cards)
         ? cfg.cards
         : [];
       this.document = rawCards.map((card) =>
-        card instanceof CardActionObject
-          ? card
-          : new CardActionObject(card || {})
+        card instanceof CardActionObject ? card : new CardActionObject(card || {})
+      );
+    } else {
+      const rawProducts = Array.isArray(document)
+        ? document
+        : Array.isArray(cfg.products)
+        ? cfg.products
+        : [];
+      this.document = rawProducts.map((p) =>
+        p instanceof ProductActionObject ? p : new ProductActionObject(p || {})
       );
     }
 
-    // Wrapper class for the *whole* document area
-    this.documentClass = documentClass || "col-12";
+    this.documentClass = documentClass || "col-6 col-md-4 col-lg-3 col-xl-2 mb-3";
 
     // Base TabForm config – ALWAYS a TabFormObject
     this.form =
-      form instanceof TabFormObject
-        ? form
-        : new TabFormObject(form || { tabs: [] });
+      form instanceof TabFormObject ? form : new TabFormObject(form || { tabs: [] });
 
     // Optional pagination → PaginationObject
     this.pagination =
@@ -153,8 +150,7 @@ function buildTabFormModel(crudForm, mode = "create", row = null) {
         row[fieldName] !== null &&
         row[fieldName] !== "";
 
-      const shouldPrefillFromRow =
-        hasRowValue && (mode !== "edit" || tabIndex === 0);
+      const shouldPrefillFromRow = hasRowValue && (mode !== "edit" || tabIndex === 0);
 
       if (shouldPrefillFromRow) {
         input.value = row[fieldName];
@@ -193,8 +189,7 @@ function openModalById(id) {
   if (!modalEl) return;
 
   const win = window;
-  const globalBootstrap =
-    win.bootstrap || win.Bootstrap || win["bootstrap"] || null;
+  const globalBootstrap = win.bootstrap || win.Bootstrap || win["bootstrap"] || null;
 
   if (globalBootstrap && typeof globalBootstrap.Modal === "function") {
     const modalInstance = globalBootstrap.Modal.getOrCreateInstance(modalEl);
@@ -210,6 +205,29 @@ function openModalById(id) {
   }
 }
 
+const lower = (v) => String(v ?? "").toLowerCase();
+
+/**
+ * Normalize any event (OutputObject or plain object):
+ * - type: lowercase
+ * - action: lowercase
+ * - everything else preserved
+ */
+function normalizeEvent(e) {
+  if (!e) return null;
+
+  const base =
+    e instanceof OutputObject && typeof e.toJSON === "function" ? e.toJSON() : e;
+
+  if (!base || typeof base !== "object") return null;
+
+  return {
+    ...base,
+    type: lower(base.type),
+    action: lower(base.action),
+  };
+}
+
 /* -------------------------------------------------------
  * AlloyCrudForm
  * ----------------------------------------------------- */
@@ -217,22 +235,18 @@ function openModalById(id) {
  * @typedef {Object} AlloyCrudFormProps
  * @property {CrudFormObject} crudForm
  * @property {(out: any) => void | Promise<void>} [output]
- * @property {any} [fileUploader]
  */
+
 /**
  * @param {AlloyCrudFormProps} props
  */
-export function AlloyCrudForm({ crudForm, output, fileUploader }) {
+export function AlloyCrudForm({ crudForm, output }) {
   if (!crudForm || !(crudForm instanceof CrudFormObject)) {
-    throw new Error(
-      "AlloyCrudForm requires `crudForm` (CrudFormObject instance)."
-    );
+    throw new Error("AlloyCrudForm requires `crudForm` (CrudFormObject instance).");
   }
 
   const emit = (out) => {
-    if (typeof output === "function") {
-      output(out);
-    }
+    if (typeof output === "function") output(out);
   };
 
   const [view, setView] = useState("table");
@@ -250,6 +264,7 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
   const inTableView = view === "table";
   const isTable = crudForm.type === "table";
   const isCard = crudForm.type === "card";
+  const isProduct = crudForm.type === "product";
 
   const hiddenToastTriggerRef = useRef(null);
 
@@ -261,58 +276,72 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       hiddenToastTriggerRef.current.click();
       return;
     }
-
-    if (crudForm.modalToast?.id) {
-      openModalById(crudForm.modalToast.id);
-    }
+    if (crudForm.modalToast?.id) openModalById(crudForm.modalToast.id);
   };
+
+  // Keep search mounted; ignore first init clear if any
+
+  // Keep search mounted; ignore first init clear if any
+  // const ignoreFirstSearchClearRef = useRef(false);
 
   const handleSearchOutput = (searchOut) => {
-    if (!searchOut) return;
+    const base = normalizeEvent(searchOut);
+    if (!base) return;
 
-    const base =
-      searchOut instanceof OutputObject &&
-      typeof searchOut.toJSON === "function"
-        ? searchOut.toJSON()
-        : searchOut;
+    if (base.type && base.type !== "search-bar") return;
 
-    const action = base?.action || "search";
-    const data = base?.data || {};
+    const action = base.action; // already lowercase
+    const data = base.data || {};
 
-    if (action === "search" || action === "select") {
-      const out = OutputObject.ok({
-        id: crudForm.id,
-        type: "crud-form",
-        action: action === "select" ? "search-select" : "search",
-        data,
-      });
-      emit(out);
+    switch (action) {
+      case "search":
+        emit(
+          OutputObject.ok({
+            id: crudForm.id,
+            type: "crud-form",
+            action: "search",
+            data,
+          })
+        );
+        return;
+
+      case "clear":
+        emit(
+          OutputObject.ok({
+            id: crudForm.id,
+            type: "crud-form",
+            action: "clear",
+            data,
+          })
+        );
+        return;
+
+      default:
+        return;
     }
   };
 
+
   const handlePaginationOutput = (pageOut) => {
-    if (!pageOut) return;
+    const base = normalizeEvent(pageOut);
+    if (!base) return;
 
-    const base =
-      pageOut instanceof OutputObject &&
-      typeof pageOut.toJSON === "function"
-        ? pageOut.toJSON()
-        : pageOut;
+    if (base.type && base.type !== "pagination") return;
 
-    if (base.type !== "pagination" || base.action !== "page") {
-      return;
-    }
+    // only "page"
+    if (base.action !== "page") return;
 
-    const data = base.data || {};
+    const pageNumber = base?.data?.pageNumber;
+    if (typeof pageNumber !== "number" || Number.isNaN(pageNumber)) return;
 
-    const out = OutputObject.ok({
-      id: crudForm.id,
-      type: "crud-form",
-      action: "page",
-      data,
-    });
-
-    emit(out);
+    emit(
+      OutputObject.ok({
+        id: crudForm.id,
+        type: "crud-form",
+        action: "page",
+        data: { pageNumber },
+      })
+    );
   };
 
   function openForm(mode, row) {
@@ -331,207 +360,268 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
   const handleTableOutput = (tableOut) => {
     if (!tableOut) return;
 
-    if (tableOut.type === "column" && tableOut.action === "Sort") {
-      const column = tableOut.data?.name ?? "";
-      const dir = tableOut.data?.dir ?? "";
-      const data =
-        column && typeof column === "string" ? { [column]: dir } : {};
+    const typeLower = lower(tableOut.type);
+    const actionLower = lower(tableOut.action);
 
-      const out = OutputObject.ok({
-        id: crudForm.id,
-        type: "crud-form",
-        action: "Sort",
-        data,
-      });
+    // column sort
+    if (typeLower === "column" && actionLower === "sort") {
+      const column = tableOut?.data?.name ?? "";
+      const dir = tableOut?.data?.dir ?? "";
+      const data = column && typeof column === "string" ? { [column]: dir } : {};
 
-      emit(out);
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: "sort",
+          data,
+        })
+      );
       return;
     }
 
-    if (tableOut.type === "table") {
+    // table row action buttons
+    if (typeLower === "table") {
       const row = tableOut.data || {};
-      const btnName = tableOut.action || "";
-      const lower = (btnName || "").toLowerCase();
+      const btnNameLower = actionLower;
 
-      if (lower.includes("edit")) {
+      if (btnNameLower.includes("edit")) {
         openForm("edit", row);
 
-        const out = OutputObject.ok({
-          id: crudForm.id,
-          type: "crud-form",
-          action: "editInit",
-          data: { ...row },
-        });
-        emit(out);
-
+        emit(
+          OutputObject.ok({
+            id: crudForm.id,
+            type: "crud-form",
+            action: "editinit",
+            data: { ...row },
+          })
+        );
         return;
       }
 
-      if (lower.includes("delete")) {
+      if (btnNameLower.includes("delete")) {
         setActiveRow(row || null);
 
-        if (crudForm.modalToast) {
-          doOpenToastModal();
-        } else {
-          openForm("delete", row);
-        }
+        if (crudForm.modalToast) doOpenToastModal();
+        else openForm("delete", row);
 
         return;
       }
 
-      if (btnName) {
-        const out = OutputObject.ok({
-          id: crudForm.id,
-          type: "crud-form",
-          action: btnName,
-          data: {
-            ...row,
-          },
-        });
-        emit(out);
+      if (btnNameLower) {
+        emit(
+          OutputObject.ok({
+            id: crudForm.id,
+            type: "crud-form",
+            action: btnNameLower, // ✅ emit lowercase action
+            data: { ...row },
+          })
+        );
       }
       return;
     }
 
-    if (tableOut.type === "row" && tableOut.action === "navigate") {
+    // row navigate
+    if (typeLower === "row" && actionLower === "navigate") {
       const { to, ...restRow } = tableOut.data || {};
 
-      const out = OutputObject.ok({
-        id: crudForm.id,
-        type: "crud-form",
-        action: "navigate",
-        data: {
-          to,
-          ...restRow,
-        },
-      });
-
-      emit(out);
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: "navigate",
+          data: { to, ...restRow },
+        })
+      );
       return;
     }
 
-    const out = OutputObject.ok({
-      id: crudForm.id,
-      type: "crud-form",
-      action: tableOut.action || "table",
-      data: { ...(tableOut.data || {}) },
-    });
-    emit(out);
+    // generic fallback
+    emit(
+      OutputObject.ok({
+        id: crudForm.id,
+        type: "crud-form",
+        action: actionLower || "table",
+        data: { ...(tableOut.data || {}) },
+      })
+    );
   };
 
   const handleCardOutput = (cardOut) => {
-    if (!cardOut || cardOut.type !== "card-action") {
-      return;
-    }
+    if (!cardOut) return;
+
+    const typeLower = lower(cardOut.type);
+    if (typeLower !== "card-action") return;
 
     const row = cardOut.data || {};
-    const btnName = cardOut.action || "";
-    const lower = (btnName || "").toLowerCase();
+    const btnNameLower = lower(cardOut.action);
 
-    if (lower.includes("edit")) {
+    if (btnNameLower.includes("edit")) {
       openForm("edit", row);
 
-      const out = OutputObject.ok({
-        id: crudForm.id,
-        type: "crud-form",
-        action: "editInit",
-        data: { ...row },
-      });
-      emit(out);
-
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: "editinit",
+          data: { ...row },
+        })
+      );
       return;
     }
 
-    if (lower.includes("delete")) {
+    if (btnNameLower.includes("delete")) {
       setActiveRow(row || null);
 
-      if (crudForm.modalToast) {
-        doOpenToastModal();
-      } else {
-        openForm("delete", row);
-      }
+      if (crudForm.modalToast) doOpenToastModal();
+      else openForm("delete", row);
 
       return;
     }
 
-    if (btnName) {
-      const out = OutputObject.ok({
-        id: crudForm.id,
-        type: "crud-form",
-        action: btnName,
-        data: {
-          ...row,
-        },
-      });
-      emit(out);
+    if (btnNameLower) {
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: btnNameLower, // ✅ emit lowercase action
+          data: { ...row },
+        })
+      );
+    }
+  };
+
+  const handleProductOutput = (prodOut) => {
+    const base = normalizeEvent(prodOut);
+    if (!base) return;
+
+    if (base.type !== "product-action") return;
+
+    const row = base.data || {};
+    const btnNameLower = base.action;
+
+    if (btnNameLower.includes("edit")) {
+      openForm("edit", row);
+
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: "editinit",
+          data: { ...row },
+        })
+      );
+      return;
+    }
+
+    if (btnNameLower.includes("delete")) {
+      setActiveRow(row || null);
+
+      if (crudForm.modalToast) doOpenToastModal();
+      else openForm("delete", row);
+
+      return;
+    }
+
+    if (btnNameLower) {
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: btnNameLower, // ✅ emit lowercase action
+          data: { ...row },
+        })
+      );
     }
   };
 
   const handleAddOutput = () => {
     openForm("create", null);
+
+    emit(
+      OutputObject.ok({
+        id: crudForm.id,
+        type: "crud-form",
+        action: "createinit",
+        data: {},
+      })
+    );
   };
 
+  // TabForm output: check in lowercase; emit normalized lowercase for pass-through
   const handleFormOutput = (tfOut) => {
-    if (!tfOut) return;
+    const base = normalizeEvent(tfOut);
+    if (!base) return;
 
-    const base =
-      tfOut instanceof OutputObject && typeof tfOut.toJSON === "function"
-        ? tfOut.toJSON()
-        : tfOut;
+    const action = base.action; // lowercase
 
-    if (base.type !== "tab-form") return;
+    switch (action) {
+      case "submit": {
+        const data = base.data || {};
+        const valuesByTab = data.values || {};
+        const flatValues = flattenValues(valuesByTab);
 
-    const tfAction = base.action;
-    const data = base.data || {};
-    const valuesByTab = data.values || {};
-    const flatValues = flattenValues(valuesByTab);
+        const outAction =
+          formMode === "edit" ? "edit" : formMode === "delete" ? "delete" : "create";
 
-    if (tfAction !== "submit") {
-      return;
+        emit(
+          OutputObject.ok({
+            id: crudForm.id,
+            type: "crud-form",
+            action: outAction, // ✅ lowercase
+            data: { ...flatValues },
+          })
+        );
+
+        backToTable();
+        return;
+      }
+
+      case "draft": {
+        const data = base.data || {};
+        const valuesByTab = data.values || {};
+        const flatValues = flattenValues(valuesByTab);
+
+        emit(
+          OutputObject.ok({
+            id: crudForm.id,
+            type: "crud-form",
+            action: "draft",
+            data: {
+              currentIndex: data.currentIndex,
+              currentTabKey: data.currentTabKey,
+              values: valuesByTab,
+              ...flatValues,
+            },
+          })
+        );
+        return;
+      }
+
+      default: {
+        // ✅ whatever it gets -> lowercase type/action -> emit
+        emit(base);
+        return;
+      }
     }
-
-    let action;
-    if (formMode === "edit") action = "Edit";
-    else if (formMode === "delete") action = "Delete";
-    else action = "Create";
-
-    const out = OutputObject.ok({
-      id: crudForm.id,
-      type: "crud-form",
-      action,
-      data: {
-        ...flatValues,
-      },
-    });
-
-    emit(out);
-    backToTable();
   };
 
   const handleModalToastOutput = (toastOut) => {
-    if (!toastOut) return;
+    const base = normalizeEvent(toastOut);
+    if (!base) return;
 
-    const base =
-      toastOut instanceof OutputObject &&
-      typeof toastOut.toJSON === "function"
-        ? toastOut.toJSON()
-        : toastOut;
-
-    if (base.type !== "modal-toast" || base.action !== "click") {
-      return;
-    }
+    if (base.type !== "modal-toast") return;
+    if (base.action !== "click") return;
 
     if (activeRow) {
-      const out = OutputObject.ok({
-        id: crudForm.id,
-        type: "crud-form",
-        action: "Delete",
-        data: {
-          ...activeRow,
-        },
-      });
-
-      emit(out);
+      emit(
+        OutputObject.ok({
+          id: crudForm.id,
+          type: "crud-form",
+          action: "delete",
+          data: { ...activeRow },
+        })
+      );
       setActiveRow(null);
     }
   };
@@ -541,7 +631,7 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       return (
         <>
           <div className="row mt-2">
-            <div className={crudForm.documentClass}>
+            <div className="col-12">
               <AlloyTableAction
                 tableAction={crudForm.document}
                 output={handleTableOutput}
@@ -551,7 +641,7 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
 
           {crudForm.pagination && (
             <div className="row mt-2">
-              <div className={crudForm.documentClass}>
+              <div className="col-12">
                 <AlloyPagination
                   pagination={crudForm.pagination}
                   output={handlePaginationOutput}
@@ -567,26 +657,39 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       return (
         <>
           <div className="row mt-2">
-            <div className={crudForm.documentClass}>
-              <div className="row">
-                {crudForm.document.map((card) => (
-                  <div
-                    key={card.id}
-                    className="col-sm-6 col-md-4 col-lg-3 mb-3"
-                  >
-                    <AlloyCardAction
-                      cardAction={card}
-                      output={handleCardOutput}
-                    />
-                  </div>
-                ))}
+            {crudForm.document.map((card) => (
+              <div key={card.id} className={crudForm.documentClass}>
+                <AlloyCardAction cardAction={card} output={handleCardOutput} />
               </div>
-            </div>
+            ))}
           </div>
-
           {crudForm.pagination && (
             <div className="row mt-2">
-              <div className={crudForm.documentClass}>
+              <div className="col-12">
+                <AlloyPagination
+                  pagination={crudForm.pagination}
+                  output={handlePaginationOutput}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (isProduct && Array.isArray(crudForm.document)) {
+      return (
+        <>
+          <div className="row mt-2">
+            {crudForm.document.map((p) => (
+              <div key={p.id} className={crudForm.documentClass}>
+                <AlloyProductAction productAction={p} output={handleProductOutput} />
+              </div>
+            ))}
+          </div>
+          {crudForm.pagination && (
+            <div className="row mt-2">
+              <div className="col-12">
                 <AlloyPagination
                   pagination={crudForm.pagination}
                   output={handlePaginationOutput}
@@ -600,10 +703,8 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
 
     return (
       <div className="row mt-2">
-        <div className={crudForm.documentClass}>
-          <div className="alert alert-warning mt-3">
-            No document configured for this CrudForm.
-          </div>
+        <div className="col-12">
+          <div className="alert alert-warning mt-3">No document configured for this CrudForm.</div>
         </div>
       </div>
     );
@@ -611,40 +712,25 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
 
   return (
     <div className={crudForm.className}>
+      {/* Search remains mounted always, but hidden in form view */}
+      <div className={`row input-group mt-2 ${inTableView ? "" : "d-none"}`}>
+        <div className="col-sm-8">
+          {crudForm.search && <AlloySearch search={crudForm.search} output={handleSearchOutput} />}
+        </div>
+
+        <div className="col-sm-4 d-flex align-items-center justify-content-end">
+          {crudForm.add && <AlloyButtonIcon buttonIcon={crudForm.add} output={handleAddOutput} />}
+        </div>
+      </div>
+
       {inTableView ? (
-        <>
-          <div className="row input-group mt-2">
-            <div className="col-sm-8">
-              {crudForm.search && (
-                <AlloySearch
-                  search={crudForm.search}
-                  output={handleSearchOutput}
-                />
-              )}
-            </div>
-
-            <div className="col-sm-4 d-flex align-items-center justify-content-end">
-              {crudForm.add && (
-                <AlloyButtonIcon
-                  buttonIcon={crudForm.add}
-                  output={handleAddOutput}
-                />
-              )}
-            </div>
-          </div>
-
-          {renderList()}
-        </>
+        <>{renderList()}</>
       ) : (
         <>
           <div className="d-flex align-items-center justify-content-between mt-2 mb-3">
             <div>
               <h5 className="mb-1">
-                {formMode === "edit"
-                  ? "Edit"
-                  : formMode === "delete"
-                  ? "Delete"
-                  : "Create"}
+                {formMode === "edit" ? "Edit" : formMode === "delete" ? "Delete" : "Create"}
                 {crudForm.name ? ` — ${crudForm.name}` : ""}
               </h5>
               <div className="text-muted small">
@@ -670,11 +756,7 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
             />
           </div>
 
-          <AlloyTabForm
-            tabForm={tabFormModel}
-            output={handleFormOutput}
-            fileUploader={fileUploader}
-          />
+          <AlloyTabForm tabForm={tabFormModel} output={handleFormOutput} />
         </>
       )}
 
@@ -689,10 +771,7 @@ export function AlloyCrudForm({ crudForm, output, fileUploader }) {
       )}
 
       {crudForm.modalToast && (
-        <AlloyModalToast
-          modalToast={crudForm.modalToast}
-          output={handleModalToastOutput}
-        />
+        <AlloyModalToast modalToast={crudForm.modalToast} output={handleModalToastOutput} />
       )}
     </div>
   );

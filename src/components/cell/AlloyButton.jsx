@@ -6,13 +6,12 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { generateId, OutputObject } from "../../utils/idHelper.js";
+import { OutputObject, useDomId } from "../../utils/idHelper.js";
 
 /* -------------------------------------------
  * useActiveClass
  *
- * Same pattern as AlloyLink / AlloyLinkIcon / AlloyLinkLogo:
- * track hover / press / focus and return:
+ * Track hover / press / focus and return:
  *  - merged className (base + active if "on")
  *  - event handlers to control that state
  * ----------------------------------------- */
@@ -49,7 +48,7 @@ function useActiveClass(className = "", active = "") {
 /**
  * @typedef {Object} ButtonConfig
  * @property {string} name                  - Required. Visible label text.
- * @property {string} [id]                  - Optional. DOM id. Auto-generated if missing.
+ * @property {string} [id]                  - Optional. DOM id. If omitted, stable id via useDomId().
  * @property {string} [className]           - Optional. Base classes for <button>.
  * @property {string} [active]              - Optional. Classes added on hover/press/focus.
  * @property {boolean} [disabled]           - Optional. Defaults to false.
@@ -74,7 +73,9 @@ export class ButtonObject {
       throw new Error("ButtonObject requires `name`.");
     }
 
-    this.id = button.id ?? generateId("btn");
+    // IMPORTANT: do not generate random ids here (Next SSR/CSR safe)
+    this.id = button.id;
+
     this.name = button.name;
 
     this.className = button.className ?? "btn btn-primary";
@@ -107,13 +108,12 @@ export const AlloyButton = forwardRef(function AlloyButton(
   }
 
   const elRef = useRef(null);
-  const autoId = useRef(button.id);
   const isDisabled = button.disabled;
 
-  const { className, events } = useActiveClass(
-    button.className,
-    button.active
-  );
+  // SSR/CSR stable DOM id (or provided id)
+  const domId = useDomId("btn", button.id);
+
+  const { className, events } = useActiveClass(button.className, button.active);
 
   // expose focus() / click() / element / model via ref
   useImperativeHandle(
@@ -140,14 +140,13 @@ export const AlloyButton = forwardRef(function AlloyButton(
       // 1) internal active-class tracking
       alsoCallInternal?.(e);
 
-      // 2) normalized OutputObject for parent (only some events)
+      // 2) normalized OutputObject for parent (ONLY CLICK emits)
       if (shouldEmit && typeof output === "function") {
         const out = OutputObject.ok({
-          id: button.id,
+          id: domId,
           type: "button",
           action,
           data: {
-            // keep payload minimal; we don't duplicate id here
             name: button.name,
           },
         });
@@ -160,20 +159,10 @@ export const AlloyButton = forwardRef(function AlloyButton(
     };
 
   const mergedEvents = {
-    // EMIT
+    // ✅ EMIT ONLY CLICK
     onClick: emitThen(button.onClick, undefined, "click", true),
-    onMouseDown: emitThen(undefined, events.onMouseDown, "mousedown", true),
 
     // NO EMIT – just state + model handler
-    onKeyDown: emitThen(
-      button.onKeyDown,
-      events.onFocus,
-      "keydown",
-      false
-    ),
-    onKeyUp: emitThen(button.onKeyUp, undefined, "keyup", false),
-    onFocus: emitThen(button.onFocus, events.onFocus, "focus", false),
-    onBlur: emitThen(button.onBlur, events.onBlur, "blur", false),
     onMouseEnter: emitThen(
       button.onMouseEnter,
       events.onMouseEnter,
@@ -186,12 +175,20 @@ export const AlloyButton = forwardRef(function AlloyButton(
       "mouseleave",
       false
     ),
+    onMouseDown: emitThen(undefined, events.onMouseDown, "mousedown", false),
     onMouseUp: emitThen(undefined, events.onMouseUp, "mouseup", false),
+
+    onFocus: emitThen(button.onFocus, events.onFocus, "focus", false),
+    onBlur: emitThen(button.onBlur, events.onBlur, "blur", false),
+
+    // NOTE: do not call events.onFocus here (keydown != focus)
+    onKeyDown: emitThen(button.onKeyDown, undefined, "keydown", false),
+    onKeyUp: emitThen(button.onKeyUp, undefined, "keyup", false),
   };
 
   return (
     <button
-      id={autoId.current}
+      id={domId}
       ref={elRef}
       type="button"
       className={className}

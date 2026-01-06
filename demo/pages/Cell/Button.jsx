@@ -1,74 +1,81 @@
 // pages/Cell/Button.jsx
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { AlloyButton, ButtonObject } from "../../../src";
 
-const DEFAULT_INPUT = JSON.stringify(
-  {
-    id: "alloyBtn01",            // optional; auto-generated if omitted
-    name: "Primary",
-    className: "btn btn-primary",
-    active: "active",
-    disabled: false,
-    ariaLabel: "Primary action",
-    tabIndex: 0
-  },
-  null,
-  2
-);
+const DEFAULT_INPUT_OBJ = {
+  id: "alloyBtn01", // optional; stable via useDomId() if omitted
+  name: "Primary",
+  className: "btn btn-primary",
+  active: "active",
+  disabled: false,
+  ariaLabel: "Primary action",
+  tabIndex: 0,
+};
+
+const DEFAULT_INPUT = JSON.stringify(DEFAULT_INPUT_OBJ, null, 2);
 
 export default function ButtonPage() {
   const [inputJson, setInputJson] = useState(DEFAULT_INPUT);
   const [parseError, setParseError] = useState("");
   const [outputJson, setOutputJson] = useState(
-    "// Interact with the button to see events here…"
+    "// Click the button to see output here…"
   );
+
+  // Keep last valid parsed object so preview stays stable while typing invalid JSON
+  const [parsed, setParsed] = useState(DEFAULT_INPUT_OBJ);
 
   const btnRef = useRef(null);
 
-  // Turn JSON string -> ButtonObject model
+  function handleInputChange(e) {
+    const val = e.target.value;
+    setInputJson(val);
+
+    try {
+      const obj = JSON.parse(val || "{}");
+      if (!obj || typeof obj !== "object") throw new Error("JSON must be an object.");
+      setParsed(obj);
+      setParseError("");
+    } catch (err) {
+      setParseError(err.message || "Invalid JSON.");
+      // keep last valid parsed
+    }
+  }
+
+  // Turn parsed object -> ButtonObject model
   const model = useMemo(() => {
     try {
-      const raw = JSON.parse(inputJson || "{}");
-      setParseError("");
-
-      return new ButtonObject(raw);
-    } catch (e) {
-      // If either parse fails or model validation fails ("name" missing, etc.)
-      setParseError(String(e.message || e));
-
-      // Safe fallback: disabled button so preview still renders
+      return new ButtonObject(parsed);
+    } catch {
+      // Safe fallback so preview still renders
       return new ButtonObject({
-        name: "Invalid JSON",
+        name: "Invalid config",
         className: "btn btn-secondary",
-        disabled: true
+        disabled: true,
       });
     }
-  }, [inputJson]);
+  }, [parsed]);
 
-  // Global output hook for AlloyButton
-  // NOW: receives a single OutputObject instance from AlloyButton
+  // Receives a single OutputObject instance from AlloyButton (ONLY on click)
   function handleOutput(out) {
-    // If it's an OutputObject, use its safe JSON representation
-    const payload =
-      out && typeof out.toJSON === "function" ? out.toJSON() : out;
-
+    const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
-  // Reset editor + output
   function handleReset() {
     setInputJson(DEFAULT_INPUT);
-    setOutputJson("// Interact with the button to see events here…");
+    setParsed(DEFAULT_INPUT_OBJ);
+    setOutputJson("// Click the button to see output here…");
     setParseError("");
   }
 
-  // Pretty-print/format input JSON
   function handleFormat() {
     try {
-      const parsed = JSON.parse(inputJson);
-      setInputJson(JSON.stringify(parsed, null, 2));
+      const obj = JSON.parse(inputJson);
+      setInputJson(JSON.stringify(obj, null, 2));
+      setParsed(obj);
+      setParseError("");
     } catch {
-      // ignore format if invalid JSON; parseError UI will already warn them
+      // ignore
     }
   }
 
@@ -92,10 +99,10 @@ export default function ButtonPage() {
         <div className="col-12 text-center">
           <AlloyButton ref={btnRef} button={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
-            Tip: Hover, focus, blur, keydown/keyup, click — all emit via{" "}
-            <code>output</code> as an <code>OutputObject</code> with{" "}
-            <code>id</code>, <code>type</code>, <code>action</code>,{" "}
-            <code>error</code> and a minimal <code>data</code> payload.
+            Tip: <strong>Only click emits</strong> via <code>output</code> as an{" "}
+            <code>OutputObject</code> with <code>id</code>, <code>type</code>,{" "}
+            <code>action</code>, <code>error</code> and a minimal{" "}
+            <code>data</code> payload.
           </div>
         </div>
       </div>
@@ -143,23 +150,20 @@ export default function ButtonPage() {
             }`}
             rows={18}
             value={inputJson}
-            onChange={(e) => setInputJson(e.target.value)}
+            onChange={handleInputChange}
             spellCheck={false}
           />
           {parseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {parseError}
-            </div>
+            <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
 
           <div className="form-text">
-            Required: <code>name</code>. Optional:{" "}
-            <code>id</code>, <code>className</code>, <code>active</code>,{" "}
-            <code>disabled</code>, <code>title</code>,{" "}
-            <code>ariaLabel</code>, <code>tabIndex</code>, and per-event
-            handlers like <code>onClick(e, self)</code>. If you omit{" "}
-            <code>id</code> it will auto-generate. <code>title</code> and{" "}
-            <code>ariaLabel</code> default to the button's <code>name</code>.
+            Required: <code>name</code>. Optional: <code>id</code>,{" "}
+            <code>className</code>, <code>active</code>, <code>disabled</code>,{" "}
+            <code>title</code>, <code>ariaLabel</code>, <code>tabIndex</code>,
+            and per-event handlers like <code>onClick(e, self)</code>. If you omit{" "}
+            <code>id</code>, the component will generate a stable one via{" "}
+            <code>useDomId()</code>.
           </div>
         </div>
 
@@ -185,6 +189,7 @@ export default function ButtonPage() {
             onChange={(e) => setOutputJson(e.target.value)}
             spellCheck={false}
           />
+
           <div className="form-text">
             Shape:
             <pre className="mb-0 mt-1 small">
@@ -194,8 +199,7 @@ export default function ButtonPage() {
   "action": "click",
   "error": false,
   "data": {
-    "name": "Primary",
-    "disabled": false
+    "name": "Primary"
   }
 }`}
             </pre>

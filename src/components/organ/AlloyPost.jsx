@@ -4,51 +4,21 @@ import React, { useMemo } from "react";
 import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 import AlloyForm, { FormObject } from "../tissue/AlloyForm.jsx";
-import AlloyButtonIcon, {
-  ButtonIconObject,
-} from "../cell/AlloyButtonIcon.jsx";
+import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 
 /* -------------------------------------------------------
  * PostObject (model)
  * ----------------------------------------------------- */
 
-/**
- * @typedef {Object} CommentConfig
- * @property {string} [name]
- * @property {string} [email]
- * @property {string} [body]
- * @property {string} [createdAt] ISO string
- */
-
-/**
- * @typedef {Object} PostConfig
- * @property {string} [id]
- * @property {string} [className]
- * @property {string} [title]
- * @property {string} [slug]
- * @property {string} [authorName]
- * @property {string} [publishedAt]
- * @property {string} [categoryName]
- * @property {string} [subcategoryName]
- * @property {string[]} [tags]
- * @property {string} [imageUrl]
- * @property {string} [imageAlt]
- * @property {string} [contentHtml]
- * @property {number} [likesCount]
- * @property {CommentConfig[]} [comments]
- * @property {Object} [likeButton]
- * @property {Object} [commentForm]
- */
-
 export class PostObject {
   /**
-   * @param {PostConfig} post
+   * @param {any} post
    */
   constructor(post = {}) {
     this.id = post.id ?? generateId("post");
     this.className = post.className ?? "container my-4 my-lg-5";
 
-    // Core post fields
+    // Core
     this.title = post.title ?? "";
     this.slug = post.slug ?? "";
     this.authorName = post.authorName ?? "";
@@ -60,18 +30,16 @@ export class PostObject {
     this.tags = Array.isArray(post.tags) ? post.tags : [];
 
     this.imageUrl = post.imageUrl ?? "";
-    this.imageAlt = post.imageAlt ?? this.title; // fallback
+    this.imageAlt = post.imageAlt ?? this.title;
 
-    // Main content (HTML string – should be sanitized by backend)
+    // HTML string
     this.contentHtml = post.contentHtml ?? "";
 
     // Engagement
-    this.likesCount =
-      typeof post.likesCount === "number" ? post.likesCount : 0;
-
+    this.likesCount = typeof post.likesCount === "number" ? post.likesCount : 0;
     this.comments = Array.isArray(post.comments) ? post.comments : [];
 
-    // ---------- Like button (AlloyButtonIcon) ----------
+    // ---------- Like button ----------
     const likeBtn = post.likeButton ?? {};
     this.likeButton =
       likeBtn instanceof ButtonIconObject
@@ -80,47 +48,22 @@ export class PostObject {
             id: likeBtn.id ?? `${this.id}-like`,
             name: likeBtn.name ?? "Like",
             icon: likeBtn.icon ?? { iconClass: "fa-regular fa-heart me-1" },
-            className:
-              likeBtn.className ?? "btn btn-outline-danger btn-sm me-2",
+            className: likeBtn.className ?? "btn btn-outline-danger btn-sm me-2",
             active: likeBtn.active ?? "",
             disabled: !!likeBtn.disabled,
             title: likeBtn.title ?? likeBtn.name ?? "Like",
             ariaLabel: likeBtn.ariaLabel ?? likeBtn.name ?? "Like",
+            // optional data if you need in the page
             data: {
               ...(likeBtn.data || {}),
               slug: this.slug,
+              id: this.id,
             },
           });
 
     // ---------- Comment form (AlloyForm) ----------
+    // IMPORTANT: We keep this as a FormObject so AlloyForm does validation + emits submit payload.
     const commentCfg = post.commentForm ?? {};
-
-    // Ensure submit has icon, following FormObject's default style
-    const submitCfg = commentCfg.submit || {};
-    const safeSubmit = commentCfg.submit
-      ? {
-          ...submitCfg,
-          icon:
-            submitCfg.icon ??
-            {
-              iconClass: "fa-solid fa-paper-plane",
-            },
-          className:
-            submitCfg.className ?? "btn btn-primary btn-sm mt-2",
-          ariaLabel: submitCfg.ariaLabel ?? "Post comment",
-          title: submitCfg.title ?? "Post comment",
-          disabled: submitCfg.disabled ?? false,
-          loading: submitCfg.loading ?? false,
-        }
-      : {
-          name: "Post comment",
-          icon: { iconClass: "fa-solid fa-paper-plane" },
-          className: "btn btn-primary btn-sm mt-2",
-          disabled: false,
-          loading: false,
-          ariaLabel: "Post comment",
-          title: "Post comment",
-        };
 
     this.commentForm =
       commentCfg instanceof FormObject
@@ -128,42 +71,56 @@ export class PostObject {
         : new FormObject({
             id: commentCfg.id ?? `${this.id}-commentForm`,
             title: commentCfg.title ?? "Add your comment",
-            className:
-              commentCfg.className ??
-              "bg-white rounded-4 shadow-sm p-4",
+            className: commentCfg.className ?? "col-12",
             message: commentCfg.message ?? "",
-            action: commentCfg.action ?? "post.comment",
+            // This is the action YOU will receive at the PAGE level (wrapped into post output)
+            action: commentCfg.action ?? "comment",
             type: commentCfg.type ?? "AlloyInputTextIcon",
-            submit: safeSubmit,
+
+            submit:
+              commentCfg.submit ?? {
+                name: "Post Comment",
+                icon: { iconClass: "fa-solid fa-paper-plane" },
+                className: "btn btn-primary btn-sm mt-2",
+                disabled: false,
+                loading: false,
+                ariaLabel: "Post Comment",
+                title: "Post Comment",
+              },
+
+            // NOTE: These names MUST match what your page expects (name/email/body).
             fields:
-              commentCfg.fields ??
-              [
+              commentCfg.fields ?? [
                 {
                   name: "name",
                   label: "Name",
                   type: "text",
+                  layout: "text",
                   required: true,
+                  minLength: 2,
                   className: "form-control form-control-sm",
-                  layoutClass: "col-md-6",
                 },
                 {
                   name: "email",
                   label: "Email (optional)",
                   type: "email",
+                  layout: "text",
                   required: false,
                   className: "form-control form-control-sm",
-                  layoutClass: "col-md-6",
                 },
                 {
                   name: "body",
                   label: "Comment",
                   type: "textarea",
-                  rows: 3,
+                  layout: "textarea",
                   required: true,
+                  minLength: 2,
+                  rows: 3,
                   className: "form-control form-control-sm",
-                  layoutClass: "col-12",
                 },
               ],
+
+            data: commentCfg.data ?? {},
           });
   }
 }
@@ -173,47 +130,65 @@ export class PostObject {
  * ----------------------------------------------------- */
 
 export function AlloyPost({ post, output }) {
-  // Hydrate like AlloyForm / AlloyDonate: accept plain JSON or PostObject
+  // Hydrate input to PostObject
   const model = useMemo(
     () => (post instanceof PostObject ? post : new PostObject(post || {})),
     [post]
   );
 
   const emit = (out) => {
-    if (typeof output === "function") {
-      output(out);
-    }
+    if (typeof output === "function") output(out);
   };
 
+  // Wrap LIKE into one post-level output
   const handleLikeOutput = (innerOut) => {
     if (!innerOut) return;
+
     const base =
       innerOut instanceof OutputObject && typeof innerOut.toJSON === "function"
         ? innerOut.toJSON()
         : innerOut;
 
-    // You can wrap if you want:
-    // const wrapped = new OutputObject({
-    //   id: model.id,
-    //   type: "post",
-    //   action: "like",
-    //   error: !!base.error,
-    //   data: base.data || {}
-    // });
-    // emit(wrapped);
+    const wrapped = new OutputObject({
+      id: model.id,
+      type: "post",
+      action: "like",
+      error: !!base?.error,
+      // Keep whatever the button emits (don’t mutate)
+      data: base?.data ?? {},
+    });
 
-    emit(base);
+    emit(wrapped);
   };
 
-  const handleCommentOutput = (innerOut) => {
+  // Wrap COMMENT SUBMIT ONLY into one post-level output
+  const handleCommentFormOutput = (innerOut) => {
     if (!innerOut) return;
+
     const base =
       innerOut instanceof OutputObject && typeof innerOut.toJSON === "function"
         ? innerOut.toJSON()
         : innerOut;
 
-    // Same note as above – can wrap if you want a "post.comment" envelope
-    emit(base);
+    // ✅ Only act on submit. Ignore field-level change/blur outputs.
+    const action = String(base?.action ?? "").toLowerCase().trim();
+    const type = String(base?.type ?? "").toLowerCase().trim();
+
+    if (type !== "form" || action !== "submit") return;
+
+    const wrapped = new OutputObject({
+      id: model.id,
+      type: "post",
+      // Use the form's configured action (example: "comment")
+      action: String(model.commentForm?.action ?? "comment")
+        .toLowerCase()
+        .trim(),
+      error: !!base?.error,
+      // ✅ Pass the submit payload EXACTLY as AlloyForm provides it
+      data: base?.data ?? {},
+    });
+
+    emit(wrapped);
   };
 
   const {
@@ -258,10 +233,7 @@ export function AlloyPost({ post, output }) {
                 </li>
               )}
               {subcategoryName && (
-                <li
-                  className="breadcrumb-item active"
-                  aria-current="page"
-                >
+                <li className="breadcrumb-item active" aria-current="page">
                   {subcategoryName}
                 </li>
               )}
@@ -301,10 +273,7 @@ export function AlloyPost({ post, output }) {
             {tags && tags.length > 0 && (
               <div className="post-tags mt-2">
                 {tags.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="badge text-bg-secondary me-1 mb-1"
-                  >
+                  <span key={idx} className="badge text-bg-secondary me-1 mb-1">
                     {tag}
                   </span>
                 ))}
@@ -319,21 +288,16 @@ export function AlloyPost({ post, output }) {
                 src={imageUrl}
                 alt={imageAlt}
                 className="post-hero shadow-sm rounded-4 w-100"
-                style={{
-                  maxHeight: "440px",
-                  objectFit: "cover",
-                }}
+                style={{ maxHeight: "440px", objectFit: "cover" }}
               />
             </figure>
           )}
 
           <div className="row">
-            {/* Main article */}
+            {/* Main */}
             <article className="col-lg-8 mb-5">
               <div className="bg-white rounded-4 shadow-sm p-4 p-md-5 post-content">
-                <div
-                  dangerouslySetInnerHTML={{ __html: contentHtml }}
-                />
+                <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
               </div>
 
               {/* Comments */}
@@ -341,9 +305,7 @@ export function AlloyPost({ post, output }) {
                 <h2 className="h5 mb-3">
                   Comments{" "}
                   {comments && comments.length > 0 && (
-                    <span className="text-muted small">
-                      ({comments.length})
-                    </span>
+                    <span className="text-muted small">({comments.length})</span>
                   )}
                 </h2>
 
@@ -353,22 +315,18 @@ export function AlloyPost({ post, output }) {
                     {comments.map((c, idx) => {
                       const created =
                         c.createdAt &&
-                        new Date(c.createdAt).toLocaleDateString(
-                          undefined,
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        );
+                        new Date(c.createdAt).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        });
+
                       return (
                         <div
                           key={idx}
                           className="comment border-bottom border-light-subtle pb-3 mb-3"
                         >
-                          <div className="fw-semibold">
-                            {c.name}
-                          </div>
+                          <div className="fw-semibold">{c.name}</div>
                           {(created || c.email) && (
                             <div className="text-muted small mb-1">
                               {created}
@@ -385,11 +343,7 @@ export function AlloyPost({ post, output }) {
 
                 {/* Comment form */}
                 <div className="bg-white rounded-4 shadow-sm p-4">
-                  <h3 className="h6 mb-3">Add your comment</h3>
-                  <AlloyForm
-                    form={commentForm}
-                    output={handleCommentOutput}
-                  />
+                  <AlloyForm form={commentForm} output={handleCommentFormOutput} />
                 </div>
               </section>
             </article>
@@ -397,34 +351,18 @@ export function AlloyPost({ post, output }) {
             {/* Sidebar */}
             <aside className="col-lg-4">
               <div className="sidebar-card bg-white rounded-4 shadow-sm p-3 p-md-4 mb-4">
-                <h2 className="h6 text-uppercase text-muted mb-3">
-                  Post engagement
-                </h2>
+                <h2 className="h6 text-uppercase text-muted mb-3">Post engagement</h2>
 
                 <div className="d-flex align-items-center mb-3">
-                  <AlloyButtonIcon
-                    buttonIcon={likeButton}
-                    output={handleLikeOutput}
-                  />
+                  <AlloyButtonIcon buttonIcon={likeButton} output={handleLikeOutput} />
                   <span className="small ms-2">
-                    <span className="fw-semibold">
-                      {likesCount}
-                    </span>{" "}
-                    likes
+                    <span className="fw-semibold">{likesCount}</span> likes
                   </span>
                 </div>
 
-                <p className="small text-muted mb-2">
-                  Liked this article? Hit the like button and share it
-                  with your project team to start planning your next
-                  precast job.
-                </p>
-
                 <hr />
 
-                <h3 className="h6 text-uppercase text-muted mb-2">
-                  Post details
-                </h3>
+                <h3 className="h6 text-uppercase text-muted mb-2">Post details</h3>
                 <dl className="row mb-0 small">
                   {categoryName && (
                     <>
@@ -435,19 +373,13 @@ export function AlloyPost({ post, output }) {
                   {subcategoryName && (
                     <>
                       <dt className="col-5">Subcategory</dt>
-                      <dd className="col-7">
-                        {subcategoryName}
-                      </dd>
+                      <dd className="col-7">{subcategoryName}</dd>
                     </>
                   )}
                   <dt className="col-5">Published</dt>
-                  <dd className="col-7">
-                    {publishedAt ? "Yes" : "Draft"}
-                  </dd>
+                  <dd className="col-7">{publishedAt ? "Yes" : "Draft"}</dd>
                   <dt className="col-5">Comments</dt>
-                  <dd className="col-7">
-                    {comments ? comments.length : 0}
-                  </dd>
+                  <dd className="col-7">{comments ? comments.length : 0}</dd>
                 </dl>
               </div>
             </aside>

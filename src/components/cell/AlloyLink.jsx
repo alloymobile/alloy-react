@@ -1,14 +1,9 @@
-import { useMemo, useRef, useState } from "react";
-import { generateId } from "../../utils/idHelper.js"; 
+// src/components/cell/AlloyLink.jsx  (REACT VERSION)
+import { useMemo, useState } from "react";
+import { useDomId } from "../../utils/idHelper.js";
 
 /* -------------------------------------------
- * Hook: useActiveClass
- *
- * - Takes a base className and an "active" className.
- * - Tracks hover / press / focus.
- * - Returns:
- *    className => merged classes depending on state
- *    events    => mouse/keyboard handlers to drive the state
+ * useActiveClass (unchanged)
  * ----------------------------------------- */
 function useActiveClass(className = "", active = "") {
   const [hovered, setHovered] = useState(false);
@@ -36,40 +31,26 @@ function useActiveClass(className = "", active = "") {
   };
 }
 
-/* -------------------------------------------
- * LinkObject
- *
- * Public shape for AlloyLink.
- * We do NOT destructure in the constructor anymore.
- * We validate required fields, normalize defaults,
- * and guarantee an id.
- * ----------------------------------------- */
-
 /**
  * @typedef {Object} LinkConfig
- * @property {string} href                - Required. Destination URL/path.
- * @property {string} name                - Required. Visible text label.
- * @property {string} [id]                - Optional. If not provided, a unique id is generated.
- * @property {string} [className]         - Optional. Base classes for <a>.
- * @property {string} [active]            - Optional. Classes added on hover/press/focus.
- * @property {string} [target]            - Optional. E.g. "_blank".
- * @property {string} [rel]               - Optional. E.g. "nofollow".
- * @property {(e:any)=>void} [onClick]    - Optional. Click handler (can navigate(), log, preventDefault, etc.).
- * @property {string} [title]             - Optional. Tooltip text. Defaults to `name`.
+ * @property {string} href
+ * @property {string} name
+ * @property {string} [id]
+ * @property {string} [className]
+ * @property {string} [active]
+ * @property {string} [target]
+ * @property {string} [rel]
+ * @property {(e:any)=>void} [onClick]
+ * @property {string} [title]
  */
 export class LinkObject {
-  /**
-   * @param {LinkConfig} link
-   */
   constructor(link = {}) {
-    if (!link.href) {
-      throw new Error("LinkObject requires `href`.");
-    }
-    if (!link.name) {
-      throw new Error("LinkObject requires `name`.");
-    }
+    if (!link.href) throw new Error("LinkObject requires `href`.");
+    if (!link.name) throw new Error("LinkObject requires `name`.");
 
-    this.id = link.id ?? generateId("link");
+    // NOTE: do NOT generate random ids here (Next hydration-safe pattern)
+    this.id = link.id;
+
     this.name = link.name;
     this.href = link.href;
     this.className = link.className ?? "nav-link";
@@ -77,35 +58,19 @@ export class LinkObject {
     this.target = link.target;
     this.rel = link.rel;
     this.onClick = link.onClick;
-    this.title = link.title ?? link.name; // fallback to visible label
+    this.title = link.title ?? link.name;
   }
 }
 
-/* -------------------------------------------
- * AlloyLink Component
- *
- * - Accepts a single prop: { link }
- * - `link` MUST be an instance of LinkObject.
- * - Renders an <a> with:
- *    - stable id via useRef
- *    - hover/active/focus styling from useActiveClass
- *    - safe rel handling for target="_blank"
- *    - optional onClick (consumer logic, e.g. navigate())
- * ----------------------------------------- */
-
 export function AlloyLink({ link }) {
-  // Validate prop contract
   if (!link || !(link instanceof LinkObject)) {
     throw new Error("AlloyLink requires `link` (LinkObject instance).");
   }
 
-  // Stabilize DOM id across re-renders so the <a id="..."> doesn't change
-  const autoId = useRef(link.id);
-
-  // Merge base class and active class depending on hover/press/focus
   const { className, events } = useActiveClass(link.className, link.active);
 
-  // Security: if opening a new tab, include noopener/noreferrer
+  const href = link.href || "#";
+
   const safeRel =
     link.target === "_blank"
       ? link.rel
@@ -113,10 +78,13 @@ export function AlloyLink({ link }) {
         : "noopener noreferrer"
       : link.rel;
 
+  // SSR/CSR stable id (or provided id)
+  const domId = useDomId("link", link.id);
+
   return (
     <a
-      id={autoId.current}
-      href={link.href}
+      id={domId}
+      href={href}
       className={className}
       target={link.target}
       rel={safeRel}
@@ -124,7 +92,7 @@ export function AlloyLink({ link }) {
       title={link.title}
       {...events}
     >
-      <span>{link.name}</span>
+      {link.name}
     </a>
   );
 }

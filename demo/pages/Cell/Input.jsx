@@ -1,15 +1,15 @@
-import React, { useMemo, useState } from "react";
+// pages/Cell/InputPage.jsx
+import React, { useMemo, useEffect, useState } from "react";
 import { AlloyInput, InputObject } from "../../../src";
 
 /**
  * DEFAULT_INPUTS
  * Each preset is valid to pass directly to `new InputObject(...)`.
- * Notice `className`:
- *   - text-ish, textarea, password, etc. use "form-control"
- *   - select uses "form-select"
- *   - radio / checkbox use "form-check-input"
  *
- * You can override className in your JSON to theme per-field.
+ * NOTE (SSR-safe IDs):
+ * - InputObject should NOT auto-generate `id` (prevents Next.js SSR hydration mismatches).
+ * - If you want a predictable id for testing, add `id: "myId"` in any preset JSON.
+ * - Otherwise AlloyInput generates a stable SSR/CSR id internally via useId()/useDomId().
  */
 const DEFAULT_INPUTS = {
   text: {
@@ -79,6 +79,16 @@ const DEFAULT_INPUTS = {
     ]
   },
 
+  switch: {
+    name: "isActive",
+    label: "Active",
+    type: "switch",
+    layout: "text",
+    required: false,
+    className: "form-check-input",
+    value: true
+  },
+
   select: {
     name: "role",
     label: "Role",
@@ -94,6 +104,28 @@ const DEFAULT_INPUTS = {
     ]
   },
 
+  // ✅ Multiselect demo (NEW)
+  // - Renders as <select multiple>
+  // - Value is string[] (array of selected values)
+  // - Use `size` to control visible rows (default 4)
+  multiselect: {
+    name: "permissions",
+    label: "Permissions",
+    type: "multiselect",
+    layout: "text",
+    required: true,
+    className: "form-select",
+    size: 5,
+    options: [
+      { value: "read", label: "Read" },
+      { value: "write", label: "Write" },
+      { value: "delete", label: "Delete" },
+      { value: "admin", label: "Admin" },
+      { value: "export", label: "Export" },
+      { value: "import", label: "Import" }
+    ]
+  },
+
   date: {
     name: "dob",
     label: "Date of Birth",
@@ -101,6 +133,35 @@ const DEFAULT_INPUTS = {
     layout: "text",
     required: true,
     className: "form-control"
+  },
+
+  // ✅ Datetime-local demo (NEW)
+  // - Renders as <input type="datetime-local">
+  // - Value format: "YYYY-MM-DDTHH:mm" (e.g., "2024-01-15T14:30")
+  // - Use `min` and `max` to constrain date/time range
+  "datetime-local": {
+    name: "appointmentTime",
+    label: "Appointment Date & Time",
+    type: "datetime-local",
+    layout: "text",
+    required: true,
+    className: "form-control",
+    min: "2024-01-01T00:00",
+    max: "2025-12-31T23:59"
+  },
+
+  // ✅ Time demo (NEW)
+  // - Renders as <input type="time">
+  // - Value format: "HH:mm" (e.g., "14:30")
+  time: {
+    name: "preferredTime",
+    label: "Preferred Time",
+    type: "time",
+    layout: "text",
+    required: true,
+    className: "form-control",
+    min: "09:00",
+    max: "17:00"
   },
 
   radio: {
@@ -117,34 +178,31 @@ const DEFAULT_INPUTS = {
     ]
   },
 
-  // NEW: icon layout demo using iconGroupClass
-  icon: {
-    name: "username",
-    label: "Username (icon layout)",
-    type: "text",
-    layout: "icon",
-    placeholder: "Enter your username",
+  // ✅ File upload demo (MULTI enabled)
+  // - With fileUploader: emits string (single) OR string[] (multi) URLs.
+  // - Without fileUploader: emits File (single) OR File[] (multi).
+  file: {
+    name: "attachments",
+    label: "Upload Files (multi)",
+    type: "file",
+    layout: "text",
     required: true,
     className: "form-control",
-    icon: { iconClass: "fa-solid fa-user" },
-    // This styles the <span> wrapping the icon in the input-group
-    iconGroupClass: "bg-light border-0"
+    accept: ".pdf,.png,.jpg,.jpeg",
+    multiple: true
   },
 
-  // ✅ NEW: canvas demo (signature/drawing)
-  // Emits data.value as a string like:
-  // "data:image/png;base64,iVBORw0KGgo..."
+  // ✅ Canvas demo (signature/drawing)
+  // Emits data.value as a string like: "data:image/png;base64,iVBORw0K..."
   canvas: {
     name: "signature",
     label: "Signature (canvas)",
     type: "canvas",
     layout: "text",
     required: true,
-    // Optional canvas config supported by AlloyInput:
     width: 600,
     height: 220,
-    canvasStrokeWidth: 2,
-    // You can also test disabled mode:
+    canvasStrokeWidth: 2
     // disabled: true
   }
 };
@@ -152,7 +210,6 @@ const DEFAULT_INPUTS = {
 const TABS = Object.keys(DEFAULT_INPUTS);
 
 export default function InputPage() {
-  // which preset we're looking at
   const [tab, setTab] = useState("text");
 
   // left textarea (editable JSON for the current tab)
@@ -165,24 +222,37 @@ export default function InputPage() {
     "// Interact with the field (type, blur, select, etc.)"
   );
 
-  // parseError if user types invalid JSON
+  // parse error text shown under the JSON editor
   const [parseError, setParseError] = useState("");
 
   /**
-   * Build an InputObject from whatever's in the editor.
-   * If parsing fails, fallback to that tab's default preset
-   * so the preview never explodes.
+   * Parse JSON safely (no setState inside render).
+   * Returns:
+   *  - inputModel: InputObject always (fallbacks to current tab default)
+   *  - parseErr: string (empty if ok)
    */
-  const inputModel = useMemo(() => {
+  const { inputModel, parseErr } = useMemo(() => {
     try {
       const raw = JSON.parse(inputJson || "{}");
-      setParseError("");
-      return new InputObject(raw);
+      return { inputModel: new InputObject(raw), parseErr: "" };
     } catch (e) {
-      setParseError(String(e.message || e));
-      return new InputObject(DEFAULT_INPUTS[tab]);
+      const msg = String(e?.message || e);
+      return { inputModel: new InputObject(DEFAULT_INPUTS[tab]), parseErr: msg };
     }
   }, [inputJson, tab]);
+
+  // reflect parse error in state (so the UI can show invalid styling)
+  useEffect(() => {
+    setParseError(parseErr);
+  }, [parseErr]);
+
+  // Demo-only fileUploader:
+  // returns a local blob URL so you can see URL behavior without a backend.
+  async function demoFileUploader(fieldName, file) {
+    // eslint-disable-next-line no-unused-vars
+    const _ = fieldName;
+    return URL.createObjectURL(file);
+  }
 
   // AlloyInput calls this on change/blur with OutputObject
   function handleOutput(out) {
@@ -192,7 +262,6 @@ export default function InputPage() {
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
-  // switch tabs (ex: "text" -> "email")
   function switchTab(nextTab) {
     const freshConfig = DEFAULT_INPUTS[nextTab];
     setTab(nextTab);
@@ -207,21 +276,25 @@ export default function InputPage() {
       const parsed = JSON.parse(inputJson);
       setInputJson(JSON.stringify(parsed, null, 2));
     } catch {
-      // ignore; parseError is already shown if invalid
+      // ignore; parseError already shown
     }
   }
+
+  // Enable uploader only for file tab (keeps other tabs pure)
+  const uploader = tab === "file" ? demoFileUploader : undefined;
 
   return (
     <div className="container py-3">
       <h3 className="mb-4 text-center">AlloyInput</h3>
 
       {/* Tabs for each field type */}
-      <ul className="nav nav-underline nav-fill mb-3">
+      <ul className="nav nav-underline nav-fill mb-3 flex-wrap">
         {TABS.map((key) => (
           <li className="nav-item" key={key}>
             <button
               className={`nav-link ${key === tab ? "active" : ""}`}
               onClick={() => switchTab(key)}
+              type="button"
             >
               {key}
             </button>
@@ -243,13 +316,28 @@ export default function InputPage() {
       {/* Live field preview */}
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
-          <AlloyInput input={inputModel} output={handleOutput} />
+          {/* key={tab} remounts when switching types (keeps demo clean) */}
+          <AlloyInput
+            key={tab}
+            input={inputModel}
+            output={handleOutput}
+            fileUploader={uploader}
+          />
+
           <div className="small text-secondary mt-2 text-center">
             <div>
-              Try editing the JSON on the left: remove <code>required</code>, change{" "}
-              <code>minLength</code>, tweak <code>pattern</code>, etc. The field
-              re-validates live (no remount needed).
+              Try editing the JSON on the left: remove <code>required</code>,
+              change <code>minLength</code>, tweak <code>pattern</code>, etc.
             </div>
+
+            {tab === "file" && (
+              <div className="mt-1">
+                File tab is configured with <code>multiple: true</code>. Select
+                multiple files to see <code>data.value</code> become an array.
+                This demo uses a <code>fileUploader</code> that returns local blob
+                URLs (no backend needed), so output becomes <code>string[]</code>.
+              </div>
+            )}
 
             {tab === "canvas" && (
               <div className="mt-1">
@@ -259,8 +347,45 @@ export default function InputPage() {
               </div>
             )}
 
+            {tab === "datetime-local" && (
+              <div className="mt-1">
+                Datetime-local emits value in <strong>ISO format</strong>:{" "}
+                <code>YYYY-MM-DDTHH:mm</code> (e.g., <code>2024-01-15T14:30</code>).
+                Use <code>min</code> and <code>max</code> to constrain the date/time range.
+              </div>
+            )}
+
+            {tab === "time" && (
+              <div className="mt-1">
+                Time emits value in <strong>24-hour format</strong>:{" "}
+                <code>HH:mm</code> (e.g., <code>14:30</code>).
+                Use <code>min</code> and <code>max</code> to constrain the time range.
+              </div>
+            )}
+
+            {tab === "multiselect" && (
+              <div className="mt-1">
+                Multiselect emits <code>data.value</code> as a <strong>string[]</strong>{" "}
+                (array of selected values). Hold <code>Ctrl</code> (or <code>Cmd</code> on Mac)
+                to select multiple options. Use <code>size</code> to control visible rows.
+              </div>
+            )}
+
+            {tab === "switch" && (
+              <div className="mt-1">
+                Switch emits <code>data.value</code> as a <strong>boolean</strong>{" "}
+                (<code>true</code>/<code>false</code>).
+              </div>
+            )}
+
             <div>
               Errors announce with <code>aria-live="polite"</code> after blur.
+            </div>
+
+            <div className="mt-1">
+              Tip: You can set an explicit <code>id</code> in the JSON for a
+              predictable DOM id. If omitted, AlloyInput generates a stable id
+              using React <code>useId()</code> (SSR-safe in Next.js).
             </div>
           </div>
         </div>
@@ -296,6 +421,7 @@ export default function InputPage() {
             onChange={(e) => setInputJson(e.target.value)}
             spellCheck={false}
           />
+
           {parseError && (
             <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
@@ -306,10 +432,9 @@ export default function InputPage() {
                 Only <code>name</code> is required.
               </li>
               <li>
-                <code>className</code> styles the control. Examples:
+                <code>className</code> styles the control. Examples:{" "}
                 <code>"form-control"</code>, <code>"form-select"</code>,{" "}
-                <code>"form-check-input"</code>, or your own classes
-                like <code>"form-control form-control-lg bg-dark text-white"</code>.
+                <code>"form-check-input"</code>, or your own classes.
               </li>
               <li>
                 For checkbox / radio, pass{" "}
@@ -318,21 +443,31 @@ export default function InputPage() {
                 </code>
               </li>
               <li>
+                For <code>multiselect</code>, pass <code>options</code> array and
+                optionally <code>size</code> (visible rows, default 4).
+              </li>
+              <li>
+                For <code>datetime-local</code> and <code>time</code>, use{" "}
+                <code>min</code> and <code>max</code> to constrain values.
+              </li>
+              <li>
                 To enforce strong password rules, set{" "}
                 <code>passwordStrength: true</code>.
               </li>
               <li>
-                Layout <code>"icon"</code> or <code>"floating"</code> also
-                requires an <code>icon</code>, for example{" "}
-                <code>{`{ iconClass: "fa-solid fa-user" }`}</code>. For
-                <code>"icon"</code> layout, you can additionally use{" "}
-                <code>iconGroupClass</code> to style the icon span (e.g.{" "}
-                <code>"bg-light border-0"</code>).
+                <code>type: "file"</code> supports <code>accept</code> and{" "}
+                <code>multiple</code>. If you pass <code>fileUploader</code> to{" "}
+                <code>AlloyInput</code>, value becomes a URL string (<code>multiple</code>{" "}
+                emits <code>string[]</code>).
               </li>
               <li>
-                NEW: <code>type: "canvas"</code> supports optional{" "}
-                <code>width</code>, <code>height</code>,{" "}
-                <code>canvasStrokeWidth</code>, and <code>disabled</code>.
+                <code>type: "canvas"</code> supports optional <code>width</code>,{" "}
+                <code>height</code>, <code>canvasStrokeWidth</code>, and{" "}
+                <code>disabled</code>.
+              </li>
+              <li>
+                Optional: set an explicit <code>id</code> in JSON. If you omit it,
+                AlloyInput generates an SSR-safe id internally.
               </li>
             </ul>
           </div>
@@ -370,14 +505,14 @@ export default function InputPage() {
             The callback receives a normalized <code>OutputObject</code>, e.g.:
             <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
 {`{
-  "id": "input-xyz",
+  "id": "input-<stable>",
   "type": "input",
   "action": "change",   // or "blur"
   "error": false,       // true if validation failed
   "data": {
     "name": "email",
     "value": "user@example.com",
-    "errors": []        // array of validation messages for this field
+    "errors": []
   }
 }`}
             </pre>
@@ -385,8 +520,20 @@ export default function InputPage() {
             and read <code>data.value</code> for the latest value.
             <div className="mt-2">
               For <code>type: "canvas"</code>, <code>data.value</code> will be a
-              DataURL string like{" "}
-              <code>data:image/png;base64,...</code>.
+              DataURL string like <code>data:image/png;base64,...</code>.
+            </div>
+            <div className="mt-1">
+              For <code>type: "file"</code> with <code>multiple: true</code>,{" "}
+              <code>data.value</code> will be an array (e.g. <code>string[]</code>{" "}
+              when uploader is used).
+            </div>
+            <div className="mt-1">
+              For <code>type: "multiselect"</code>,{" "}
+              <code>data.value</code> will be a <code>string[]</code> of selected values.
+            </div>
+            <div className="mt-1">
+              For <code>type: "datetime-local"</code>,{" "}
+              <code>data.value</code> will be <code>"YYYY-MM-DDTHH:mm"</code> format.
             </div>
           </div>
         </div>

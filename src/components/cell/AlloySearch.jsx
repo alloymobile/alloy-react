@@ -1,51 +1,26 @@
 // src/lib/components/tissue/AlloySearch.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { OutputObject, generateId } from "../../utils/idHelper.js";
 import AlloyInput, { InputObject } from "./AlloyInput.jsx";
 
 /* -------------------------------------------------------
  * SearchObject (model)
- *
- * Config shape:
- * {
- *   id?: string;
- *   className?: string;          // wrapper row
- *   search: InputConfig | InputObject;
- *
- *   // Behaviour tuning
- *   minChars?: number;           // default 2
- *   debounceMs?: number;         // default 400
- *
- *   // Results (injected by parent, usually from server)
- *   results?: any[];             // array of strings or objects
- *   resultConfig?: {
- *     idKey?: string;            // property for id (default "id")
- *     labelKey?: string;         // property for main label (default "label" | "name" | "title")
- *     descriptionKey?: string;   // optional property for second line
- *     iconKey?: string;          // optional property for iconClass
- *   };
- * }
  * ----------------------------------------------------- */
 export class SearchObject {
-  /**
-   * @param {Object} response
-   */
   constructor(response = {}) {
     const cfg = response || {};
 
     this.id = cfg.id ?? generateId("search");
     this.className = cfg.className ?? "row mb-3";
 
-    // Normalize search → InputObject
     if (cfg.search instanceof InputObject) {
       this.search = cfg.search;
     } else if (cfg.search) {
       this.search = new InputObject(cfg.search);
     } else {
-      // SAFE DEFAULT: provide name + icon so InputObject doesn't throw
       this.search = new InputObject({
-        id: "searchInput",
+        id: generateId("searchInput"),
         name: "query",
         type: "text",
         layout: "icon",
@@ -53,22 +28,18 @@ export class SearchObject {
         placeholder: cfg.placeholder ?? "Search…",
         icon: { iconClass: "fa-solid fa-magnifying-glass" },
         className: "form-control",
+        iconGroupClass: cfg.iconGroupClass ?? "",
       });
     }
 
-    // Behaviour tuning
     this.minChars =
       typeof cfg.minChars === "number" && cfg.minChars >= 0 ? cfg.minChars : 2;
 
     this.debounceMs =
-      typeof cfg.debounceMs === "number" && cfg.debounceMs >= 0
-        ? cfg.debounceMs
-        : 400;
+      typeof cfg.debounceMs === "number" && cfg.debounceMs >= 0 ? cfg.debounceMs : 400;
 
-    // Results (injected from server by parent)
     this.results = Array.isArray(cfg.results) ? cfg.results : [];
 
-    // How to map a result object → UI (id / label / description / icon)
     const defaultResultConfig = {
       idKey: "id",
       labelKey: "label",
@@ -86,40 +57,9 @@ export class SearchObject {
 /* -------------------------------------------------------
  * AlloySearch (view)
  *
- * Emits:
- *   1) Debounced query:
- *      {
- *        id: search.id,
- *        type: "search-bar",
- *        action: "search",
- *        error: false,
- *        data: { [fieldName]: "query text" }
- *      }
- *
- *   1b) Clear:
- *      {
- *        id: search.id,
- *        type: "search-bar",
- *        action: "clear",
- *        error: false,
- *        data: { [fieldName]: "" }
- *      }
- *
- *   2) Result selection:
- *      {
- *        id: search.id,
- *        type: "search-bar",
- *        action: "select",
- *        error: false,
- *        data: {
- *          [fieldName]: "current query text",
- *          result: <raw result object or string>
- *        }
- *      }
- *
- * NOTE:
- *   - Component does NOT call HTTP. Parent listens for "search"/"clear",
- *     calls server, and re-renders with updated `results`.
+ * Emits ONLY:
+ *   - action: "search" (debounced, >= minChars)
+ *   - action: "clear"  (immediate, ONLY when crossing from >= minChars to < minChars)
  * ----------------------------------------------------- */
 export function AlloySearch({ search, output }) {
   if (!search || !(search instanceof SearchObject)) {
@@ -132,54 +72,100 @@ export function AlloySearch({ search, output }) {
 
   const inputName = search.search?.name ?? "query";
 
-  /* ----------------- Local state (live query) ----------------- */
-
   const [liveValue, setLiveValue] = useState(() => {
-    return typeof search.search?.value !== "undefined"
-      ? String(search.search.value)
-      : "";
+    return typeof search.search?.value !== "undefined" ? String(search.search.value) : "";
   });
 
-  // When parent swaps SearchObject (e.g. different screen), sync value
+  const didMountRef = useRef(false);
+  const timerRef = useRef(null);
+
+  // Tracks whether we were previously in "search mode" (>= minChars)
+  const wasAboveRef = useRef(false);
+
+  // Dedupe: last debounced search text
+  const lastSearchTextRef = useRef("");
+
+  // Reset when the SearchObject identity changes (screen swap)
   useEffect(() => {
     const v =
-      typeof search.search?.value !== "undefined"
-        ? String(search.search.value)
-        : "";
-    setLiveValue(v);
-  }, [search]);
+      typeof search.search?.value !== "undefined" ? String(search.search.value) : "";
 
-  /* ----------------- Debounced search + clear emission ----------------- */
+    setLiveValue(v);
+
+    didMountRef.current = false;
+    wasAboveRef.current = (v || "").trim().length >= search.minChars;
+    lastSearchTextRef.current = "";
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [search.id]); // IMPORTANT: do NOT depend on entire `search`
+
+  // Controlled input to avoid DOM wipes on rerender
+  const inputModel = useMemo(() => {
+    const base = search.search instanceof InputObject ? search.search : new InputObject(search.search || {});
+    return new InputObject({ ...base, value: liveValue });
+  }, [search.search, liveValue]);
 
   useEffect(() => {
-    const trimmed = (liveValue || "").trim();
-
-    // ✅ IMPORTANT: when cleared (or below minChars) emit "clear"
-    if (!trimmed || trimmed.length < search.minChars) {
-      const out = OutputObject.ok({
-        id: search.id,
-        type: "search-bar",
-        action: "clear",
-        data: { [inputName]: "" },
-      });
-      emit(out);
+    if (!didMountRef.current) {
+      didMountRef.current = true;
       return;
     }
 
-    const handle = setTimeout(() => {
-      const out = OutputObject.ok({
-        id: search.id,
-        type: "search-bar",
-        action: "search",
-        data: { [inputName]: trimmed },
-      });
-      emit(out);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    const trimmed = (liveValue || "").trim();
+    const minChars = search.minChars;
+
+    // BELOW threshold:
+    // ✅ Emit clear ONLY if we were previously above threshold (i.e., user deleted below threshold)
+    if (trimmed.length < minChars) {
+      if (wasAboveRef.current) {
+        wasAboveRef.current = false;
+        lastSearchTextRef.current = "";
+
+        emit(
+          OutputObject.ok({
+            id: search.id,
+            type: "search-bar",
+            action: "clear",
+            data: { [inputName]: "" },
+          })
+        );
+      }
+      return;
+    }
+
+    // ABOVE/EQUAL threshold: debounce search
+    wasAboveRef.current = true;
+
+    timerRef.current = setTimeout(() => {
+      if (lastSearchTextRef.current === trimmed) return;
+
+      lastSearchTextRef.current = trimmed;
+
+      emit(
+        OutputObject.ok({
+          id: search.id,
+          type: "search-bar",
+          action: "search",
+          data: { [inputName]: trimmed },
+        })
+      );
     }, search.debounceMs);
 
-    return () => clearTimeout(handle);
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [liveValue, search.id, search.minChars, search.debounceMs, inputName]);
-
-  /* ----------------- Handle inner input events ----------------- */
 
   const handleSearchOutput = (inputOut) => {
     if (!inputOut) return;
@@ -189,12 +175,24 @@ export function AlloySearch({ search, output }) {
         ? inputOut.toJSON()
         : inputOut;
 
-    const value = base?.data?.value;
-    setLiveValue(typeof value === "string" ? value : String(value ?? ""));
-    // NOTE: no emit here — effect above handles debounced search/clear.
-  };
+    const data = base?.data || {};
 
-  /* ----------------- Results mapping helpers ----------------- */
+    const hasDirect = Object.prototype.hasOwnProperty.call(data, inputName);
+
+    // Ignore events for other fields (prevents random clears from unrelated input events)
+    if (!hasDirect && typeof data.name === "string" && data.name && data.name !== inputName) {
+      return;
+    }
+
+    let next;
+
+    if (hasDirect) next = data[inputName];
+    else if (typeof data.value !== "undefined") next = data.value;
+    else if (typeof data.text !== "undefined") next = data.text;
+    else return; // ignore events that don't carry a usable value
+
+    setLiveValue(typeof next === "string" ? next : String(next ?? ""));
+  };
 
   const normalizedResults = useMemo(() => {
     const { resultConfig } = search;
@@ -215,11 +213,7 @@ export function AlloySearch({ search, output }) {
       const id = obj[idKey] ?? obj.id ?? obj.key ?? String(index);
 
       const label =
-        obj[labelKey] ??
-        obj.name ??
-        obj.title ??
-        obj.subject ??
-        JSON.stringify(obj);
+        obj[labelKey] ?? obj.name ?? obj.title ?? obj.subject ?? JSON.stringify(obj);
 
       const description = descriptionKey ? obj[descriptionKey] : "";
       const iconClass = iconKey && obj[iconKey] ? obj[iconKey] : "";
@@ -236,35 +230,16 @@ export function AlloySearch({ search, output }) {
 
   const hasResults = normalizedResults.length > 0;
 
-  /* ----------------- Result selection handler ----------------- */
-
   const handleResultClick = (resultItem) => {
-    const out = OutputObject.ok({
-      id: search.id,
-      type: "search-bar",
-      action: "select",
-      data: {
-        [inputName]: (liveValue || "").trim(),
-        result: resultItem.raw,
-      },
-    });
-
-    emit(out);
-
-    // ✅ Optional UX: clear the input after selecting a result
-    // If you DON'T want this behaviour, remove the next line.
-    setLiveValue("");
+    // No extra events. Just set value; debounced search will happen if >= minChars.
+    setLiveValue(resultItem?.label ?? "");
   };
-
-  /* ----------------- Render ----------------- */
 
   return (
     <div id={search.id} className={search.className}>
       <div className="col-12">
-        {/* Search input */}
-        <AlloyInput input={search.search} output={handleSearchOutput} />
+        <AlloyInput input={inputModel} output={handleSearchOutput} />
 
-        {/* Results list */}
         {hasResults && (
           <div className="mt-2">
             <ul className="list-group shadow-sm">

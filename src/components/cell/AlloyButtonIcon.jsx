@@ -8,7 +8,7 @@ import React, {
 } from "react";
 
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
-import { generateId, OutputObject } from "../../utils/idHelper.js";
+import { OutputObject, useDomId } from "../../utils/idHelper.js";
 
 /* -------------------------------------------
  * useActiveClass (same pattern as AlloyButton)
@@ -46,7 +46,7 @@ function useActiveClass(className = "", active = "") {
 /**
  * @typedef {Object} ButtonIconConfig
  * @property {string} [name]               - Optional. Visible label text. If missing → icon-only.
- * @property {string} [id]                 - Optional. DOM id. Auto-generated if missing.
+ * @property {string} [id]                 - Optional. DOM id. If omitted, stable id via useDomId().
  * @property {string} [className]          - Optional. Base classes for <button>.
  * @property {string} [active]             - Optional. Classes added on hover/press/focus.
  * @property {boolean} [disabled]          - Optional. Defaults to false.
@@ -54,7 +54,8 @@ function useActiveClass(className = "", active = "") {
  * @property {string} [ariaLabel]          - Optional. Accessible name. Defaults to name or "icon button".
  * @property {number} [tabIndex]           - Optional. Tab index override.
  *
- * @property {{iconClass:string, id?:string}} icon  - Required. Passed to IconObject.
+ * @property {IconObject|{iconClass:string,id?:string,className?:string,styleName?:string}} icon
+ *                                          - Required. Passed to IconObject.
  *
  * @property {(e:any, self:ButtonIconObject)=>void} [onClick]
  * @property {(e:any, self:ButtonIconObject)=>void} [onKeyDown]
@@ -73,7 +74,9 @@ export class ButtonIconObject {
       throw new Error("ButtonIconObject requires `icon`.");
     }
 
-    this.id = btn.id ?? generateId("btn-icon");
+    // IMPORTANT: do not generate random ids here (Next SSR/CSR safe)
+    this.id = btn.id;
+
     this.name = btn.name; // optional
 
     this.className = btn.className ?? "btn btn-primary";
@@ -85,9 +88,8 @@ export class ButtonIconObject {
     this.ariaLabel = btn.ariaLabel ?? fallbackLabel;
     this.tabIndex = btn.tabIndex;
 
-    // icon as IconObject
-    this.icon =
-      btn.icon instanceof IconObject ? btn.icon : new IconObject(btn.icon);
+    // icon as IconObject (supports updated IconObject fields like className)
+    this.icon = btn.icon instanceof IconObject ? btn.icon : new IconObject(btn.icon);
 
     // optional per-event callbacks
     this.onClick = btn.onClick;
@@ -103,9 +105,8 @@ export class ButtonIconObject {
 /* -------------------------------------------
  * AlloyButtonIcon
  *
- * IMPORTANT: Only emits OutputObject on:
+ * ✅ Emits OutputObject ONLY on:
  *  - click
- *  - keydown
  * ----------------------------------------- */
 export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
   { buttonIcon, output },
@@ -118,8 +119,10 @@ export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
   }
 
   const elRef = useRef(null);
-  const autoId = useRef(buttonIcon.id);
   const isDisabled = buttonIcon.disabled;
+
+  // SSR/CSR stable DOM id (or provided)
+  const domId = useDomId("btn-icon", buttonIcon.id);
 
   const { className, events } = useActiveClass(
     buttonIcon.className,
@@ -151,14 +154,16 @@ export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
       // 1) internal active-class tracking
       alsoCallInternal?.(e);
 
-      // 2) normalized OutputObject for parent (only for click / keydown)
+      // 2) normalized OutputObject for parent (ONLY click emits)
       if (shouldEmit && typeof output === "function") {
+        const eventName = buttonIcon.name || buttonIcon.title;
+
         const out = OutputObject.ok({
-          id: buttonIcon.id,
+          id: domId,
           type: "button-icon",
           action,
           data: {
-            name: buttonIcon.name,
+            name: eventName,
           },
         });
 
@@ -170,19 +175,15 @@ export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
     };
 
   const mergedEvents = {
-    // EMIT
+    // ✅ EMIT ONLY CLICK
     onClick: emitThen(buttonIcon.onClick, undefined, "click", true),
-    onKeyDown: emitThen(
-      buttonIcon.onKeyDown,
-      events.onFocus,
-      "keydown",
-      true
-    ),
 
     // NO EMIT – just state + model handler
+    onKeyDown: emitThen(buttonIcon.onKeyDown, undefined, "keydown", false),
     onKeyUp: emitThen(buttonIcon.onKeyUp, undefined, "keyup", false),
     onFocus: emitThen(buttonIcon.onFocus, events.onFocus, "focus", false),
     onBlur: emitThen(buttonIcon.onBlur, events.onBlur, "blur", false),
+
     onMouseEnter: emitThen(
       buttonIcon.onMouseEnter,
       events.onMouseEnter,
@@ -201,7 +202,7 @@ export const AlloyButtonIcon = forwardRef(function AlloyButtonIcon(
 
   return (
     <button
-      id={autoId.current}
+      id={domId}
       ref={elRef}
       type="button"
       className={className}

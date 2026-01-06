@@ -2,76 +2,95 @@
 import React, { useMemo, useRef, useState } from "react";
 import { AlloyButtonIcon, ButtonIconObject } from "../../../src";
 
-const DEFAULT_INPUT = JSON.stringify(
-  {
-    id: "alloyBtnIcon01",
-    name: "Sync", // remove this to see icon-only
-    className: "btn btn-primary",
-    active: "active",
-    disabled: false,
-    ariaLabel: "Sync now",
-    tabIndex: 0,
-    icon: { iconClass: "fa-solid fa-rotate" } // will be wrapped into IconObject automatically
+const DEFAULT_INPUT_OBJ = {
+  id: "alloyBtnIcon01", // optional; stable via useDomId() if omitted
+  name: "Sync", // remove this to see icon-only (event will use `title`)
+  title: "Sync", // used as fallback event name when `name` is missing (also tooltip)
+  className: "btn btn-primary",
+  active: "active",
+  disabled: false,
+  ariaLabel: "Sync now",
+  tabIndex: 0,
+
+  // ButtonIcon -> AlloyIcon (icon wrapper styling supported)
+  icon: {
+    iconClass: "fa-solid fa-rotate",
+    className:
+      "d-inline-flex align-items-center justify-content-center bg-light rounded-circle p-2",
   },
-  null,
-  2
-);
+};
+
+const DEFAULT_INPUT = JSON.stringify(DEFAULT_INPUT_OBJ, null, 2);
 
 export default function ButtonIconPage() {
   const [inputJson, setInputJson] = useState(DEFAULT_INPUT);
   const [parseError, setParseError] = useState("");
   const [outputJson, setOutputJson] = useState(
-    "// Interact with the button to see events here…"
+    "// Click the button to see output here…"
   );
+
   const btnRef = useRef(null);
+
+  // Keep last valid parsed object so preview stays stable while typing invalid JSON
+  const [parsed, setParsed] = useState(DEFAULT_INPUT_OBJ);
+
+  function handleInputChange(e) {
+    const val = e.target.value;
+    setInputJson(val);
+
+    try {
+      const obj = JSON.parse(val || "{}");
+      if (!obj || typeof obj !== "object")
+        throw new Error("JSON must be an object.");
+      setParsed(obj);
+      setParseError("");
+    } catch (err) {
+      setParseError(err.message || "Invalid JSON.");
+      // keep last valid parsed
+    }
+  }
 
   // Parse user JSON -> build a safe ButtonIconObject model.
   const model = useMemo(() => {
     try {
-      const raw = JSON.parse(inputJson || "{}");
-      setParseError("");
-
-      // ButtonIconObject constructor will:
-      // - validate that `icon` exists
-      // - wrap raw.icon in IconObject if needed
-      // - generate id if missing
-      // - default ariaLabel/title if missing
-      return new ButtonIconObject(raw);
-    } catch (e) {
-      setParseError(String(e.message || e));
-
+      const safe = parsed && typeof parsed === "object" ? parsed : {};
+      return new ButtonIconObject(safe);
+    } catch {
       // Fallback model so preview never crashes
       return new ButtonIconObject({
-        name: "Invalid JSON",
+        name: "Invalid config",
         className: "btn btn-secondary",
         disabled: true,
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" }
+        icon: {
+          iconClass: "fa-solid fa-triangle-exclamation",
+          className:
+            "d-inline-flex align-items-center justify-content-center bg-light rounded-circle p-2",
+        },
       });
     }
-  }, [inputJson]);
+  }, [parsed]);
 
-  // Global output hook for AlloyButtonIcon
-  // Receives a single OutputObject instance
+  // Global output hook for AlloyButtonIcon (ONLY on click)
   function handleOutput(out) {
-    const payload =
-      out && typeof out.toJSON === "function" ? out.toJSON() : out;
-
+    const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
   function handleReset() {
     setInputJson(DEFAULT_INPUT);
-    setOutputJson("// Interact with the button to see events here…");
+    setParsed(DEFAULT_INPUT_OBJ);
+    setOutputJson("// Click the button to see output here…");
     setParseError("");
   }
 
   function handleFormat() {
     try {
-      const parsed = JSON.parse(inputJson);
-      setInputJson(JSON.stringify(parsed, null, 2));
+      const obj = JSON.parse(inputJson);
+      setInputJson(JSON.stringify(obj, null, 2));
+      setParsed(obj);
+      setParseError("");
     } catch {
-      // ignore if user JSON is currently invalid;
-      // parseError UI already handles telling them
+      // ignore
     }
   }
 
@@ -93,15 +112,13 @@ export default function ButtonIconPage() {
       {/* Row 2 — Live ButtonIcon Preview */}
       <div className="row mb-4">
         <div className="col-12 text-center">
-          <AlloyButtonIcon
-            ref={btnRef}
-            buttonIcon={model}
-            output={handleOutput}
-          />
+          <AlloyButtonIcon ref={btnRef} buttonIcon={model} output={handleOutput} />
           <div className="small text-secondary mt-2">
-            If <code>name</code> is missing ⇒ icon-only button. All events emit
-            an <code>OutputObject</code> with{" "}
-            <code>{`{ id, type: "button-icon", action, error, data: { name } }`}</code>.
+            If <code>name</code> is missing ⇒ icon-only button (no visible label).{" "}
+            On click, output sends <code>data.name</code> as{" "}
+            <code>name</code> if present, otherwise <code>title</code>.{" "}
+            <strong>Only click emits</strong> an <code>OutputObject</code>:{" "}
+            <code>{`{ id, type: "button-icon", action: "click", error, data: { name } }`}</code>.
           </div>
         </div>
       </div>
@@ -151,19 +168,27 @@ export default function ButtonIconPage() {
             }`}
             rows={18}
             value={inputJson}
-            onChange={(e) => setInputJson(e.target.value)}
+            onChange={handleInputChange}
             spellCheck={false}
           />
           {parseError && (
             <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
+
           <div className="form-text">
-            <code>icon</code> is required. <code>name</code> is optional.
+            Required: <code>icon.iconClass</code>. Optional: <code>name</code>,{" "}
+            <code>id</code>, <code>className</code>, <code>active</code>,{" "}
+            <code>disabled</code>, <code>title</code>, <code>ariaLabel</code>,{" "}
+            <code>tabIndex</code>.
             <br />
-            <code>id</code> is optional — it will auto-generate if missing.
+            For icon-only buttons, set <code>title</code> so the click event has a
+            reliable identifier (used when <code>name</code> is missing).
             <br />
-            <code>title</code> and <code>ariaLabel</code> default to{" "}
-            <code>name</code> (or <code>"icon button"</code> if no name).
+            If you omit <code>id</code>, the component generates a stable one via{" "}
+            <code>useDomId()</code> (SSR-safe).
+            <br />
+            Icon wrapper styling: <code>icon.className</code> (applied to the
+            wrapper <code>{"<span>"}</code> inside <code>AlloyIcon</code>).
           </div>
         </div>
 
@@ -189,10 +214,14 @@ export default function ButtonIconPage() {
             onChange={(e) => setOutputJson(e.target.value)}
             spellCheck={false}
           />
+
           <div className="form-text">
-            Output is an <code>OutputObject</code>:
+            Output is an <code>OutputObject</code> (only on click):
             <br />
-            <code>{`{ id, type, action, error, data: { name } }`}</code>.
+            <code>{`{ id, type, action, error, data: { name } }`}</code>
+            <br />
+            Where <code>data.name</code> = <code>name</code> (if provided) else{" "}
+            <code>title</code>.
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+// pages/Cell/ButtonSubmit.jsx
 import React, { useMemo, useRef, useState } from "react";
 import { AlloyButtonSubmit, ButtonSubmitObject } from "../../../src";
 
@@ -10,7 +11,11 @@ const DEFAULT_INPUT_OBJ = {
   loading: false,
   ariaLabel: "Submit form",
   tabIndex: 0,
-  icon: { iconClass: "fa-solid fa-spinner fa-spin" }
+  icon: {
+    iconClass: "fa-solid fa-spinner fa-spin",
+    // NEW: AlloyIcon now supports wrapper styling via icon.className (span wrapper)
+    className: "d-inline-flex align-items-center justify-content-center",
+  },
 };
 
 const DEFAULT_INPUT = JSON.stringify(DEFAULT_INPUT_OBJ, null, 2);
@@ -24,56 +29,71 @@ export default function ButtonSubmitPage() {
 
   const btnRef = useRef(null);
 
-  // Build ButtonSubmitObject from JSON (or safe fallback if invalid)
+  // Keep last valid parsed object so preview stays stable while typing invalid JSON
+  const [parsed, setParsed] = useState(DEFAULT_INPUT_OBJ);
+
+  function handleInputChange(e) {
+    const val = e.target.value;
+    setInputJson(val);
+
+    try {
+      const obj = JSON.parse(val || "{}");
+      if (!obj || typeof obj !== "object") throw new Error("JSON must be an object.");
+      setParsed(obj);
+      setParseError("");
+    } catch (err) {
+      setParseError(err.message || "Invalid JSON.");
+      // keep last valid parsed
+    }
+  }
+
+  // Build ButtonSubmitObject from parsed (PURE memo)
   const model = useMemo(() => {
     try {
-      const raw = JSON.parse(inputJson || "{}");
-      setParseError("");
-      return new ButtonSubmitObject(raw);
-    } catch (e) {
-      setParseError(String(e.message || e));
+      const safe = parsed && typeof parsed === "object" ? parsed : {};
+      return new ButtonSubmitObject(safe);
+    } catch {
+      // Safe fallback so preview never crashes (no setState here)
       return new ButtonSubmitObject({
         name: "Invalid",
         className: "btn btn-secondary",
         disabled: true,
         loading: false,
-        icon: { iconClass: "fa-solid fa-triangle-exclamation" }
+        icon: {
+          iconClass: "fa-solid fa-triangle-exclamation",
+          className: "d-inline-flex align-items-center justify-content-center",
+        },
       });
     }
-  }, [inputJson]);
+  }, [parsed]);
 
   // Called by AlloyButtonSubmit on click / mousedown / keydown
   function handleOutput(out) {
     const payload =
       out && typeof out.toJSON === "function" ? out.toJSON() : out || {};
-
     setOutputJson(JSON.stringify(payload, null, 2));
   }
 
-  // Reset demo
   function doReset() {
     setInputJson(DEFAULT_INPUT);
+    setParsed(DEFAULT_INPUT_OBJ);
     setOutputJson("// Interact with the submit button to see OutputObject here…");
     setParseError("");
   }
 
-  // Programmatically trigger the same path as a user click
   function triggerClick() {
     const api = btnRef.current;
     if (!api) return;
-
-    if (typeof api.click === "function") {
-      api.click();
-    } else if (api.el && typeof api.el.click === "function") {
-      api.el.click();
-    }
+    if (typeof api.click === "function") api.click();
+    else if (api.el && typeof api.el.click === "function") api.el.click();
   }
 
-  // Pretty-print the JSON editor content
   function handleFormat() {
     try {
-      const parsed = JSON.parse(inputJson);
-      setInputJson(JSON.stringify(parsed, null, 2));
+      const obj = JSON.parse(inputJson);
+      setInputJson(JSON.stringify(obj, null, 2));
+      setParsed(obj);
+      setParseError("");
     } catch {
       // ignore - parseError already visible
     }
@@ -110,15 +130,9 @@ export default function ButtonSubmitPage() {
           </form>
 
           <div className="small text-secondary mt-2">
-            Events that arm the button: <code>mousedown</code>,{" "}
-            <code>keydown</code> (<code>Enter</code>/<code>Space</code>),{" "}
-            <code>click</code>.
-            <br />
-            On arm, <code>output</code> receives an{" "}
-            <code>OutputObject</code>{" "}
-            {`{ id, type, action, error, errorMessage, data }`}, where{" "}
-            <code>data</code> only includes the provided fields (e.g.{" "}
-            <code>name</code>).
+            Arms on: <code>mousedown</code>, <code>keydown</code> (<code>Enter</code>/<code>Space</code>),{" "}
+            <code>click</code>. While armed/loading, the spinner icon is shown and the button is disabled
+            until parent sets <code>loading:false</code> again.
           </div>
         </div>
       </div>
@@ -146,10 +160,7 @@ export default function ButtonSubmitPage() {
                 onClick={handleFormat}
                 title="Prettify JSON"
               >
-                <i
-                  className="fa-solid fa-wand-magic-sparkles me-2"
-                  aria-hidden="true"
-                />
+                <i className="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true" />
                 Format
               </button>
 
@@ -165,25 +176,24 @@ export default function ButtonSubmitPage() {
           </div>
 
           <textarea
-            className={`form-control font-monospace ${
-              parseError ? "is-invalid" : ""
-            }`}
+            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
             rows={18}
             value={inputJson}
-            onChange={(e) => setInputJson(e.target.value)}
+            onChange={handleInputChange}
             spellCheck={false}
             placeholder={DEFAULT_INPUT}
           />
           {parseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {parseError}
-            </div>
+            <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
 
           <div className="form-text">
-            <strong>Required:</strong>{" "}
-            <code>name</code>, <code>icon</code>. The element is always{" "}
-            <code>type="submit"</code>.
+            <strong>Required:</strong> <code>name</code>, <code>icon.iconClass</code>.{" "}
+            <strong>Optional:</strong> <code>id</code>, <code>className</code>, <code>disabled</code>,{" "}
+            <code>loading</code>, <code>title</code>, <code>ariaLabel</code>, <code>tabIndex</code>.
+            <br />
+            <strong>Icon wrapper styling:</strong> use <code>icon.className</code> (applies to the icon’s
+            wrapping <code>&lt;span&gt;</code> inside <code>AlloyIcon</code>).
           </div>
         </div>
 
@@ -198,9 +208,7 @@ export default function ButtonSubmitPage() {
               type="button"
               className="btn btn-sm btn-outline-danger"
               onClick={() =>
-                setOutputJson(
-                  "// Interact with the submit button to see OutputObject here…"
-                )
+                setOutputJson("// Interact with the submit button to see OutputObject here…")
               }
             >
               Clear
@@ -215,9 +223,9 @@ export default function ButtonSubmitPage() {
             spellCheck={false}
             placeholder='// { "id": "btnSubmit01", "type": "button-submit", "action": "click", "error": false, "data": { "name": "Save" } }'
           />
+
           <div className="form-text">
             Only real events from <code>AlloyButtonSubmit</code> appear here.
-            No more synthetic <code>trigger-loading</code> entries.
           </div>
         </div>
       </div>

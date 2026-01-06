@@ -8,6 +8,7 @@ export { AlloyButtonSubmit, ButtonSubmitObject } from "./components/cell/AlloyBu
 export { AlloyInput, InputObject } from "./components/cell/AlloyInput.jsx";
 export { AlloySearch, SearchObject } from "./components/cell/AlloySearch.jsx";
 export { AlloyLoading, LoadingObject } from "./components/cell/AlloyLoading.jsx";
+export { AlloyMedia, MediaObject } from "./components/cell/AlloyMedia.jsx";
 
 export { AlloyLinkBar, LinkBarObject } from "./components/tissue/AlloyLinkBar.jsx"
 export { AlloyButtonBar, ButtonBarObject } from "./components/tissue/AlloyButtonBar.jsx"
@@ -21,6 +22,7 @@ export { AlloyPagination, PaginationObject } from "./components/tissue/AlloyPagi
 export { AlloyCarousel, CarouselObject } from "./components/tissue/AlloyCarousel.jsx"
 export { AlloyImage, ImageObject } from "./components/tissue/AlloyImage.jsx"
 export { AlloyVideo, VideoObject } from "./components/tissue/AlloyVideo.jsx"
+export { AlloyProductAction, ProductActionObject } from "./components/tissue/AlloyProductAction.jsx"
 
 export { AlloyTabForm, TabFormObject, TabObject } from "./components/organ/AlloyTabForm.jsx"
 export { AlloyModal, ModalObject } from "./components/tissue/AlloyModal.jsx"
@@ -39,3 +41,5 @@ export { AlloySignup, SignupObject } from "./components/organ/AlloySignup.jsx"
 export { AlloyCrudForm, CrudFormObject } from "./components/organ/AlloyCrudForm.jsx"
 export { AlloyForget, ForgetObject } from "./components/organ/AlloyForget.jsx"
 export { AlloyPost, PostObject } from "./components/organ/AlloyPost.jsx"
+export { AlloyMarquee, MarqueeObject } from "./components/organ/AlloyMarquee.jsx"
+export { AlloyMosaic, MosaicObject } from "./components/organ/AlloyMosaic.jsx"

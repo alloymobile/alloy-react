@@ -65,21 +65,16 @@ export class CardObject {
     // header (optional)
     const rawHeader = card.header ?? {};
     this.header =
-      rawHeader instanceof BlockObject
-        ? rawHeader
-        : new BlockObject(rawHeader);
+      rawHeader instanceof BlockObject ? rawHeader : new BlockObject(rawHeader);
 
     // body (required)
     const rawBody = card.body ?? {};
-    this.body =
-      rawBody instanceof BlockObject ? rawBody : new BlockObject(rawBody);
+    this.body = rawBody instanceof BlockObject ? rawBody : new BlockObject(rawBody);
 
     // fields (required, at least 1)
     const rawFields = Array.isArray(card.fields) ? card.fields : [];
     if (rawFields.length === 0) {
-      throw new Error(
-        "CardObject requires at least one field in `fields`."
-      );
+      throw new Error("CardObject requires at least one field in `fields`.");
     }
     this.fields = rawFields.map((f) =>
       f instanceof BlockObject ? f : new BlockObject(f || {})
@@ -88,9 +83,7 @@ export class CardObject {
     // footer (optional)
     const rawFooter = card.footer ?? {};
     this.footer =
-      rawFooter instanceof BlockObject
-        ? rawFooter
-        : new BlockObject(rawFooter);
+      rawFooter instanceof BlockObject ? rawFooter : new BlockObject(rawFooter);
   }
 }
 
@@ -156,6 +149,18 @@ export function AlloyCard({ card }) {
                 ) : field.hasIcon() ? (
                   // Icon-only field
                   <AlloyIcon icon={field.icon} />
+                ) : field.hasTags && field.hasTags() ? (
+                  // Tags-only field (vertical stack)
+                  <div className="d-flex flex-column gap-1">
+                    {field.tags.map((t) => {
+                      if (!t || !t.name || !t.name.trim()) return null;
+                      return (
+                        <div key={t.id} id={t.id} className={t.className}>
+                          {t.name}
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : field.hasText() ? (
                   // Text-only field
                   <span>{field.name}</span>

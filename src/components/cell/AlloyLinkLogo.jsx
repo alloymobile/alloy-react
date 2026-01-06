@@ -1,12 +1,8 @@
-import React, { useMemo, useRef, useState } from "react";
-import { generateId } from "../../utils/idHelper.js";
+import React, { useMemo, useState } from "react";
+import { useDomId } from "../../utils/idHelper.js";
 
 /* -------------------------------------------
  * Hook: useActiveClassLogo
- *
- * Same pattern as useActiveClass / useActiveClassIcon:
- * returns merged className and a bundle of event handlers
- * based on hover / press / focus.
  * ----------------------------------------- */
 function useActiveClassLogo(className = "", active = "") {
   const [hovered, setHovered] = useState(false);
@@ -34,80 +30,55 @@ function useActiveClassLogo(className = "", active = "") {
   };
 }
 
-/* -------------------------------------------
- * LinkLogoObject
- *
- * Data model for AlloyLinkLogo.
- * This is "link + brand image (logo)" instead of icon/font.
- *
- * It:
- *  - validates required fields (href, logo)
- *  - ensures it always has an id
- *  - normalizes defaults
- *  - provides fallback for title
- *
- * After construction, AlloyLinkLogo can trust it.
- * ----------------------------------------- */
-
 /**
  * @typedef {Object} LinkLogoConfig
- * @property {string} href                        - Required. Destination URL/path.
- * @property {string} logo                        - Required. <img src="..."> URL.
- * @property {string} [id]                        - Optional. DOM id. Auto-generated if missing.
- * @property {string} [name]                      - Optional. Visible label text after the logo.
- * @property {number|string} [width]              - Optional. Logo width (px, number, etc.).
- * @property {number|string} [height]             - Optional. Logo height.
- * @property {string} [logoAlt]                   - Optional. alt text for the <img>. Defaults to name.
- * @property {string} [className]                 - Optional. Base classes for <a>.
- * @property {string} [active]                    - Optional. Classes applied on hover/press/focus.
- * @property {string} [target]                    - Optional. e.g. "_blank".
- * @property {string} [rel]                       - Optional. e.g. "nofollow".
- * @property {(e:any)=>void} [onClick]            - Optional. Custom click handler
- *                                                  (preventDefault()+navigate(), analytics, etc.).
- * @property {string} [title]                     - Optional. Tooltip text. Defaults to `name`.
+ * @property {string} href
+ * @property {string} logo
+ * @property {string} [id]
+ * @property {string} [name]
+ * @property {number|string} [width]
+ * @property {number|string} [height]
+ * @property {string} [logoAlt]
+ * @property {string} [className]
+ * @property {string} [active]
+ * @property {string} [target]
+ * @property {string} [rel]
+ * @property {(e:any)=>void} [onClick]
+ * @property {string} [title]
+ * @property {string} [ariaLabel]   - Optional: for logo-only links
  */
 export class LinkLogoObject {
-  /**
-   * @param {LinkLogoConfig} linkLogo
-   */
   constructor(linkLogo = {}) {
-    if (!linkLogo.href) {
-      throw new Error("LinkLogoObject requires `href`.");
-    }
-    if (!linkLogo.logo) {
-      throw new Error("LinkLogoObject requires `logo`.");
-    }
+    if (!linkLogo.href) throw new Error("LinkLogoObject requires `href`.");
+    if (!linkLogo.logo) throw new Error("LinkLogoObject requires `logo`.");
 
-    this.id = linkLogo.id ?? generateId("link-logo");
+    // IMPORTANT: no generateId here (SSR-safe pattern)
+    this.id = linkLogo.id;
+
     this.name = linkLogo.name;
     this.href = linkLogo.href;
     this.logo = linkLogo.logo;
     this.width = linkLogo.width;
     this.height = linkLogo.height;
+
+    // alt text: prefer explicit alt, else name, else empty
     this.logoAlt = linkLogo.logoAlt ?? linkLogo.name ?? "";
+
     this.className = linkLogo.className ?? "nav-link";
     this.active = linkLogo.active ?? "";
     this.target = linkLogo.target;
     this.rel = linkLogo.rel;
     this.onClick = linkLogo.onClick;
-    this.title = linkLogo.title ?? linkLogo.name;
+
+    // better defaults
+    this.title = linkLogo.title ?? linkLogo.name ?? linkLogo.href;
+    this.ariaLabel =
+      linkLogo.ariaLabel ?? linkLogo.title ?? linkLogo.name ?? "Link";
   }
 }
 
 /* -------------------------------------------
- * AlloyLinkLogo
- *
- * Props:
- *   { linkLogo: LinkLogoObject }
- *
- * Renders an <a> with:
- *   - a logo <img />
- *   - optional text label right after the logo
- *
- * Behavior:
- *   - className changes on hover/press/focus via useActiveClassLogo
- *   - "noopener noreferrer" is auto-added for target="_blank"
- *   - onClick is passed through for custom logic (navigate(), analytics, etc.)
+ * AlloyLinkLogo (React)
  * ----------------------------------------- */
 export function AlloyLinkLogo({ linkLogo }) {
   if (!linkLogo || !(linkLogo instanceof LinkLogoObject)) {
@@ -116,16 +87,11 @@ export function AlloyLinkLogo({ linkLogo }) {
     );
   }
 
-  // Keep the id stable across re-renders
-  const autoId = useRef(linkLogo.id);
-
-  // Build visual state classes + event handlers
   const { className, events } = useActiveClassLogo(
     linkLogo.className,
     linkLogo.active
   );
 
-  // Safe rel behavior for external targets
   const safeRel =
     linkLogo.target === "_blank"
       ? linkLogo.rel
@@ -135,27 +101,29 @@ export function AlloyLinkLogo({ linkLogo }) {
 
   const hasLabel = Boolean(linkLogo.name);
 
+  // stable id (or provided id)
+  const domId = useDomId("link-logo", linkLogo.id);
+
   return (
     <a
-      id={autoId.current}
+      id={domId}
       href={linkLogo.href}
       className={className}
       target={linkLogo.target}
       rel={safeRel}
       onClick={linkLogo.onClick}
       title={linkLogo.title}
+      aria-label={hasLabel ? undefined : linkLogo.ariaLabel}
       {...events}
     >
-      <span className="d-inline-flex align-items-center">
-        <img
-          src={linkLogo.logo}
-          alt={linkLogo.logoAlt || linkLogo.name || ""}
-          width={linkLogo.width}
-          height={linkLogo.height}
-          style={{ display: "inline-block" }}
-        />
-        {hasLabel && <span className="px-1">{linkLogo.name}</span>}
-      </span>
+      <img
+        src={linkLogo.logo}
+        alt={linkLogo.logoAlt || linkLogo.name || ""}
+        width={linkLogo.width}
+        height={linkLogo.height}
+        style={{ display: "inline-block" }}
+      />
+      {hasLabel && <span className="px-1">{linkLogo.name}</span>}
     </a>
   );
 }

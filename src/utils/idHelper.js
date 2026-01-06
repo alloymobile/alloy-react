@@ -1,5 +1,28 @@
 // src/utils/idHelper.js
 import { IconObject } from "../components/cell/AlloyIcon.jsx";
+import { useId, useMemo } from "react";
+
+/**
+ * SSR/CSR-consistent DOM id.
+ * - If providedId exists, return it.
+ * - Otherwise generate a stable id using React's useId().
+ *
+ * Usage:
+ *   const id = useDomId("icon", icon.id);
+ */
+export function useDomId(prefix = "id", providedId) {
+  const rid = useId();
+
+  return useMemo(() => {
+    if (typeof providedId === "string" && providedId.trim() !== "") return providedId.trim();
+
+    // React useId() may include ":"; it's valid in HTML, but we can clean it
+    const clean = String(rid).replace(/[:]/g, "");
+    return `${prefix}-${clean}`;
+  }, [prefix, providedId, rid]);
+}
+
+
 
 /**
  * Generate a unique ID string with a given prefix.
@@ -208,6 +231,7 @@ export class LogoObject {
  *      - text (name)
  *      - icon + text (IconObject)
  *      - logo (LogoObject)
+ *      - tags stack (TagObject[])
  *  - layout:
  *      - colClass → outer column width
  *      - className → inner styling
@@ -222,6 +246,7 @@ export class BlockObject {
    *   - icon?: IconObject|{iconClass}
    *   - iconClass?: string         // shorthand
    *   - logo?: LogoObject|{imageUrl, alt, ...}
+   *   - tags?: TagObject[]|{id?:string,name?:string,className?:string}[]
    *   - ariaLabel?: string
    */
   constructor(block = {}) {
@@ -254,6 +279,12 @@ export class BlockObject {
         ? rawLogo
         : new LogoObject(rawLogo)
       : null;
+
+    // Tags (stacked lines)
+    const rawTags = Array.isArray(block.tags) ? block.tags : [];
+    this.tags = rawTags
+      .filter(Boolean)
+      .map((t) => (t instanceof TagObject ? t : new TagObject(t || {})));
   }
 
   hasLogo() {
@@ -262,6 +293,13 @@ export class BlockObject {
 
   hasIcon() {
     return !!this.icon;
+  }
+
+  hasTags() {
+    return (
+      Array.isArray(this.tags) &&
+      this.tags.some((t) => t && t.name && t.name.trim().length > 0)
+    );
   }
 
   hasText() {
