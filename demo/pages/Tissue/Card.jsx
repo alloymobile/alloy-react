@@ -2,7 +2,31 @@
 import React, { useMemo, useState } from "react";
 import { AlloyCard, CardObject } from "../../../src";
 
-/* ---------------------- Base demo card objects ---------------------- */
+/* ------------------------------------------------------------------
+   CardObject layout (uses BlockObject for all content blocks):
+
+   - card.id, .className
+   - layout: "single" (default) | "split"
+   - leftColClass, rightColClass (for split layout)
+
+   - header: BlockObject (optional)
+   - body:   BlockObject (container styling)
+
+   - leftFields: BlockObject[] (for split layout - left column)
+   - fields: BlockObject[] (REQUIRED, at least one)
+
+   - footer: BlockObject (optional)
+
+   BlockObject field types (priority order):
+     1. media      → AlloyMedia
+     2. logo       → <img>
+     3. icon       → AlloyIcon
+     4. tags       → vertical badge stack
+     5. quantity   → AlloyQuantity
+     6. buttonIcon → AlloyButtonIcon
+     7. linkIcon   → AlloyLinkIcon
+     8. name       → plain text
+------------------------------------------------------------------- */
 
 /** 1) Simple text-only card */
 const CARD_TEXT_ONLY = {
@@ -17,8 +41,7 @@ const CARD_TEXT_ONLY = {
 
   body: {
     id: "demoTextBody",
-    className: "card-body p-3",
-    name: "Text-only body"
+    className: "card-body p-3"
   },
 
   fields: [
@@ -49,7 +72,7 @@ const CARD_TEXT_ONLY = {
   }
 };
 
-/** 2) Card with icon + text (using separate fields) */
+/** 2) Card with icon + text */
 const CARD_ICON_TEXT = {
   id: "demoIconTextCard01",
   className: "card border m-2 shadow",
@@ -62,12 +85,10 @@ const CARD_ICON_TEXT = {
 
   body: {
     id: "demoIconTextBody",
-    className: "card-body p-3",
-    name: "Icon and text blocks"
+    className: "card-body p-3"
   },
 
   fields: [
-    // Row 1: icon in a small column + title in remaining width
     {
       id: "icon-user",
       colClass: "col-auto d-flex align-items-center",
@@ -80,8 +101,6 @@ const CARD_ICON_TEXT = {
       className: "fw-semibold fs-5 mb-1",
       name: "User Profile"
     },
-
-    // Row 2: description text
     {
       id: "icon-desc",
       colClass: "col-12",
@@ -110,36 +129,31 @@ const CARD_IMAGE_TEXT = {
 
   body: {
     id: "demoImageTextBody",
-    className: "card-body p-3",
-    name: "Logo and descriptive text"
+    className: "card-body p-3"
   },
 
   fields: [
-    // Row 1: full-width logo/image
     {
       id: "img-logo",
       colClass: "col-12",
       className: "mb-2",
       logo: {
-        imageUrl:
-          "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+        imageUrl: "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
         alt: "Alloymobile logo",
         className: "img-fluid d-block w-100 h-auto object-fit-contain rounded"
       }
     },
-    // Row 2: title
     {
       id: "img-title",
       colClass: "col-12",
       className: "fw-semibold fs-5 mb-1",
       name: "Alloymobile"
     },
-    // Row 3: description
     {
       id: "img-desc",
       colClass: "col-12",
       className: "small text-secondary",
-      name: "This card demonstrates how a field with a LogoObject is rendered as a responsive, non-bleeding image above supporting text."
+      name: "This card demonstrates how a field with a LogoObject is rendered as a responsive image above supporting text."
     }
   ],
 
@@ -150,7 +164,7 @@ const CARD_IMAGE_TEXT = {
   }
 };
 
-/** 4) Card with Tags stack (new feature) */
+/** 4) Card with Tags stack */
 const CARD_TAGS_STACK = {
   id: "demoTagsCard01",
   className: "card border m-2 shadow",
@@ -163,45 +177,28 @@ const CARD_TAGS_STACK = {
 
   body: {
     id: "demoTagsBody",
-    className: "card-body p-3",
-    name: "Layout: image left, stacked lines right"
+    className: "card-body p-3"
   },
 
   fields: [
-    // Left column: image
     {
       id: "tags-img",
       colClass: "col-4",
       className: "d-flex align-items-start",
       logo: {
-        imageUrl:
-          "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+        imageUrl: "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
         alt: "Alloymobile logo",
         className: "img-fluid rounded"
       }
     },
-
-    // Right column: stacked lines via tags[]
     {
       id: "tags-lines",
       colClass: "col-8",
       className: "d-flex flex-column",
       tags: [
-        {
-          id: "tags-title",
-          name: "Alloymobile",
-          className: "fw-semibold"
-        },
-        {
-          id: "tags-sub",
-          name: "Design system components",
-          className: "text-secondary small"
-        },
-        {
-          id: "tags-meta",
-          name: "Image left • 3 lines right (tags stack)",
-          className: "text-secondary small"
-        }
+        { id: "tags-title", name: "Alloymobile", className: "fw-semibold" },
+        { id: "tags-sub", name: "Design system components", className: "text-secondary small" },
+        { id: "tags-meta", name: "Image left • 3 lines right (tags stack)", className: "text-secondary small" }
       ]
     }
   ],
@@ -209,7 +206,281 @@ const CARD_TAGS_STACK = {
   footer: {
     id: "demoTagsFooter",
     className: "card-footer text-muted small",
-    name: "New: fields can render `tags` (TagObject[]) as a vertical stack."
+    name: "Fields can render `tags` (TagObject[]) as a vertical stack."
+  }
+};
+
+/** 5) NEW - Split Layout with Media */
+const CARD_SPLIT_MEDIA = {
+  id: "demoSplitMediaCard01",
+  className: "card border m-2 shadow",
+  layout: "split",
+  leftColClass: "col-12 col-sm-5",
+  rightColClass: "col-12 col-sm-7",
+
+  header: {
+    id: "demoSplitMediaHeader",
+    className: "card-header fw-semibold",
+    name: "Split Layout + Media"
+  },
+
+  body: {
+    id: "demoSplitMediaBody",
+    className: "card-body p-3"
+  },
+
+  leftFields: [
+    {
+      id: "productMedia",
+      colClass: "col-12",
+      media: {
+        name: "Product Gallery",
+        thumbSize: 56,
+        items: [
+          {
+            id: "img-1",
+            url: "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+            isPrimary: true
+          },
+          {
+            id: "img-2",
+            url: "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png"
+          }
+        ]
+      }
+    }
+  ],
+
+  fields: [
+    {
+      id: "prodTitle",
+      colClass: "col-12",
+      className: "fw-bold fs-5",
+      name: "Premium Widget Pro"
+    },
+    {
+      id: "prodDesc",
+      colClass: "col-12",
+      className: "text-muted small",
+      name: "Split layout places leftFields in left column and fields in right column."
+    },
+    {
+      id: "prodTags",
+      colClass: "col-12",
+      tags: [
+        { id: "tag-new", name: "New", className: "badge bg-success me-1" },
+        { id: "tag-featured", name: "Featured", className: "badge bg-primary" }
+      ]
+    }
+  ],
+
+  footer: {
+    id: "demoSplitMediaFooter",
+    className: "card-footer text-muted small",
+    name: "layout: 'split' with leftFields containing media"
+  }
+};
+
+/** 6) NEW - Quantity Field */
+const CARD_QUANTITY = {
+  id: "demoQuantityCard01",
+  className: "card border m-2 shadow",
+  layout: "split",
+  leftColClass: "col-4",
+  rightColClass: "col-8",
+
+  header: {
+    id: "demoQuantityHeader",
+    className: "card-header fw-semibold",
+    name: "Quantity Field"
+  },
+
+  body: {
+    id: "demoQuantityBody",
+    className: "card-body p-3"
+  },
+
+  leftFields: [
+    {
+      id: "itemImage",
+      colClass: "col-12",
+      logo: {
+        imageUrl: "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png",
+        alt: "Product",
+        className: "img-fluid rounded"
+      }
+    }
+  ],
+
+  fields: [
+    {
+      id: "itemName",
+      colClass: "col-12",
+      className: "fw-semibold",
+      name: "Widget Basic Edition"
+    },
+    {
+      id: "itemPrice",
+      colClass: "col-12",
+      className: "text-primary fw-bold mb-2",
+      name: "$29.99"
+    },
+    {
+      id: "itemQty",
+      colClass: "col-12",
+      quantity: {
+        name: "quantity",
+        label: "",
+        value: 1,
+        min: 1,
+        max: 10,
+        step: 1,
+        showRange: false
+      }
+    }
+  ],
+
+  footer: {
+    id: "demoQuantityFooter",
+    className: "card-footer text-muted small",
+    name: "Quantity field with AlloyQuantity component"
+  }
+};
+
+/** 7) NEW - ButtonIcon Fields */
+const CARD_BUTTON_ICON = {
+  id: "demoButtonIconCard01",
+  className: "card border m-2 shadow",
+
+  header: {
+    id: "demoButtonIconHeader",
+    className: "card-header fw-semibold",
+    name: "ButtonIcon Fields"
+  },
+
+  body: {
+    id: "demoButtonIconBody",
+    className: "card-body p-3"
+  },
+
+  fields: [
+    {
+      id: "docIcon",
+      colClass: "col-auto",
+      icon: { iconClass: "fa-solid fa-file-pdf fa-2x text-danger" }
+    },
+    {
+      id: "docTitle",
+      colClass: "col",
+      className: "fw-semibold",
+      name: "Annual Report 2024.pdf"
+    },
+    {
+      id: "btnFavorite",
+      colClass: "col-auto",
+      buttonIcon: {
+        icon: { iconClass: "fa-regular fa-heart" },
+        className: "btn btn-outline-danger btn-sm",
+        ariaLabel: "Favorite",
+        name: "favorite"
+      }
+    },
+    {
+      id: "btnDownload",
+      colClass: "col-auto",
+      buttonIcon: {
+        icon: { iconClass: "fa-solid fa-download" },
+        className: "btn btn-outline-primary btn-sm",
+        ariaLabel: "Download",
+        name: "download"
+      }
+    },
+    {
+      id: "btnDesc",
+      colClass: "col-12",
+      className: "text-muted small mt-2",
+      name: "ButtonIcon fields trigger actions via output callback."
+    }
+  ],
+
+  footer: {
+    id: "demoButtonIconFooter",
+    className: "card-footer text-muted small",
+    name: "Interactive buttonIcon fields in card body"
+  }
+};
+
+/** 8) NEW - LinkIcon Fields */
+const CARD_LINK_ICON = {
+  id: "demoLinkIconCard01",
+  className: "card border m-2 shadow",
+
+  header: {
+    id: "demoLinkIconHeader",
+    className: "card-header fw-semibold",
+    name: "LinkIcon Fields"
+  },
+
+  body: {
+    id: "demoLinkIconBody",
+    className: "card-body p-3"
+  },
+
+  fields: [
+    {
+      id: "projIcon",
+      colClass: "col-auto",
+      icon: { iconClass: "fa-solid fa-folder fa-2x text-warning" }
+    },
+    {
+      id: "projTitle",
+      colClass: "col",
+      className: "fw-semibold",
+      name: "Project Dashboard"
+    },
+    {
+      id: "linkView",
+      colClass: "col-auto",
+      linkIcon: {
+        to: "/projects/123",
+        icon: { iconClass: "fa-solid fa-eye" },
+        className: "btn btn-outline-secondary btn-sm",
+        ariaLabel: "View"
+      }
+    },
+    {
+      id: "linkEdit",
+      colClass: "col-auto",
+      linkIcon: {
+        to: "/projects/123/edit",
+        icon: { iconClass: "fa-solid fa-pen" },
+        className: "btn btn-outline-primary btn-sm",
+        ariaLabel: "Edit"
+      }
+    },
+    {
+      id: "linkExternal",
+      colClass: "col-auto",
+      linkIcon: {
+        to: "https://example.com",
+        icon: { iconClass: "fa-solid fa-external-link-alt" },
+        className: "btn btn-outline-dark btn-sm",
+        ariaLabel: "External",
+        target: "_blank"
+      }
+    },
+    {
+      id: "linkDesc",
+      colClass: "col-12",
+      className: "text-muted small mt-2",
+      name: "LinkIcon fields navigate to URLs. Use for routing or external links."
+    }
+  ],
+
+  footer: {
+    id: "demoLinkIconFooter",
+    className: "card-footer text-muted small",
+    name: "Navigation via linkIcon fields (no output callback)"
   }
 };
 
@@ -218,152 +489,136 @@ const DEFAULT_TEXT_ONLY_JSON = JSON.stringify(CARD_TEXT_ONLY, null, 2);
 const DEFAULT_ICON_TEXT_JSON = JSON.stringify(CARD_ICON_TEXT, null, 2);
 const DEFAULT_IMAGE_TEXT_JSON = JSON.stringify(CARD_IMAGE_TEXT, null, 2);
 const DEFAULT_TAGS_STACK_JSON = JSON.stringify(CARD_TAGS_STACK, null, 2);
+const DEFAULT_SPLIT_MEDIA_JSON = JSON.stringify(CARD_SPLIT_MEDIA, null, 2);
+const DEFAULT_QUANTITY_JSON = JSON.stringify(CARD_QUANTITY, null, 2);
+const DEFAULT_BUTTON_ICON_JSON = JSON.stringify(CARD_BUTTON_ICON, null, 2);
+const DEFAULT_LINK_ICON_JSON = JSON.stringify(CARD_LINK_ICON, null, 2);
 
-/* code snippet for docs */
-const TAG_SNIPPET = `<AlloyCard card={new CardObject(cardObject)} />`;
+/* code snippet */
+const TAG_SNIPPET = `<AlloyCard card={new CardObject(cardObject)} output={handleOutput} />`;
 
 export default function CardPage() {
-  // which tab are we looking at: "text" | "icontext" | "imagetext" | "tags"
+  const TABS = [
+    { key: "text", label: "Text Only" },
+    { key: "icontext", label: "Icon + Text" },
+    { key: "imagetext", label: "Image + Text" },
+    { key: "tags", label: "Tags" },
+    { key: "splitmedia", label: "Split + Media" },
+    { key: "quantity", label: "Quantity" },
+    { key: "buttonicon", label: "ButtonIcon" },
+    { key: "linkicon", label: "LinkIcon" }
+  ];
+
   const [activeTab, setActiveTab] = useState("text");
 
-  // each tab has its own editable JSON text
+  // JSON per tab
   const [jsonText, setJsonText] = useState(DEFAULT_TEXT_ONLY_JSON);
   const [jsonIconText, setJsonIconText] = useState(DEFAULT_ICON_TEXT_JSON);
   const [jsonImageText, setJsonImageText] = useState(DEFAULT_IMAGE_TEXT_JSON);
   const [jsonTags, setJsonTags] = useState(DEFAULT_TAGS_STACK_JSON);
+  const [jsonSplitMedia, setJsonSplitMedia] = useState(DEFAULT_SPLIT_MEDIA_JSON);
+  const [jsonQuantity, setJsonQuantity] = useState(DEFAULT_QUANTITY_JSON);
+  const [jsonButtonIcon, setJsonButtonIcon] = useState(DEFAULT_BUTTON_ICON_JSON);
+  const [jsonLinkIcon, setJsonLinkIcon] = useState(DEFAULT_LINK_ICON_JSON);
 
-  // each tab tracks its own parse error
+  // errors per tab
   const [errorText, setErrorText] = useState("");
   const [errorIconText, setErrorIconText] = useState("");
   const [errorImageText, setErrorImageText] = useState("");
   const [errorTags, setErrorTags] = useState("");
+  const [errorSplitMedia, setErrorSplitMedia] = useState("");
+  const [errorQuantity, setErrorQuantity] = useState("");
+  const [errorButtonIcon, setErrorButtonIcon] = useState("");
+  const [errorLinkIcon, setErrorLinkIcon] = useState("");
 
-  // choose which JSON string + error is active right now
-  const activeJson =
-    activeTab === "icontext"
-      ? jsonIconText
-      : activeTab === "imagetext"
-      ? jsonImageText
-      : activeTab === "tags"
-      ? jsonTags
-      : jsonText;
+  // output per tab
+  const defaultOutputMsg = '// Click interactive fields to see output';
+  const [outputText, setOutputText] = useState(defaultOutputMsg);
+  const [outputIconText, setOutputIconText] = useState(defaultOutputMsg);
+  const [outputImageText, setOutputImageText] = useState(defaultOutputMsg);
+  const [outputTags, setOutputTags] = useState(defaultOutputMsg);
+  const [outputSplitMedia, setOutputSplitMedia] = useState(defaultOutputMsg);
+  const [outputQuantity, setOutputQuantity] = useState(defaultOutputMsg);
+  const [outputButtonIcon, setOutputButtonIcon] = useState(defaultOutputMsg);
+  const [outputLinkIcon, setOutputLinkIcon] = useState(defaultOutputMsg);
 
-  const activeError =
-    activeTab === "icontext"
-      ? errorIconText
-      : activeTab === "imagetext"
-      ? errorImageText
-      : activeTab === "tags"
-      ? errorTags
-      : errorText;
+  /* Fallback card for errors */
+  function makeFallbackCard() {
+    return new CardObject({
+      className: "card border m-2 shadow",
+      header: { className: "card-header bg-danger text-white", name: "Error" },
+      body: { className: "card-body p-3" },
+      fields: [{ className: "text-danger", colClass: "col-12", name: "Could not parse input JSON." }],
+      footer: { className: "card-footer text-muted small", name: "Fix the JSON to preview." }
+    });
+  }
 
-  // parse the active JSON to build preview model
+  /* Tab bindings */
+  const tabConfig = {
+    text: {
+      json: jsonText, setJson: setJsonText, error: errorText, setError: setErrorText,
+      output: outputText, setOutput: setOutputText, defaultJson: DEFAULT_TEXT_ONLY_JSON, label: "Text Only"
+    },
+    icontext: {
+      json: jsonIconText, setJson: setJsonIconText, error: errorIconText, setError: setErrorIconText,
+      output: outputIconText, setOutput: setOutputIconText, defaultJson: DEFAULT_ICON_TEXT_JSON, label: "Icon + Text"
+    },
+    imagetext: {
+      json: jsonImageText, setJson: setJsonImageText, error: errorImageText, setError: setErrorImageText,
+      output: outputImageText, setOutput: setOutputImageText, defaultJson: DEFAULT_IMAGE_TEXT_JSON, label: "Image + Text"
+    },
+    tags: {
+      json: jsonTags, setJson: setJsonTags, error: errorTags, setError: setErrorTags,
+      output: outputTags, setOutput: setOutputTags, defaultJson: DEFAULT_TAGS_STACK_JSON, label: "Tags"
+    },
+    splitmedia: {
+      json: jsonSplitMedia, setJson: setJsonSplitMedia, error: errorSplitMedia, setError: setErrorSplitMedia,
+      output: outputSplitMedia, setOutput: setOutputSplitMedia, defaultJson: DEFAULT_SPLIT_MEDIA_JSON, label: "Split + Media"
+    },
+    quantity: {
+      json: jsonQuantity, setJson: setJsonQuantity, error: errorQuantity, setError: setErrorQuantity,
+      output: outputQuantity, setOutput: setOutputQuantity, defaultJson: DEFAULT_QUANTITY_JSON, label: "Quantity"
+    },
+    buttonicon: {
+      json: jsonButtonIcon, setJson: setJsonButtonIcon, error: errorButtonIcon, setError: setErrorButtonIcon,
+      output: outputButtonIcon, setOutput: setOutputButtonIcon, defaultJson: DEFAULT_BUTTON_ICON_JSON, label: "ButtonIcon"
+    },
+    linkicon: {
+      json: jsonLinkIcon, setJson: setJsonLinkIcon, error: errorLinkIcon, setError: setErrorLinkIcon,
+      output: outputLinkIcon, setOutput: setOutputLinkIcon, defaultJson: DEFAULT_LINK_ICON_JSON, label: "LinkIcon"
+    }
+  };
+
+  const currentTab = tabConfig[activeTab];
+
+  /* Parse model */
   const previewModel = useMemo(() => {
-    let rawText = jsonText;
-    if (activeTab === "icontext") rawText = jsonIconText;
-    if (activeTab === "imagetext") rawText = jsonImageText;
-    if (activeTab === "tags") rawText = jsonTags;
-
     try {
-      const raw = JSON.parse(rawText);
-
-      // clear the appropriate error bucket
-      if (activeTab === "icontext") {
-        setErrorIconText("");
-      } else if (activeTab === "imagetext") {
-        setErrorImageText("");
-      } else if (activeTab === "tags") {
-        setErrorTags("");
-      } else {
-        setErrorText("");
-      }
-
-      return new CardObject(raw);
+      currentTab.setError("");
+      return new CardObject(JSON.parse(currentTab.json));
     } catch (e) {
-      const msg = String(e.message || e);
-
-      if (activeTab === "icontext") {
-        setErrorIconText(msg);
-      } else if (activeTab === "imagetext") {
-        setErrorImageText(msg);
-      } else if (activeTab === "tags") {
-        setErrorTags(msg);
-      } else {
-        setErrorText(msg);
-      }
-
-      // fallback model so preview doesn't completely die
-      return new CardObject({
-        className: "card border m-2 shadow",
-        link: "",
-        header: {
-          className: "card-header bg-danger text-white",
-          name: "Error"
-        },
-        body: {
-          className: "card-body p-3",
-          name: "Invalid JSON"
-        },
-        fields: [
-          {
-            className: "text-danger",
-            colClass: "col-12",
-            name: "Could not parse input JSON."
-          }
-        ],
-        footer: {
-          className: "card-footer text-muted small",
-          name: "Fix the JSON on the right and the preview will update."
-        }
-      });
+      currentTab.setError(String(e.message || e));
+      return makeFallbackCard();
     }
-  }, [activeTab, jsonText, jsonIconText, jsonImageText, jsonTags]);
+  }, [activeTab, currentTab.json]);
 
-  function handleTabClick(tab) {
-    setActiveTab(tab);
+  /* Handlers */
+  function handleOutput(out) {
+    const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
+    currentTab.setOutput(JSON.stringify(payload, null, 2));
   }
 
-  function handleTextareaChange(e) {
-    const next = e.target.value;
-    if (activeTab === "icontext") {
-      setJsonIconText(next);
-    } else if (activeTab === "imagetext") {
-      setJsonImageText(next);
-    } else if (activeTab === "tags") {
-      setJsonTags(next);
-    } else {
-      setJsonText(next);
-    }
-  }
-
-  function handleResetCurrent() {
-    if (activeTab === "icontext") {
-      setJsonIconText(DEFAULT_ICON_TEXT_JSON);
-      setErrorIconText("");
-    } else if (activeTab === "imagetext") {
-      setJsonImageText(DEFAULT_IMAGE_TEXT_JSON);
-      setErrorImageText("");
-    } else if (activeTab === "tags") {
-      setJsonTags(DEFAULT_TAGS_STACK_JSON);
-      setErrorTags("");
-    } else {
-      setJsonText(DEFAULT_TEXT_ONLY_JSON);
-      setErrorText("");
-    }
-  }
-
-  function headerTitle() {
-    if (activeTab === "icontext") return "Icon + Text Card";
-    if (activeTab === "imagetext") return "Image + Text Card";
-    if (activeTab === "tags") return "Tags Stack Card";
-    return "Text-only Card";
+  function handleReset() {
+    currentTab.setJson(currentTab.defaultJson);
+    currentTab.setError("");
+    currentTab.setOutput(defaultOutputMsg);
   }
 
   return (
     <div className="container py-3">
       <h3 className="mb-3 text-center">AlloyCard</h3>
 
-      {/* Row 1 — Tag sample */}
+      {/* Tag snippet */}
       <div className="row mb-3">
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
@@ -372,174 +627,81 @@ export default function CardPage() {
         </div>
       </div>
 
-      {/* Row 2 — Tabs + Preview */}
+      {/* Tabs */}
+      <ul className="nav nav-tabs flex-wrap justify-content-center mb-3">
+        {TABS.map(({ key, label }) => (
+          <li className="nav-item" key={key}>
+            <button
+              className={`nav-link ${activeTab === key ? "active" : ""}`}
+              onClick={() => setActiveTab(key)}
+              type="button"
+            >
+              {label}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {/* Preview + Output */}
       <div className="row mb-4">
-        <div className="col-12 col-lg-6">
-          {/* Tabs */}
-          <ul className="nav nav-tabs mb-3">
-            <li className="nav-item">
-              <button
-                className={"nav-link " + (activeTab === "text" ? "active" : "")}
-                onClick={() => handleTabClick("text")}
-                type="button"
-              >
-                Text Only
-              </button>
-            </li>
+        <div className="col-12 col-lg-6 mb-3 mb-lg-0">
+          <AlloyCard card={previewModel} output={handleOutput} />
 
-            <li className="nav-item">
-              <button
-                className={"nav-link " + (activeTab === "icontext" ? "active" : "")}
-                onClick={() => handleTabClick("icontext")}
-                type="button"
-              >
-                Icon + Text
-              </button>
-            </li>
-
-            <li className="nav-item">
-              <button
-                className={"nav-link " + (activeTab === "imagetext" ? "active" : "")}
-                onClick={() => handleTabClick("imagetext")}
-                type="button"
-              >
-                Image + Text
-              </button>
-            </li>
-
-            <li className="nav-item">
-              <button
-                className={"nav-link " + (activeTab === "tags" ? "active" : "")}
-                onClick={() => handleTabClick("tags")}
-                type="button"
-              >
-                Tags Stack
-              </button>
-            </li>
-          </ul>
-
-          {/* Preview card */}
-          <AlloyCard card={previewModel} />
-
-          {/* Helper text */}
           <div className="small text-secondary mt-2">
             <div className="mb-1">
-              <strong>Layout model:</strong> <code>header</code> (optional),{" "}
-              <code>body</code> (required), <code>fields</code> (required, at
-              least one), and <code>footer</code> (optional).
+              <strong>Layout:</strong> <code>layout: "single"</code> (default) or <code>"split"</code>
             </div>
-
             <div className="mb-1">
-              <code>fields</code> is an ordered array of{" "}
-              <strong>blocks</strong> (BlockObject) rendered inside the{" "}
-              <code>body</code> as a Bootstrap grid using{" "}
-              <code>colClass</code>.
-            </div>
-
-            <div className="mb-1">
-              Each field can render as:
-              <ul className="ps-3 mb-0">
-                <li>
-                  <strong>Text</strong> — when <code>name</code> is present.
-                </li>
-                <li>
-                  <strong>Icon</strong> — when <code>icon</code> /{" "}
-                  <code>iconClass</code> is present (renders{" "}
-                  <code>&lt;AlloyIcon/&gt;</code>).
-                </li>
-                <li>
-                  <strong>Logo / Image</strong> — when <code>logo</code> is
-                  present (renders a responsive image).
-                </li>
-                <li>
-                  <strong>Tags stack</strong> — when <code>tags</code> is
-                  present (renders a vertical stack of <code>TagObject[]</code>).
-                </li>
-              </ul>
-            </div>
-
-            <div className="mb-1">
-              If <code>link</code> is provided on the card, only{" "}
-              <code>body</code> becomes a clickable React Router{" "}
-              <code>&lt;Link/&gt;</code>. Header and footer never become links.
+              <strong>Field types:</strong> media, logo, icon, tags, quantity, buttonIcon, linkIcon, text
             </div>
           </div>
         </div>
+
+        <div className="col-12 col-lg-6">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="fw-semibold">Output</span>
+            <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => currentTab.setOutput(defaultOutputMsg)}>
+              Clear
+            </button>
+          </div>
+          <textarea
+            className="form-control font-monospace bg-light border"
+            rows={8}
+            value={currentTab.output}
+            readOnly
+            spellCheck={false}
+          />
+        </div>
       </div>
 
-      {/* Row 3 — Tab-specific editable JSON */}
-      <div className="row g-3 align-items-stretch">
-        <div className="col-12 col-lg-8">
+      {/* JSON Editor */}
+      <div className="row g-3">
+        <div className="col-12">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">
-              {headerTitle()} — Input JSON (editable)
-            </span>
-
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={handleResetCurrent}
-            >
-              Reset This Tab
+            <span className="fw-semibold">{currentTab.label} — Input JSON</span>
+            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={handleReset}>
+              Reset
             </button>
           </div>
 
           <textarea
-            className={`form-control font-monospace ${activeError ? "is-invalid" : ""}`}
+            className={`form-control font-monospace ${currentTab.error ? "is-invalid" : ""}`}
             rows={18}
-            value={activeJson}
-            onChange={handleTextareaChange}
+            value={currentTab.json}
+            onChange={(e) => currentTab.setJson(e.target.value)}
             spellCheck={false}
           />
 
-          {activeError && (
-            <div className="invalid-feedback d-block mt-1">{activeError}</div>
+          {currentTab.error && (
+            <div className="invalid-feedback d-block mt-1">{currentTab.error}</div>
           )}
 
           <div className="form-text">
             <ul className="mb-0 ps-3">
-              <li>
-                <code>body</code> is required. We wrap plain objects into
-                the internal <code>BlockObject</code> and default missing
-                classes to <code>"card-body"</code>.
-              </li>
-
-              <li>
-                <code>header</code> and <code>footer</code> are optional.
-                If present, we default their classes to{" "}
-                <code>"card-header"</code> / <code>"card-footer"</code>{" "}
-                unless you override.
-              </li>
-
-              <li>
-                <code>fields</code> is an ordered array of blocks rendered
-                inside <code>body</code> in a Bootstrap{" "}
-                <code>.row</code>. Each field may specify{" "}
-                <code>colClass</code> (e.g. <code>"col-12"</code>,{" "}
-                <code>"col-auto"</code>, <code>"col-md-6"</code>).
-              </li>
-
-              <li className="mt-2">
-                Content rules:
-                <ul className="ps-3 mb-0">
-                  <li>
-                    If a field has <code>logo</code> → it renders only the
-                    logo.
-                  </li>
-                  <li>
-                    Else if it has <code>icon</code> /{" "}
-                    <code>iconClass</code> → it renders only the icon via{" "}
-                    <code>&lt;AlloyIcon/&gt;</code>.
-                  </li>
-                  <li>
-                    Else if it has <code>tags</code> → it renders a vertical
-                    stack of <code>TagObject[]</code>.
-                  </li>
-                  <li>
-                    Else if it has <code>name</code> → it renders text.
-                  </li>
-                </ul>
-              </li>
+              <li><code>layout</code>: "single" (default) | "split"</li>
+              <li><code>leftFields</code>: left column fields (split layout)</li>
+              <li><code>fields</code>: main fields (required)</li>
+              <li>Field types (priority): media → logo → icon → tags → quantity → buttonIcon → linkIcon → text</li>
             </ul>
           </div>
         </div>

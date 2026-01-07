@@ -5,6 +5,9 @@ import AlloyInput, { InputObject } from "../cell/AlloyInput.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
 
+import AlloyCrud, { CrudObject } from "./AlloyCrud.jsx";
+import AlloyPay, { PayObject } from "../tissue/AlloyPay.jsx";
+
 import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* -------------------------------------------------------
@@ -21,13 +24,30 @@ export class TabObject {
     this.stage = tab.stage ?? "";
     this.status = tab.status ?? "";
 
+    const t = String(tab.type ?? "inputs").trim().toLowerCase();
+    this.type = t === "crud" ? "crud" : t === "pay" ? "pay" : "inputs";
+
     this.icon = tab.icon
       ? tab.icon instanceof IconObject
         ? tab.icon
         : new IconObject(tab.icon)
       : null;
 
-    this.inputs = Array.isArray(tab.inputs) ? tab.inputs : [];
+    this.inputs = this.type === "inputs" && Array.isArray(tab.inputs) ? tab.inputs : [];
+
+    this.crud =
+      this.type === "crud"
+        ? tab.crud instanceof CrudObject
+          ? tab.crud
+          : new CrudObject(tab.crud || {})
+        : null;
+
+    this.pay =
+      this.type === "pay"
+        ? tab.pay instanceof PayObject
+          ? tab.pay
+          : new PayObject(tab.pay || {})
+        : null;
   }
 }
 
@@ -158,15 +178,12 @@ export function AlloyTabForm({ tabForm, output }) {
   const currentTabKey = currentTab ? currentTab.key : "";
   const navButtons = tabForm.navButtons || {};
 
-  // 🔑 KEY FIX: when a *new* TabFormObject comes in (e.g. after /lookup),
-  // reset internal values + errors so fields use the new `input.value`.
   useEffect(() => {
     setCurrentIndex(tabForm.currentIndex);
     setValues(buildInitialValues(tabForm));
     setErrors({});
   }, [tabForm]);
 
-  // value getter
   function getValue(tabKey, name, fallback, type) {
     const tabVals = values[tabKey] || {};
     if (Object.prototype.hasOwnProperty.call(tabVals, name)) {
@@ -176,7 +193,6 @@ export function AlloyTabForm({ tabForm, output }) {
     return type === "checkbox" ? false : "";
   }
 
-  // Consume AlloyInput's OutputObject to update values + field-level errors.
   function handleFieldOutput(tabKey, out) {
     const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
 
@@ -186,20 +202,17 @@ export function AlloyTabForm({ tabForm, output }) {
 
     if (!name) return;
 
-    // update values
     setValues((prev) => {
       const clone = { ...prev };
       const perTab = { ...(clone[tabKey] || {}) };
       perTab[name] = nextVal;
       clone[tabKey] = perTab;
 
-      // ✅ propagate the SAME AlloyInput event upwards (change/blur)
       output?.(out);
 
       return clone;
     });
 
-    // live-sync field errors
     setErrors((prev) => {
       const clone = { ...prev };
       const perTab = { ...(clone[tabKey] || {}) };
@@ -215,12 +228,20 @@ export function AlloyTabForm({ tabForm, output }) {
     });
   }
 
-  // Emit OutputObject in normalized format
+  function handleCrudOutput(out) {
+    if (typeof output === "function") output(out);
+  }
+
+  function handlePayOutput(out) {
+    if (typeof output === "function") output(out);
+  }
+
   function emit(navAction, nextIndex, nextValues, nextErrors, hadError) {
     const nextTab = tabs[nextIndex] || currentTab;
     const nextKey = nextTab ? nextTab.key : currentTabKey;
 
     const baseData = {
+      navAction,
       currentIndex: nextIndex,
       currentTabKey: nextKey,
       values: nextValues,
@@ -250,7 +271,6 @@ export function AlloyTabForm({ tabForm, output }) {
     output(out);
   }
 
-  // nav handlers
   function handlePrevious() {
     if (!currentTab || currentIndex <= 0) return;
     const nextIndex = currentIndex - 1;
@@ -260,49 +280,63 @@ export function AlloyTabForm({ tabForm, output }) {
 
   function handleNext() {
     if (!currentTab || currentIndex >= totalSteps - 1) return;
-    const tabKey = currentTab.key;
-    const tabVals = values[tabKey] || {};
-    const tabErr = validateTab(currentTab, tabVals);
 
-    if (Object.keys(tabErr).length > 0) {
-      const mergedErr = {
-        ...errors,
-        [tabKey]: tabErr,
-      };
-      setErrors(mergedErr);
-      emit("next", currentIndex, values, mergedErr, true);
+    if (currentTab.type === "inputs") {
+      const tabKey = currentTab.key;
+      const tabVals = values[tabKey] || {};
+      const tabErr = validateTab(currentTab, tabVals);
+
+      if (Object.keys(tabErr).length > 0) {
+        const mergedErr = {
+          ...errors,
+          [tabKey]: tabErr,
+        };
+        setErrors(mergedErr);
+        emit("next", currentIndex, values, mergedErr, true);
+        return;
+      }
+
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+
+      const nextErrors = { ...errors };
+      delete nextErrors[tabKey];
+      setErrors(nextErrors);
+      emit("next", nextIndex, values, nextErrors, false);
       return;
     }
 
     const nextIndex = currentIndex + 1;
     setCurrentIndex(nextIndex);
-
-    const nextErrors = { ...errors };
-    delete nextErrors[tabKey];
-    setErrors(nextErrors);
-    emit("next", nextIndex, values, nextErrors, false);
+    emit("next", nextIndex, values, errors, false);
   }
 
   function handleFinish() {
     if (!currentTab) return;
-    const tabKey = currentTab.key;
-    const tabVals = values[tabKey] || {};
-    const tabErr = validateTab(currentTab, tabVals);
 
-    if (Object.keys(tabErr).length > 0) {
-      const mergedErr = {
-        ...errors,
-        [tabKey]: tabErr,
-      };
-      setErrors(mergedErr);
-      emit("finish", currentIndex, values, mergedErr, true);
+    if (currentTab.type === "inputs") {
+      const tabKey = currentTab.key;
+      const tabVals = values[tabKey] || {};
+      const tabErr = validateTab(currentTab, tabVals);
+
+      if (Object.keys(tabErr).length > 0) {
+        const mergedErr = {
+          ...errors,
+          [tabKey]: tabErr,
+        };
+        setErrors(mergedErr);
+        emit("finish", currentIndex, values, mergedErr, true);
+        return;
+      }
+
+      const nextErrors = { ...errors };
+      delete nextErrors[tabKey];
+      setErrors(nextErrors);
+      emit("finish", currentIndex, values, nextErrors, false);
       return;
     }
 
-    const nextErrors = { ...errors };
-    delete nextErrors[tabKey];
-    setErrors(nextErrors);
-    emit("finish", currentIndex, values, nextErrors, false);
+    emit("finish", currentIndex, values, errors, false);
   }
 
   if (!currentTab) {
@@ -317,7 +351,6 @@ export function AlloyTabForm({ tabForm, output }) {
   const isLast = currentIndex === totalSteps - 1;
   const hasNext = !isLast;
 
-  // Navigation button models
   const prevButtonModel =
     hasPrevious &&
     (navButtons.previous ||
@@ -347,7 +380,6 @@ export function AlloyTabForm({ tabForm, output }) {
 
   return (
     <div className="alloy-tab-form">
-      {/* Tab headers */}
       <ul className="nav nav-tabs mb-3 flex-wrap">
         {tabs.map((tab, idx) => {
           const active = idx === currentIndex;
@@ -370,7 +402,6 @@ export function AlloyTabForm({ tabForm, output }) {
         })}
       </ul>
 
-      {/* Title + subtitle */}
       {(currentTab.title || currentTab.subtitle) && (
         <div className="mb-3">
           {currentTab.title && <h5 className="mb-1">{currentTab.title}</h5>}
@@ -380,42 +411,55 @@ export function AlloyTabForm({ tabForm, output }) {
         </div>
       )}
 
-      {/* Form body: one row / one column / inputs[] */}
       <form onSubmit={(e) => e.preventDefault()} noValidate>
         <div className="row g-3">
-          <div className="col-12 col-md-6 col-lg-5 mx-auto">
-            {currentTab.inputs.map((inputConfig, iIdx) => {
-              const val = getValue(
-                currentTab.key,
-                inputConfig.name,
-                inputConfig.value,
-                inputConfig.type
-              );
-              const tabErr = errors[currentTab.key] || {};
-              const fieldErrors = tabErr[inputConfig.name] || [];
-              const invalid = fieldErrors.length > 0;
+          {currentTab.type === "inputs" && (
+            <div className="col-12 col-md-6 col-lg-5 mx-auto">
+              {currentTab.inputs.map((inputConfig, iIdx) => {
+                const val = getValue(
+                  currentTab.key,
+                  inputConfig.name,
+                  inputConfig.value,
+                  inputConfig.type
+                );
+                const tabErr = errors[currentTab.key] || {};
+                const fieldErrors = tabErr[inputConfig.name] || [];
+                const invalid = fieldErrors.length > 0;
 
-              const model = new InputObject({
-                ...inputConfig,
-                value: val,
-                errors: fieldErrors,
-                invalid,
-              });
+                const model = new InputObject({
+                  ...inputConfig,
+                  value: val,
+                  errors: fieldErrors,
+                  invalid,
+                });
 
-              return (
-                <AlloyInput
-                  key={`inp-${iIdx}`}
-                  input={model}
-                  output={(out) => handleFieldOutput(currentTab.key, out)}
-                />
-              );
-            })}
-          </div>
+                return (
+                  <AlloyInput
+                    key={`inp-${iIdx}`}
+                    input={model}
+                    output={(out) => handleFieldOutput(currentTab.key, out)}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {currentTab.type === "crud" && (
+            <div className="col-12">
+              {currentTab.crud && (
+                <AlloyCrud crud={currentTab.crud} output={handleCrudOutput} />
+              )}
+            </div>
+          )}
+
+          {currentTab.type === "pay" && (
+            <div className="col-12">
+              {currentTab.pay && <AlloyPay pay={currentTab.pay} output={handlePayOutput} />}
+            </div>
+          )}
         </div>
 
-        {/* Nav buttons */}
         <div className="d-flex justify-content-between mt-4">
-          {/* Left: Previous */}
           {hasPrevious ? (
             <AlloyButtonIcon
               buttonIcon={prevButtonModel}
@@ -425,7 +469,6 @@ export function AlloyTabForm({ tabForm, output }) {
             <span />
           )}
 
-          {/* Right: Next / Finish */}
           <div className="d-flex gap-2 ms-auto">
             {hasNext && (
               <AlloyButtonIcon

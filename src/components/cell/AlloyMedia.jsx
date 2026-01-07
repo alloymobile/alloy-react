@@ -173,7 +173,8 @@ function renderActiveMedia(active, media, fitClass, keySuffix) {
         key={`glb-${String(active?.id || "glb")}-${keySuffix}`}
         src={url}
         alt={media?.glb?.alt || "3D model"}
-        className={`w-100 h-100 ${media?.glb?.className || ""}`}
+        class={`w-100 h-100 ${media?.glb?.className || ""}`}
+        style={{ position: "absolute", inset: 0 }}
         {...attrs}
       />
     );
@@ -186,6 +187,7 @@ function renderActiveMedia(active, media, fitClass, keySuffix) {
         key={`vid-${String(active?.id || "vid")}-${keySuffix}`}
         src={url}
         className={`w-100 h-100 ${fitClass} ${media?.vid?.className || ""}`}
+        style={{ position: "absolute", inset: 0, margin: "auto" }}
         {...attrs}
         onLoadedMetadata={(e) => {
           const v = e.currentTarget;
@@ -213,6 +215,7 @@ function renderActiveMedia(active, media, fitClass, keySuffix) {
       src={url}
       alt={media?.img?.alt || "Image"}
       className={`w-100 h-100 ${fitClass} ${media?.img?.className || ""}`}
+      style={{ position: "absolute", inset: 0, margin: "auto" }}
       {...attrs}
     />
   );
@@ -223,7 +226,10 @@ export function AlloyMedia({ media }) {
     throw new Error("AlloyMedia requires `media` (MediaObject instance).");
   }
 
-  const items = Array.isArray(media.items) ? media.items : [];
+  const items = useMemo(
+    () => (Array.isArray(media.items) ? media.items : []),
+    [media.items]
+  );
   const first = items[0] || null;
 
   const [activeMediaId, setActiveMediaId] = useState(first ? String(first.id) : "");
@@ -257,9 +263,17 @@ export function AlloyMedia({ media }) {
     };
   }, [zoomOpen]);
 
-  const zoomBtnWrapperClass = `${media.zoom?.wrapperClassName || "position-absolute top-0 start-0 m-2"} ${
-    hover ? "opacity-100 pe-auto" : "opacity-0 pe-none"
-  }`;
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!zoomOpen) return;
+    const handleKey = (e) => {
+      if (e.key === "Escape") setZoomOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [zoomOpen]);
+
+  const zoomBtnWrapperClass = `${media.zoom?.wrapperClassName || "position-absolute top-0 start-0 m-2"}`;
 
   const zoomBtnClass = media.zoom?.buttonClassName || "btn btn-light btn-sm rounded-circle shadow-sm";
   const zoomIconClass = String(media.zoom?.icon?.iconClass || "fa-solid fa-magnifying-glass-plus");
@@ -272,26 +286,43 @@ export function AlloyMedia({ media }) {
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
         >
-          <div className="w-100 h-100 position-relative">
-            <div className={zoomBtnWrapperClass}>
-              <button
-                type="button"
-                className={zoomBtnClass}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setZoomOpen(true);
-                }}
-                aria-label="Zoom media"
-                title="Zoom"
-              >
-                <i className={zoomIconClass}></i>
-              </button>
-            </div>
+          {/* Media content layer */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {renderActiveMedia(active, media, media.img?.cardFitClass || "object-fit-cover", "card")}
+          </div>
 
-            <div className="w-100 h-100 d-flex align-items-center justify-content-center">
-              {renderActiveMedia(active, media, media.img?.cardFitClass || "object-fit-cover", "card")}
-            </div>
+          {/* Zoom button layer - always on top with pointer-events control */}
+          <div
+            className={zoomBtnWrapperClass}
+            style={{
+              zIndex: 10,
+              opacity: hover ? 1 : 0,
+              pointerEvents: hover ? "auto" : "none",
+              transition: "opacity 0.2s ease-in-out",
+            }}
+          >
+            <button
+              type="button"
+              className={zoomBtnClass}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setZoomOpen(true);
+              }}
+              aria-label="Zoom media"
+              title="Zoom"
+              style={{ width: 36, height: 36 }}
+            >
+              <i className={zoomIconClass}></i>
+            </button>
           </div>
         </div>
 
@@ -326,14 +357,27 @@ export function AlloyMedia({ media }) {
               <div className="modal-content rounded-4 overflow-hidden border-0 shadow">
                 <div className="modal-header">
                   <div className="fw-semibold text-truncate">{media.name || "Media"}</div>
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setZoomOpen(false)}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setZoomOpen(false)}
+                    aria-label="Close"
+                  >
                     <i className="fa-solid fa-xmark"></i>
                   </button>
                 </div>
 
                 <div className="modal-body p-0 bg-light">
                   <div className="ratio ratio-1x1">
-                    <div className="w-100 h-100 d-flex align-items-center justify-content-center">
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
                       {renderActiveMedia(
                         active,
                         media,

@@ -2,9 +2,28 @@
 import React, { useMemo, useState } from "react";
 import { AlloyTabForm, TabFormObject } from "../../../src";
 
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
 /* -------------------------------------------------------
  * DEFAULT TAB FORM CONFIG (for AlloyTabForm)
  * ----------------------------------------------------- */
+
+const STRIPE_PUBLISHABLE_KEY = (() => {
+  try {
+    // Vite
+    if (typeof import.meta !== "undefined" && import.meta.env) {
+      return (
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+        import.meta.env.VITE_STRIPE_PUBLIC_KEY ||
+        ""
+      );
+    }
+  } catch (e) {}
+  return "";
+})();
+
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "pk_test_replace_me");
 
 const DEFAULT_TAB_FORM = JSON.stringify(
   {
@@ -20,22 +39,22 @@ const DEFAULT_TAB_FORM = JSON.stringify(
         label: "Previous",
         icon: { iconClass: "fa-solid fa-arrow-left" },
         className: "btn btn-outline-secondary btn-sm",
-        type: "button"
+        type: "button",
       },
       next: {
         id: "btn-next",
         label: "Next",
         icon: { iconClass: "fa-solid fa-arrow-right" },
         className: "btn btn-primary btn-sm",
-        type: "button"
+        type: "button",
       },
       finish: {
         id: "btn-finish",
         label: "Finish",
         icon: { iconClass: "fa-regular fa-circle-check" },
         className: "btn btn-success btn-sm",
-        type: "button"
-      }
+        type: "button",
+      },
     },
 
     tabs: [
@@ -43,6 +62,7 @@ const DEFAULT_TAB_FORM = JSON.stringify(
       {
         id: "tab-account",
         key: "account",
+        type: "inputs",
         title: "Account",
         subtitle: "Create your login credentials.",
         order: 1,
@@ -51,7 +71,6 @@ const DEFAULT_TAB_FORM = JSON.stringify(
         status: "in_progress",
         icon: { iconClass: "fa-regular fa-user" },
 
-        // NEW schema: flat inputs per tab
         inputs: [
           {
             name: "email",
@@ -62,7 +81,7 @@ const DEFAULT_TAB_FORM = JSON.stringify(
             icon: { iconClass: "fa-regular fa-envelope" },
             required: true,
             value: "",
-            className: "form-control"
+            className: "form-control",
           },
           {
             name: "password",
@@ -74,7 +93,7 @@ const DEFAULT_TAB_FORM = JSON.stringify(
             required: true,
             passwordStrength: true,
             value: "",
-            className: "form-control"
+            className: "form-control",
           },
           {
             name: "confirmPassword",
@@ -86,15 +105,16 @@ const DEFAULT_TAB_FORM = JSON.stringify(
             required: true,
             matchWith: "password",
             value: "",
-            className: "form-control"
-          }
-        ]
+            className: "form-control",
+          },
+        ],
       },
 
       /* STEP 2: Company */
       {
         id: "tab-company",
         key: "company",
+        type: "inputs",
         title: "Company",
         subtitle: "Tell us about your company.",
         order: 2,
@@ -113,7 +133,7 @@ const DEFAULT_TAB_FORM = JSON.stringify(
             icon: { iconClass: "fa-regular fa-building" },
             required: true,
             value: "",
-            className: "form-control"
+            className: "form-control",
           },
           {
             name: "country",
@@ -124,7 +144,7 @@ const DEFAULT_TAB_FORM = JSON.stringify(
             icon: { iconClass: "fa-solid fa-globe" },
             required: true,
             value: "",
-            className: "form-control"
+            className: "form-control",
           },
           {
             name: "website",
@@ -135,18 +155,125 @@ const DEFAULT_TAB_FORM = JSON.stringify(
             icon: { iconClass: "fa-solid fa-link" },
             required: false,
             value: "",
-            className: "form-control"
-          }
-        ]
+            className: "form-control",
+          },
+        ],
       },
 
-      /* STEP 3: Review & Submit */
+      /* STEP 3: CRUD */
+      {
+        id: "tab-crud",
+        key: "crud",
+        type: "crud",
+        title: "CRUD",
+        subtitle: "Manage embedded data (CRUD).",
+        order: 3,
+        required: false,
+        stage: "registration",
+        status: "not_started",
+        icon: { iconClass: "fa-solid fa-database" },
+
+        crud: {
+          id: "demo-crud",
+          className: "container-fluid",
+          type: "card",
+
+          search: {
+            name: "demoCrudSearch",
+            id: "demoCrudSearch",
+            type: "text",
+            layout: "icon",
+            icon: { iconClass: "fa-solid fa-magnifying-glass" },
+            label: "Search",
+            placeholder: "Search…",
+            className: "form-control",
+          },
+
+          add: {
+            id: "demoCrudAdd",
+            name: "Add",
+            icon: { iconClass: "fa-solid fa-plus" },
+            className: "btn btn-primary btn-sm",
+            type: "button",
+          },
+
+          modal: {
+            id: "demoCrudModal",
+            title: "Demo CRUD",
+            action: "create",
+            submit: {
+              name: "Save",
+              className: "btn btn-primary",
+              type: "button",
+            },
+            fields: [
+              {
+                name: "name",
+                type: "text",
+                label: "Name",
+                layout: "floating",
+                required: true,
+                value: "",
+                className: "form-control",
+              },
+              {
+                name: "email",
+                type: "email",
+                label: "Email",
+                layout: "floating",
+                required: false,
+                value: "",
+                className: "form-control",
+              },
+            ],
+            data: {
+              name: "",
+              email: "",
+            },
+          },
+
+          document: [],
+        },
+      },
+
+      /* STEP 4: Pay */
+      {
+        id: "tab-pay",
+        key: "pay",
+        type: "pay",
+        title: "Payment",
+        subtitle: "Enter payment details.",
+        order: 4,
+        required: false,
+        stage: "registration",
+        status: "not_started",
+        icon: { iconClass: "fa-solid fa-credit-card" },
+
+        pay: {
+          id: "demoPay",
+          name: "Payment",
+          className: "col-12 col-md-8 col-lg-6 mx-auto",
+          disclaimer: "*Demo only. Use your Stripe publishable key for Elements.",
+          submit: {
+            name: "Pay now",
+            icon: { iconClass: "fa-solid fa-circle-notch fa-spin" },
+            className: "btn btn-primary w-100 mt-3",
+            disabled: false,
+            loading: false,
+            ariaLabel: "Pay now",
+            title: "Pay now",
+          },
+        },
+      },
+
+      /* STEP 5: Review & Submit */
       {
         id: "tab-review",
         key: "review",
+        type: "inputs",
         title: "Review",
         subtitle: "Confirm everything before submitting.",
-        order: 3,
+        order: 5,
         required: true,
         stage: "registration",
         status: "not_started",
@@ -160,11 +287,11 @@ const DEFAULT_TAB_FORM = JSON.stringify(
             layout: "text",
             required: true,
             value: false,
-            className: "form-check-input"
-          }
-        ]
-      }
-    ]
+            className: "form-check-input",
+          },
+        ],
+      },
+    ],
   },
   null,
   2
@@ -177,10 +304,9 @@ export default function TabFormPage() {
   const [jsonConfig, setJsonConfig] = useState(DEFAULT_TAB_FORM);
   const [parseError, setParseError] = useState("");
   const [submitOut, setSubmitOut] = useState(
-    "// AlloyTabForm OutputObject (id, type, action, data.currentIndex, data.currentTabKey, data.values, data.errors) will appear here"
+    "// Latest OutputObject will appear here (tab-form nav, input, crud, pay)"
   );
 
-  // Hydrate TabFormObject from JSON
   const model = useMemo(() => {
     try {
       setParseError("");
@@ -188,7 +314,6 @@ export default function TabFormPage() {
       return new TabFormObject(cfg);
     } catch (e) {
       setParseError(String(e.message || e));
-      // Minimal fallback so the demo always renders — using new schema
       return new TabFormObject({
         id: "invalid-config",
         name: "Invalid config",
@@ -201,41 +326,35 @@ export default function TabFormPage() {
             required: false,
             stage: "error",
             status: "in_progress",
-            inputs: []
-          }
-        ]
+            type: "inputs",
+            inputs: [],
+          },
+        ],
       });
     }
   }, [jsonConfig]);
 
   function handleOutput(payload) {
     const plain =
-      payload && typeof payload.toJSON === "function"
-        ? payload.toJSON()
-        : payload;
+      payload && typeof payload.toJSON === "function" ? payload.toJSON() : payload;
 
     setSubmitOut(JSON.stringify(plain, null, 2));
   }
 
   function resetJson() {
     setJsonConfig(DEFAULT_TAB_FORM);
-    setSubmitOut(
-      "// AlloyTabForm OutputObject (id, type, action, data.currentIndex, data.currentTabKey, data.values, data.errors) will appear here"
-    );
+    setSubmitOut("// Latest OutputObject will appear here (tab-form nav, input, crud, pay)");
   }
 
   return (
     <div className="container py-3">
-      {/* Header */}
       <h3 className="mb-3 text-center">AlloyTabForm</h3>
       <p className="text-muted text-center mb-4">
-        Multi-step approval / registration flow. Each tab defines its own
-        inputs; AlloyTabForm renders the steps, handles Previous / Next /
-        Finish (via AlloyButtonIcon), and emits a single OutputObject per
-        action.
+        Multi-step flow. Each tab renders ONE type: inputs (default), crud, or pay.
+        Child components emit their own OutputObject and AlloyTabForm forwards it to
+        the parent.
       </p>
 
-      {/* Tag snippet */}
       <div className="row mb-4">
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0 text-center w-100">
@@ -244,20 +363,19 @@ export default function TabFormPage() {
         </div>
       </div>
 
-      {/* 1. Rendered multi-step form */}
       <div className="row mb-5">
         <div className="col-12 mx-auto mb-4">
-          <AlloyTabForm tabForm={model} output={handleOutput} />
+          <Elements stripe={stripePromise}>
+            <AlloyTabForm tabForm={model} output={handleOutput} />
+          </Elements>
         </div>
       </div>
 
-      {/* 2. Editable JSON + latest Output */}
       <div className="row g-3 align-items-stretch justify-content-center mb-5">
-        {/* Left: editable JSON config */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="fw-semibold">
-              TabForm JSON (editable) — 3-step registration flow
+              TabForm JSON (editable) — inputs + crud + pay
             </span>
             <button
               type="button"
@@ -269,19 +387,13 @@ export default function TabFormPage() {
           </div>
 
           <textarea
-            className={`form-control font-monospace ${
-              parseError ? "is-invalid" : ""
-            }`}
+            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
             rows={20}
             value={jsonConfig}
             onChange={(e) => setJsonConfig(e.target.value)}
             spellCheck={false}
           />
-          {parseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {parseError}
-            </div>
-          )}
+          {parseError && <div className="invalid-feedback d-block mt-1">{parseError}</div>}
 
           <div className="form-text">
             <ul className="mb-0 ps-3">
@@ -289,29 +401,25 @@ export default function TabFormPage() {
                 <code>tabs[]</code> is an ordered list of steps.
               </li>
               <li>
-                Each tab defines <code>inputs[]</code> (same configs as{" "}
-                <code>AlloyInput</code>); the layout is handled by{" "}
-                <code>AlloyTabForm</code> (one centered column).
+                Each tab can set <code>type</code>: <code>"inputs"</code>,{" "}
+                <code>"crud"</code>, <code>"pay"</code>.
               </li>
               <li>
-                Use <code>icon</code> on the tab to show a Font Awesome icon in
-                the tab header.
+                For <code>type: "inputs"</code>, provide <code>inputs[]</code> (AlloyInput configs).
               </li>
               <li>
-                Optionally provide <code>navButtons.previous</code>,{" "}
-                <code>navButtons.next</code>,{" "}
-                <code>navButtons.finish</code> to customize the{" "}
-                <code>AlloyButtonIcon</code> instances used for navigation.
-                When omitted, default buttons are used.
+                For <code>type: "crud"</code>, provide <code>crud</code> (AlloyCrud config).
+              </li>
+              <li>
+                For <code>type: "pay"</code>, provide <code>pay</code> (AlloyPay config; requires Stripe Elements).
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Right: latest OutputObject */}
         <div className="col-12 col-lg-6">
           <div className="fw-semibold mb-2 text-center text-lg-start">
-            Latest AlloyTabForm output
+            Latest output
           </div>
           <textarea
             className="form-control font-monospace bg-light border"
@@ -321,33 +429,20 @@ export default function TabFormPage() {
             spellCheck={false}
           />
           <div className="form-text">
-            The OutputObject from <code>AlloyTabForm</code> has:
+            Outputs you may see:
             <ul className="mb-0 ps-3">
               <li>
-                <code>id</code> – the flow id (
-                <code>client-registration-demo</code> in the demo).
+                <code>type: "tab-form"</code> for Previous/Next/Finish (includes{" "}
+                <code>data.navAction</code>).
               </li>
               <li>
-                <code>type</code> – always <code>"tab-form"</code>.
+                Input events from <code>AlloyInput</code> (change/blur/etc).
               </li>
               <li>
-                <code>action</code> – <code>"draft"</code> for Previous/Next,{" "}
-                <code>"submit"</code> for Finish.
+                <code>type: "crud"</code> events from <code>AlloyCrud</code>.
               </li>
               <li>
-                <code>data.currentIndex</code> and{" "}
-                <code>data.currentTabKey</code> – the current wizard position.
-              </li>
-              <li>
-                <code>data.values</code> – accumulated values per tabKey, e.g.{" "}
-                <code>{`values.account.email`}</code>,{" "}
-                <code>{`values.company.companyName`}</code>.
-              </li>
-              <li>
-                <code>data.errors</code> (only when{" "}
-                <code>error === true</code>) – per-tab, per-field messages, e.g.:
-                <br />
-                <code>{`errors.company.country = ["This field is required."]`}</code>
+                <code>type: "pay"</code> events from <code>AlloyPay</code>.
               </li>
             </ul>
           </div>

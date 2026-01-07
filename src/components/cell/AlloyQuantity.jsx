@@ -1,30 +1,25 @@
 // src/components/tissue/AlloyQuantity.jsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
-import AlloyInput, { InputObject } from "../cell/AlloyInput.jsx";
-import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
+import { InputObject } from "../cell/AlloyInput.jsx";
+import { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 import { IconObject } from "../cell/AlloyIcon.jsx";
 
 import { OutputObject, useDomId } from "../../utils/idHelper.js";
 
 function toNum(x, fallback) {
-  const n =
-    typeof x === "string" && x.trim() !== "" ? Number(x.trim()) : Number(x);
+  if (typeof x === "string") {
+    const s = x.trim();
+    if (!s) return fallback;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  const n = Number(x);
   return Number.isFinite(n) ? n : fallback;
 }
 
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v));
-}
-
-function addOnce(base = "", add = "") {
-  const b = String(base || "");
-  const a = String(add || "").trim();
-  if (!a) return b.trim();
-  const tokens = a.split(/\s+/).filter(Boolean);
-  const set = new Set(b.split(/\s+/).filter(Boolean));
-  tokens.forEach((t) => set.add(t));
-  return Array.from(set).join(" ").trim();
 }
 
 /**
@@ -94,7 +89,8 @@ export class QuantityObject {
     this.step = Math.abs(toNum(step, 1)) || 1;
     this.disabled = !!disabled;
 
-    const initial = typeof value === "undefined" ? this.min : toNum(value, this.min);
+    const initial =
+      typeof value === "undefined" ? this.min : toNum(value, this.min);
     this.value = clamp(initial, this.min, this.max);
 
     this.showRange = showRange !== false;
@@ -122,7 +118,7 @@ export class QuantityObject {
         ? decrease
         : new ButtonIconObject({
             name: "",
-            className: "btn btn-light text-muted",
+            className: "btn btn-outline-secondary",
             disabled: this.disabled || this.value <= this.min,
             ariaLabel: "Decrease quantity",
             title: "Decrease",
@@ -135,7 +131,7 @@ export class QuantityObject {
         ? increase
         : new ButtonIconObject({
             name: "",
-            className: "btn btn-light text-muted",
+            className: "btn btn-outline-secondary",
             disabled: this.disabled || this.value >= this.max,
             ariaLabel: "Increase quantity",
             title: "Increase",
@@ -177,107 +173,105 @@ export function AlloyQuantity({ quantity, output }) {
 
   const domId = useDomId("qty", quantity.id);
 
-  const [qty, setQty] = useState(() =>
-    clamp(toNum(quantity.value, quantity.min), quantity.min, quantity.max)
-  );
+  const initialQty = useMemo(() => {
+    return clamp(toNum(quantity.value, quantity.min), quantity.min, quantity.max);
+  }, [quantity.value, quantity.min, quantity.max]);
+
+  const [qty, setQty] = useState(initialQty);
+  const [display, setDisplay] = useState(String(initialQty));
 
   useEffect(() => {
     if (quantity.input && !quantity.input.id) quantity.input.id = `${domId}-input`;
     if (quantity.decrease && !quantity.decrease.id) quantity.decrease.id = `${domId}-dec`;
     if (quantity.increase && !quantity.increase.id) quantity.increase.id = `${domId}-inc`;
-
-    if (quantity.decrease) {
-      quantity.decrease.className = addOnce(
-        quantity.decrease.className,
-        "ax-qty-btn ax-qty-btn-dec"
-      );
-    }
-    if (quantity.increase) {
-      quantity.increase.className = addOnce(
-        quantity.increase.className,
-        "ax-qty-btn ax-qty-btn-inc"
-      );
-    }
   }, [domId, quantity]);
 
   useEffect(() => {
     const next = clamp(toNum(quantity.value, quantity.min), quantity.min, quantity.max);
     setQty(next);
+    setDisplay(String(next));
     quantity.sync(next);
   }, [quantity, quantity.value, quantity.min, quantity.max, quantity.disabled]);
 
-// inside AlloyQuantity.jsx
-
-    const emit = useCallback(
+  const emit = useCallback(
     (action, nextValue, event) => {
-        quantity.onChange?.(nextValue, quantity, { action, event });
+      quantity.onChange?.(nextValue, quantity, { action, event });
 
-        if (typeof output === "function") {
-        output(
-            OutputObject.ok({
-            id: domId,
-            type: "quantity",
-            action,
-            data: {
-                [quantity.name]: nextValue
-            }
-            })
-        );
-        }
+      if (typeof output === "function") {
+        const payload = OutputObject.ok({
+          id: domId,
+          type: "quantity",
+          action,
+          data: {
+            [quantity.name]: nextValue
+          }
+        });
+        output(payload && typeof payload.toJSON === "function" ? payload.toJSON() : payload);
+      }
     },
     [domId, output, quantity]
-    );
+  );
 
-
-  const applyNext = useCallback(
+  const commit = useCallback(
     (nextValue, action, event) => {
       const next = clamp(toNum(nextValue, quantity.min), quantity.min, quantity.max);
       setQty(next);
+      setDisplay(String(next));
       quantity.sync(next);
       emit(action, next, event);
     },
     [emit, quantity]
   );
 
-  const onButtonOut = useCallback(
-    (out) => {
-      if (!out || out.action !== "click") return;
+  const decDisabled = quantity.disabled || qty <= quantity.min;
+  const incDisabled = quantity.disabled || qty >= quantity.max;
 
-      if (out.id === quantity.decrease?.id) {
-        applyNext(qty - quantity.step, "dec", out);
-        return;
-      }
-      if (out.id === quantity.increase?.id) {
-        applyNext(qty + quantity.step, "inc", out);
-      }
+  const onDec = useCallback(
+    (e) => {
+      if (decDisabled) return;
+      commit(qty - quantity.step, "dec", e);
     },
-    [applyNext, qty, quantity]
+    [commit, decDisabled, qty, quantity.step]
   );
 
-  const onInputOut = useCallback(
-    (out) => {
-      if (!out || out.type !== "input") return;
-      if (out.id !== quantity.input?.id) return;
-
-      const raw = out?.data?.value;
-
-      if (raw === "" || raw == null) {
-        if (out.action === "blur") applyNext(quantity.min, "set", out);
-        return;
-      }
-
-      const n = toNum(raw, NaN);
-      if (!Number.isFinite(n)) return;
-
-      applyNext(n, "set", out);
+  const onInc = useCallback(
+    (e) => {
+      if (incDisabled) return;
+      commit(qty + quantity.step, "inc", e);
     },
-    [applyNext, quantity]
+    [commit, incDisabled, qty, quantity.step]
   );
 
-  const groupClass = useMemo(() => {
-    const base = "ax-qty-group";
-    return [base, quantity.className].filter(Boolean).join(" ");
-  }, [quantity.className]);
+  const onInputChange = useCallback(
+    (e) => {
+      const v = e.target.value;
+      setDisplay(v);
+
+      const n = toNum(v, NaN);
+      if (Number.isFinite(n)) {
+        const next = clamp(n, quantity.min, quantity.max);
+        setQty(next);
+        quantity.sync(next);
+      }
+    },
+    [quantity]
+  );
+
+  const onInputBlur = useCallback(
+    (e) => {
+      const n = toNum(display, NaN);
+      if (!Number.isFinite(n)) {
+        setDisplay(String(qty));
+        return;
+      }
+      commit(n, "set", e);
+    },
+    [commit, display, qty]
+  );
+
+  const btnDecClass = quantity.decrease?.className || "btn btn-outline-secondary";
+  const btnIncClass = quantity.increase?.className || "btn btn-outline-secondary";
+  const inputClass = quantity.input?.className || "form-control text-center";
 
   return (
     <div className={quantity.colClass} id={domId}>
@@ -285,72 +279,62 @@ export function AlloyQuantity({ quantity, output }) {
         <div className="fw-semibold fs-3 mb-2">{quantity.label}</div>
       ) : null}
 
-      <div className={groupClass}>
-        <AlloyButtonIcon buttonIcon={quantity.decrease} output={onButtonOut} />
+      <div className={["input-group", quantity.className].filter(Boolean).join(" ")}>
+        <button
+          type="button"
+          id={quantity.decrease?.id}
+          className={btnDecClass}
+          disabled={decDisabled}
+          aria-label={quantity.decrease?.ariaLabel}
+          title={quantity.decrease?.title}
+          onClick={onDec}
+        >
+          {quantity.decrease?.name ? (
+            quantity.decrease.name
+          ) : quantity.decrease?.icon?.iconClass ? (
+            <i className={quantity.decrease.icon.iconClass}></i>
+          ) : (
+            "-"
+          )}
+        </button>
 
-        <div className="ax-qty-input flex-grow-1">
-          <AlloyInput input={quantity.input} output={onInputOut} />
-        </div>
+        <input
+          id={quantity.input?.id}
+          type="number"
+          inputMode="numeric"
+          className={inputClass}
+          value={display}
+          min={quantity.min}
+          max={quantity.max}
+          step={quantity.step}
+          disabled={!!quantity.disabled}
+          aria-label={quantity.input?.ariaLabel || quantity.label || "Quantity"}
+          onChange={onInputChange}
+          onBlur={onInputBlur}
+        />
 
-        <AlloyButtonIcon buttonIcon={quantity.increase} output={onButtonOut} />
+        <button
+          type="button"
+          id={quantity.increase?.id}
+          className={btnIncClass}
+          disabled={incDisabled}
+          aria-label={quantity.increase?.ariaLabel}
+          title={quantity.increase?.title}
+          onClick={onInc}
+        >
+          {quantity.increase?.name ? (
+            quantity.increase.name
+          ) : quantity.increase?.icon?.iconClass ? (
+            <i className={quantity.increase.icon.iconClass}></i>
+          ) : (
+            "+"
+          )}
+        </button>
       </div>
 
       {quantity.showRange ? (
         <div className="text-muted mt-2">{quantity.rangeText()}</div>
       ) : null}
-
-      <style>{`
-        .ax-qty-group{
-          display:flex;
-          align-items:stretch;
-          width:100%;
-          border:1px solid #dee2e6;
-          border-radius:14px;
-          overflow:hidden;
-          background:#fff;
-        }
-        .ax-qty-btn{
-          border:0 !important;
-          border-radius:0 !important;
-          min-width:72px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          padding-left:18px;
-          padding-right:18px;
-          background:#fff !important;
-        }
-        .ax-qty-btn-dec{
-          border-right:1px solid #dee2e6 !important;
-        }
-        .ax-qty-btn-inc{
-          border-left:1px solid #dee2e6 !important;
-        }
-        .ax-qty-input > .mb-3{
-          margin:0 !important;
-        }
-        .ax-qty-input input{
-          border:0 !important;
-          border-radius:0 !important;
-          box-shadow:none !important;
-          text-align:center !important;
-          font-weight:600 !important;
-          font-size:28px !important;
-          padding-top:14px !important;
-          padding-bottom:14px !important;
-        }
-        .ax-qty-input input:focus{
-          box-shadow:none !important;
-        }
-        .ax-qty-input input[type=number]::-webkit-outer-spin-button,
-        .ax-qty-input input[type=number]::-webkit-inner-spin-button{
-          -webkit-appearance:none;
-          margin:0;
-        }
-        .ax-qty-input input[type=number]{
-          -moz-appearance:textfield;
-        }
-      `}</style>
     </div>
   );
 }
