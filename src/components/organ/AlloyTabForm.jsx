@@ -7,6 +7,7 @@ import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
 
 import AlloyCrud, { CrudObject } from "./AlloyCrud.jsx";
 import AlloyPay, { PayObject } from "../tissue/AlloyPay.jsx";
+import AlloyCard, { CardObject } from "../tissue/AlloyCard.jsx";
 
 import { generateId, OutputObject } from "../../utils/idHelper.js";
 
@@ -24,8 +25,11 @@ export class TabObject {
     this.stage = tab.stage ?? "";
     this.status = tab.status ?? "";
 
+    this.initError = "";
+
     const t = String(tab.type ?? "inputs").trim().toLowerCase();
-    this.type = t === "crud" ? "crud" : t === "pay" ? "pay" : "inputs";
+    this.type =
+      t === "crud" ? "crud" : t === "pay" ? "pay" : t === "card" ? "card" : "inputs";
 
     this.icon = tab.icon
       ? tab.icon instanceof IconObject
@@ -35,19 +39,37 @@ export class TabObject {
 
     this.inputs = this.type === "inputs" && Array.isArray(tab.inputs) ? tab.inputs : [];
 
-    this.crud =
-      this.type === "crud"
-        ? tab.crud instanceof CrudObject
-          ? tab.crud
-          : new CrudObject(tab.crud || {})
-        : null;
+    this.crud = null;
+    if (this.type === "crud") {
+      try {
+        this.crud =
+          tab.crud instanceof CrudObject ? tab.crud : new CrudObject(tab.crud || {});
+      } catch (e) {
+        this.initError = String(e?.message || e);
+        this.crud = null;
+      }
+    }
 
-    this.pay =
-      this.type === "pay"
-        ? tab.pay instanceof PayObject
-          ? tab.pay
-          : new PayObject(tab.pay || {})
-        : null;
+    this.pay = null;
+    if (this.type === "pay") {
+      try {
+        this.pay = tab.pay instanceof PayObject ? tab.pay : new PayObject(tab.pay || {});
+      } catch (e) {
+        this.initError = String(e?.message || e);
+        this.pay = null;
+      }
+    }
+
+    this.card = null;
+    if (this.type === "card") {
+      try {
+        this.card =
+          tab.card instanceof CardObject ? tab.card : new CardObject(tab.card || {});
+      } catch (e) {
+        this.initError = String(e?.message || e);
+        this.card = null;
+      }
+    }
   }
 }
 
@@ -228,14 +250,6 @@ export function AlloyTabForm({ tabForm, output }) {
     });
   }
 
-  function handleCrudOutput(out) {
-    if (typeof output === "function") output(out);
-  }
-
-  function handlePayOutput(out) {
-    if (typeof output === "function") output(out);
-  }
-
   function emit(navAction, nextIndex, nextValues, nextErrors, hadError) {
     const nextTab = tabs[nextIndex] || currentTab;
     const nextKey = nextTab ? nextTab.key : currentTabKey;
@@ -411,6 +425,10 @@ export function AlloyTabForm({ tabForm, output }) {
         </div>
       )}
 
+      {currentTab.initError ? (
+        <div className="alert alert-danger">{currentTab.initError}</div>
+      ) : null}
+
       <form onSubmit={(e) => e.preventDefault()} noValidate>
         <div className="row g-3">
           {currentTab.type === "inputs" && (
@@ -447,40 +465,41 @@ export function AlloyTabForm({ tabForm, output }) {
           {currentTab.type === "crud" && (
             <div className="col-12">
               {currentTab.crud && (
-                <AlloyCrud crud={currentTab.crud} output={handleCrudOutput} />
+                <AlloyCrud crud={currentTab.crud} output={(out) => output?.(out)} />
               )}
             </div>
           )}
 
           {currentTab.type === "pay" && (
             <div className="col-12">
-              {currentTab.pay && <AlloyPay pay={currentTab.pay} output={handlePayOutput} />}
+              {currentTab.pay && (
+                <AlloyPay pay={currentTab.pay} output={(out) => output?.(out)} />
+              )}
+            </div>
+          )}
+
+          {currentTab.type === "card" && (
+            <div className="col-12">
+              {currentTab.card && (
+                <AlloyCard card={currentTab.card} output={(out) => output?.(out)} />
+              )}
             </div>
           )}
         </div>
 
         <div className="d-flex justify-content-between mt-4">
           {hasPrevious ? (
-            <AlloyButtonIcon
-              buttonIcon={prevButtonModel}
-              output={() => handlePrevious()}
-            />
+            <AlloyButtonIcon buttonIcon={prevButtonModel} output={handlePrevious} />
           ) : (
             <span />
           )}
 
           <div className="d-flex gap-2 ms-auto">
             {hasNext && (
-              <AlloyButtonIcon
-                buttonIcon={nextButtonModel}
-                output={() => handleNext()}
-              />
+              <AlloyButtonIcon buttonIcon={nextButtonModel} output={handleNext} />
             )}
             {isLast && (
-              <AlloyButtonIcon
-                buttonIcon={finishButtonModel}
-                output={() => handleFinish()}
-              />
+              <AlloyButtonIcon buttonIcon={finishButtonModel} output={handleFinish} />
             )}
           </div>
         </div>

@@ -108,7 +108,7 @@ export class MediaObject {
       buttonClassName:
         zoom.buttonClassName ??
         "btn btn-light btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center",
-      wrapperClassName: zoom.wrapperClassName ?? "position-absolute top-0 start-0 m-2",
+      wrapperClassName: zoom.wrapperClassName ?? "position-absolute top-0 end-0 m-2",
     };
   }
 }
@@ -173,7 +173,7 @@ function renderActiveMedia(active, media, fitClass, keySuffix) {
         key={`glb-${String(active?.id || "glb")}-${keySuffix}`}
         src={url}
         alt={media?.glb?.alt || "3D model"}
-        class={`w-100 h-100 ${media?.glb?.className || ""}`}
+        className={`w-100 h-100 ${media?.glb?.className || ""}`}
         style={{ position: "absolute", inset: 0 }}
         {...attrs}
       />
@@ -187,7 +187,7 @@ function renderActiveMedia(active, media, fitClass, keySuffix) {
         key={`vid-${String(active?.id || "vid")}-${keySuffix}`}
         src={url}
         className={`w-100 h-100 ${fitClass} ${media?.vid?.className || ""}`}
-        style={{ position: "absolute", inset: 0, margin: "auto" }}
+        style={{ position: "absolute", inset: 0 }}
         {...attrs}
         onLoadedMetadata={(e) => {
           const v = e.currentTarget;
@@ -215,7 +215,7 @@ function renderActiveMedia(active, media, fitClass, keySuffix) {
       src={url}
       alt={media?.img?.alt || "Image"}
       className={`w-100 h-100 ${fitClass} ${media?.img?.className || ""}`}
-      style={{ position: "absolute", inset: 0, margin: "auto" }}
+      style={{ position: "absolute", inset: 0 }}
       {...attrs}
     />
   );
@@ -225,6 +225,15 @@ export function AlloyMedia({ media }) {
   if (!media || !(media instanceof MediaObject)) {
     throw new Error("AlloyMedia requires `media` (MediaObject instance).");
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (window.customElements && !window.customElements.get("model-viewer")) {
+        import("@google/model-viewer").catch(() => {});
+      }
+    } catch {}
+  }, []);
 
   const items = useMemo(
     () => (Array.isArray(media.items) ? media.items : []),
@@ -256,14 +265,20 @@ export function AlloyMedia({ media }) {
 
   useEffect(() => {
     if (!zoomOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const body = document.body;
+    const prevOverflow = body.style.overflow;
+    const prevPaddingRight = body.style.paddingRight;
+
+    const sbw = window.innerWidth - document.documentElement.clientWidth;
+    if (sbw > 0) body.style.paddingRight = `${sbw}px`;
+
+    body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prev;
+      body.style.overflow = prevOverflow;
+      body.style.paddingRight = prevPaddingRight;
     };
   }, [zoomOpen]);
 
-  // Close modal on Escape key
   useEffect(() => {
     if (!zoomOpen) return;
     const handleKey = (e) => {
@@ -273,7 +288,7 @@ export function AlloyMedia({ media }) {
     return () => window.removeEventListener("keydown", handleKey);
   }, [zoomOpen]);
 
-  const zoomBtnWrapperClass = `${media.zoom?.wrapperClassName || "position-absolute top-0 start-0 m-2"}`;
+  const zoomBtnWrapperClass = `${media.zoom?.wrapperClassName || "position-absolute top-0 end-0 m-2"}`;
 
   const zoomBtnClass = media.zoom?.buttonClassName || "btn btn-light btn-sm rounded-circle shadow-sm";
   const zoomIconClass = String(media.zoom?.icon?.iconClass || "fa-solid fa-magnifying-glass-plus");
@@ -286,7 +301,6 @@ export function AlloyMedia({ media }) {
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
         >
-          {/* Media content layer */}
           <div
             style={{
               position: "absolute",
@@ -299,7 +313,6 @@ export function AlloyMedia({ media }) {
             {renderActiveMedia(active, media, media.img?.cardFitClass || "object-fit-cover", "card")}
           </div>
 
-          {/* Zoom button layer - always on top with pointer-events control */}
           <div
             className={zoomBtnWrapperClass}
             style={{
@@ -307,6 +320,9 @@ export function AlloyMedia({ media }) {
               opacity: hover ? 1 : 0,
               pointerEvents: hover ? "auto" : "none",
               transition: "opacity 0.2s ease-in-out",
+              display: "inline-flex",
+              width: "auto",
+              height: "auto",
             }}
           >
             <button
@@ -345,74 +361,72 @@ export function AlloyMedia({ media }) {
       </div>
 
       {zoomOpen ? (
-        <>
-          <div
-            className="modal fade show d-block"
-            tabIndex={-1}
-            role="dialog"
-            aria-modal="true"
-            onClick={() => setZoomOpen(false)}
-          >
-            <div className="modal-dialog modal-dialog-centered modal-xl" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-content rounded-4 overflow-hidden border-0 shadow">
-                <div className="modal-header">
-                  <div className="fw-semibold text-truncate">{media.name || "Media"}</div>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={() => setZoomOpen(false)}
-                    aria-label="Close"
-                  >
-                    <i className="fa-solid fa-xmark"></i>
-                  </button>
-                </div>
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100"
+          style={{ zIndex: 2000 }}
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setZoomOpen(false)}
+        >
+          <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75" />
 
-                <div className="modal-body p-0 bg-light">
-                  <div className="ratio ratio-1x1">
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {renderActiveMedia(
-                        active,
-                        media,
-                        active?.kind === "video"
-                          ? media.vid?.zoomFitClass || "object-fit-contain"
-                          : media.img?.zoomFitClass || "object-fit-contain",
-                        "zoom"
-                      )}
-                    </div>
-                  </div>
-                </div>
+          <div className="position-relative w-100 h-100 d-flex flex-column" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="btn btn-light btn-sm position-absolute top-0 end-0 m-3"
+              onClick={() => setZoomOpen(false)}
+              aria-label="Close"
+              title="Close"
+              style={{ zIndex: 5 }}
+            >
+              <i className="fa-solid fa-xmark"></i>
+            </button>
 
-                {items.length > 1 ? (
-                  <div className="modal-footer d-block">
-                    <div className="d-flex gap-2 overflow-auto pb-1">
-                      {items.map((m) => (
-                        <MediaThumb
-                          key={"zoom-" + m.id}
-                          item={m}
-                          activeId={active?.id}
-                          size={thumbPx}
-                          media={media}
-                          onClick={() => setActiveMediaId(String(m.id))}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="modal-footer"></div>
-                )}
+            <div className="p-3 p-md-4 text-white">
+              <div className="fw-semibold text-truncate pe-5">{media.name || "Media"}</div>
+            </div>
+
+            <div className="flex-grow-1 px-2 px-md-4 pb-3">
+              <div className="w-100 h-100 bg-light rounded-4 overflow-hidden border position-relative">
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {renderActiveMedia(
+                    active,
+                    media,
+                    active?.kind === "video"
+                      ? media.vid?.zoomFitClass || "object-fit-contain"
+                      : media.img?.zoomFitClass || "object-fit-contain",
+                    "zoom"
+                  )}
+                </div>
               </div>
             </div>
+
+            {items.length > 1 ? (
+              <div className="pb-3 px-2 px-md-4">
+                <div className="d-flex gap-2 overflow-auto pb-1">
+                  {items.map((m) => (
+                    <MediaThumb
+                      key={"zoom-" + m.id}
+                      item={m}
+                      activeId={active?.id}
+                      size={thumbPx}
+                      media={media}
+                      onClick={() => setActiveMediaId(String(m.id))}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
-          <div className="modal-backdrop fade show" />
-        </>
+        </div>
       ) : null}
     </>
   );
