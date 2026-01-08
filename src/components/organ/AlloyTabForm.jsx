@@ -5,7 +5,6 @@ import AlloyInput, { InputObject } from "../cell/AlloyInput.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
 
-import AlloyCrud, { CrudObject } from "./AlloyCrud.jsx";
 import AlloyPay, { PayObject } from "../tissue/AlloyPay.jsx";
 import AlloyCard, { CardObject } from "../tissue/AlloyCard.jsx";
 
@@ -25,11 +24,16 @@ export class TabObject {
     this.stage = tab.stage ?? "";
     this.status = tab.status ?? "";
 
+    const hasCustomClass =
+      typeof tab.className === "string" && tab.className.trim();
+    this._hasCustomClassName = !!hasCustomClass;
+
+    this.className = hasCustomClass ? tab.className : "col-12";
+
     this.initError = "";
 
     const t = String(tab.type ?? "inputs").trim().toLowerCase();
-    this.type =
-      t === "crud" ? "crud" : t === "pay" ? "pay" : t === "card" ? "card" : "inputs";
+    this.type = t === "pay" ? "pay" : t === "cards" ? "cards" : "inputs";
 
     this.icon = tab.icon
       ? tab.icon instanceof IconObject
@@ -37,37 +41,46 @@ export class TabObject {
         : new IconObject(tab.icon)
       : null;
 
-    this.inputs = this.type === "inputs" && Array.isArray(tab.inputs) ? tab.inputs : [];
-
-    this.crud = null;
-    if (this.type === "crud") {
+    this.inputs = [];
+    if (this.type === "inputs") {
       try {
-        this.crud =
-          tab.crud instanceof CrudObject ? tab.crud : new CrudObject(tab.crud || {});
+        const rawInputs = Array.isArray(tab.inputs) ? tab.inputs : [];
+        this.inputs = rawInputs.map((i) =>
+          i instanceof InputObject ? i : new InputObject(i || {})
+        );
       } catch (e) {
         this.initError = String(e?.message || e);
-        this.crud = null;
+        this.inputs = [];
       }
     }
 
     this.pay = null;
     if (this.type === "pay") {
       try {
-        this.pay = tab.pay instanceof PayObject ? tab.pay : new PayObject(tab.pay || {});
+        this.pay =
+          tab.pay instanceof PayObject ? tab.pay : new PayObject(tab.pay || {});
       } catch (e) {
         this.initError = String(e?.message || e);
         this.pay = null;
       }
     }
 
-    this.card = null;
-    if (this.type === "card") {
+    this.cards = [];
+    if (this.type === "cards") {
       try {
-        this.card =
-          tab.card instanceof CardObject ? tab.card : new CardObject(tab.card || {});
+        const rawCards = Array.isArray(tab.cards) ? tab.cards : [];
+        this.cards = rawCards.map((c) => {
+          const cardObj = c instanceof CardObject ? c : new CardObject(c || {});
+          const colClass =
+            typeof c?.colClass === "string" && c.colClass.trim()
+              ? c.colClass
+              : null;
+          if (colClass) cardObj.colClass = colClass;
+          return cardObj;
+        });
       } catch (e) {
         this.initError = String(e?.message || e);
-        this.card = null;
+        this.cards = [];
       }
     }
   }
@@ -82,9 +95,22 @@ export class TabFormObject {
     this.name = cfg.name ?? "";
     this.status = cfg.status ?? "draft";
 
+    const rawLayout = String(cfg.layout ?? cfg.mode ?? cfg.view ?? "tabs")
+      .trim()
+      .toLowerCase();
+    this.layout = rawLayout === "mixed" ? "mixed" : "tabs";
+
     const rawTabs = Array.isArray(cfg.tabs) ? cfg.tabs : [];
     const mappedTabs = rawTabs.map((t) => new TabObject(t));
     this.tabs = mappedTabs.sort((a, b) => a.order - b.order);
+
+    if (this.layout === "mixed") {
+      this.tabs.forEach((t) => {
+        if (!t._hasCustomClassName) {
+          t.className = "col-12 col-lg-6";
+        }
+      });
+    }
 
     let idx = typeof cfg.currentIndex === "number" ? cfg.currentIndex : 0;
     if (idx < 0) idx = 0;
@@ -119,31 +145,33 @@ export class TabFormObject {
  * Helpers
  * ----------------------------------------------------- */
 
-// build initial values from config (per tabKey)
 function buildInitialValues(tabForm) {
   const result = {};
   tabForm.tabs.forEach((tab) => {
     const tabValues = {};
-    tab.inputs.forEach((input) => {
-      const name = input.name;
-      if (!name) return;
+    if (tab.type === "inputs") {
+      tab.inputs.forEach((input) => {
+        const name = input.name;
+        if (!name) return;
 
-      if (typeof input.value !== "undefined") {
-        tabValues[name] = input.value;
-      } else if (input.type === "checkbox") {
-        tabValues[name] = false;
-      } else {
-        tabValues[name] = "";
-      }
-    });
+        if (typeof input.value !== "undefined") {
+          tabValues[name] = input.value;
+        } else if (input.type === "checkbox") {
+          tabValues[name] = false;
+        } else {
+          tabValues[name] = "";
+        }
+      });
+    }
     result[tab.key] = tabValues;
   });
   return result;
 }
 
-// basic validation: required + matchWith
 function validateTab(tab, tabValues) {
   const errors = {};
+
+  if (tab.type !== "inputs") return errors;
 
   tab.inputs.forEach((input) => {
     const name = input.name;
@@ -192,13 +220,16 @@ export function AlloyTabForm({ tabForm, output }) {
 
   const [currentIndex, setCurrentIndex] = useState(tabForm.currentIndex);
   const [values, setValues] = useState(() => buildInitialValues(tabForm));
-  const [errors, setErrors] = useState({}); // { [tabKey]: { fieldName: string[] } }
+  const [errors, setErrors] = useState({});
 
   const tabs = tabForm.tabs;
   const totalSteps = tabs.length;
   const currentTab = tabs[currentIndex] || null;
   const currentTabKey = currentTab ? currentTab.key : "";
   const navButtons = tabForm.navButtons || {};
+
+  const layout = tabForm.layout || "tabs";
+  const isMixed = String(layout).trim().toLowerCase() === "mixed";
 
   useEffect(() => {
     setCurrentIndex(tabForm.currentIndex);
@@ -272,13 +303,13 @@ export function AlloyTabForm({ tabForm, output }) {
       ? OutputObject.errorOf({
           id: tabForm.id,
           type: "tab-form",
-          action: navAction === "finish" ? "submit" : "draft",
+          action: navAction,
           data: baseData,
         })
       : OutputObject.ok({
           id: tabForm.id,
           type: "tab-form",
-          action: navAction === "finish" ? "submit" : "draft",
+          action: navAction,
           data: baseData,
         });
 
@@ -286,6 +317,7 @@ export function AlloyTabForm({ tabForm, output }) {
   }
 
   function handlePrevious() {
+    if (isMixed) return;
     if (!currentTab || currentIndex <= 0) return;
     const nextIndex = currentIndex - 1;
     setCurrentIndex(nextIndex);
@@ -293,6 +325,7 @@ export function AlloyTabForm({ tabForm, output }) {
   }
 
   function handleNext() {
+    if (isMixed) return;
     if (!currentTab || currentIndex >= totalSteps - 1) return;
 
     if (currentTab.type === "inputs") {
@@ -326,6 +359,34 @@ export function AlloyTabForm({ tabForm, output }) {
   }
 
   function handleFinish() {
+    if (!tabs.length) return;
+
+    if (isMixed) {
+      let nextErrors = { ...errors };
+      let hadError = false;
+
+      tabs.forEach((tab) => {
+        if (tab.type !== "inputs") return;
+
+        const tabKey = tab.key;
+        const tabVals = values[tabKey] || {};
+        const tabErr = validateTab(tab, tabVals);
+
+        if (Object.keys(tabErr).length > 0) {
+          nextErrors = { ...nextErrors, [tabKey]: tabErr };
+          hadError = true;
+        } else if (nextErrors[tabKey]) {
+          const clone = { ...nextErrors };
+          delete clone[tabKey];
+          nextErrors = clone;
+        }
+      });
+
+      setErrors(nextErrors);
+      emit("finish", currentIndex, values, nextErrors, hadError);
+      return;
+    }
+
     if (!currentTab) return;
 
     if (currentTab.type === "inputs") {
@@ -355,15 +416,13 @@ export function AlloyTabForm({ tabForm, output }) {
 
   if (!currentTab) {
     return (
-      <div className="alert alert-warning">
-        No steps defined for this TabForm.
-      </div>
+      <div className="alert alert-warning">No steps defined for this TabForm.</div>
     );
   }
 
-  const hasPrevious = currentIndex > 0;
-  const isLast = currentIndex === totalSteps - 1;
-  const hasNext = !isLast;
+  const hasPrevious = !isMixed && currentIndex > 0;
+  const isLast = isMixed ? true : currentIndex === totalSteps - 1;
+  const hasNext = !isMixed && !isLast;
 
   const prevButtonModel =
     hasPrevious &&
@@ -384,7 +443,7 @@ export function AlloyTabForm({ tabForm, output }) {
       }));
 
   const finishButtonModel =
-    isLast &&
+    (isLast || isMixed) &&
     (navButtons.finish ||
       new ButtonIconObject({
         name: "Finish",
@@ -394,98 +453,205 @@ export function AlloyTabForm({ tabForm, output }) {
 
   return (
     <div className="alloy-tab-form">
-      <ul className="nav nav-tabs mb-3 flex-wrap">
-        {tabs.map((tab, idx) => {
-          const active = idx === currentIndex;
-          return (
-            <li className="nav-item" key={tab.id}>
-              <button
-                type="button"
-                className={`nav-link ${active ? "active" : ""}`}
-                onClick={() => setCurrentIndex(idx)}
-              >
-                {tab.icon && (
-                  <span className="me-1">
-                    <AlloyIcon icon={tab.icon} />
-                  </span>
-                )}
-                {tab.title || `Step ${idx + 1}`}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {(currentTab.title || currentTab.subtitle) && (
-        <div className="mb-3">
-          {currentTab.title && <h5 className="mb-1">{currentTab.title}</h5>}
-          {currentTab.subtitle && (
-            <div className="text-muted small">{currentTab.subtitle}</div>
-          )}
-        </div>
+      {!isMixed && (
+        <ul className="nav nav-tabs mb-3 flex-wrap">
+          {tabs.map((tab, idx) => {
+            const active = idx === currentIndex;
+            return (
+              <li className="nav-item" key={tab.id}>
+                <button
+                  type="button"
+                  className={`nav-link ${active ? "active" : ""}`}
+                  onClick={() => setCurrentIndex(idx)}
+                >
+                  {tab.icon && (
+                    <span className="me-1">
+                      <AlloyIcon icon={tab.icon} />
+                    </span>
+                  )}
+                  {tab.title || `Step ${idx + 1}`}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
-      {currentTab.initError ? (
-        <div className="alert alert-danger">{currentTab.initError}</div>
-      ) : null}
-
       <form onSubmit={(e) => e.preventDefault()} noValidate>
-        <div className="row g-3">
-          {currentTab.type === "inputs" && (
-            <div className="col-12 col-md-6 col-lg-5 mx-auto">
-              {currentTab.inputs.map((inputConfig, iIdx) => {
-                const val = getValue(
-                  currentTab.key,
-                  inputConfig.name,
-                  inputConfig.value,
-                  inputConfig.type
-                );
-                const tabErr = errors[currentTab.key] || {};
-                const fieldErrors = tabErr[inputConfig.name] || [];
-                const invalid = fieldErrors.length > 0;
+        {isMixed ? (
+          <div className="row g-3">
+            {tabs.map((tab, idx) => {
+              const tabKey = tab.key;
+              const legendTitle = tab.title || `Step ${idx + 1}`;
+              const tabColClass =
+                typeof tab.className === "string" && tab.className.trim()
+                  ? tab.className
+                  : "col-12 col-lg-6";
 
-                const model = new InputObject({
-                  ...inputConfig,
-                  value: val,
-                  errors: fieldErrors,
-                  invalid,
-                });
+              return (
+                <div className={tabColClass} key={tab.id}>
+                  <fieldset className="border rounded p-3 h-100">
+                    <legend className="float-none w-auto px-2 mb-0">
+                      {tab.icon && (
+                        <span className="me-1">
+                          <AlloyIcon icon={tab.icon} />
+                        </span>
+                      )}
+                      {legendTitle}
+                    </legend>
 
-                return (
-                  <AlloyInput
-                    key={`inp-${iIdx}`}
-                    input={model}
-                    output={(out) => handleFieldOutput(currentTab.key, out)}
-                  />
-                );
-              })}
-            </div>
-          )}
+                    {tab.subtitle && (
+                      <div className="text-muted small mb-3">{tab.subtitle}</div>
+                    )}
 
-          {currentTab.type === "crud" && (
-            <div className="col-12">
-              {currentTab.crud && (
-                <AlloyCrud crud={currentTab.crud} output={(out) => output?.(out)} />
+                    {tab.initError ? (
+                      <div className="alert alert-danger">{tab.initError}</div>
+                    ) : null}
+
+                    {tab.type === "inputs" && (
+                      <div className="row g-3">
+                        {tab.inputs.map((inputModel, iIdx) => {
+                          const val = getValue(
+                            tabKey,
+                            inputModel.name,
+                            inputModel.value,
+                            inputModel.type
+                          );
+
+                          const tabErr = errors[tabKey] || {};
+                          const fieldErrors = tabErr[inputModel.name] || [];
+                          const invalid = fieldErrors.length > 0;
+
+                          const model = new InputObject({
+                            ...inputModel,
+                            value: val,
+                            errors: fieldErrors,
+                            invalid,
+                          });
+
+                          const colClass =
+                            typeof model.colClass === "string" && model.colClass.trim()
+                              ? model.colClass
+                              : "col-12";
+
+                          return (
+                            <div className={colClass} key={`inp-${tabKey}-${iIdx}`}>
+                              <AlloyInput
+                                input={model}
+                                output={(out) => handleFieldOutput(tabKey, out)}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {tab.type === "pay" && (
+                      <div className="row g-3">
+                        <div className="col-12">
+                          {tab.pay && (
+                            <AlloyPay pay={tab.pay} output={(out) => output?.(out)} />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {tab.type === "cards" && (
+                      <div className="row g-3">
+                        {tab.cards.map((c) => {
+                          const cardCol =
+                            typeof c.colClass === "string" && c.colClass.trim()
+                              ? c.colClass
+                              : "col-12 col-md-6";
+                          return (
+                            <div className={cardCol} key={c.id}>
+                              <AlloyCard card={c} output={(out) => output?.(out)} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </fieldset>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            {(currentTab.title || currentTab.subtitle) && (
+              <div className="mb-3">
+                {currentTab.title && <h5 className="mb-1">{currentTab.title}</h5>}
+                {currentTab.subtitle && (
+                  <div className="text-muted small">{currentTab.subtitle}</div>
+                )}
+              </div>
+            )}
+
+            {currentTab.initError ? (
+              <div className="alert alert-danger">{currentTab.initError}</div>
+            ) : null}
+
+            <div className="row g-3">
+              {currentTab.type === "inputs" &&
+                currentTab.inputs.map((inputModel, iIdx) => {
+                  const val = getValue(
+                    currentTab.key,
+                    inputModel.name,
+                    inputModel.value,
+                    inputModel.type
+                  );
+                  const tabErr = errors[currentTab.key] || {};
+                  const fieldErrors = tabErr[inputModel.name] || [];
+                  const invalid = fieldErrors.length > 0;
+
+                  const model = new InputObject({
+                    ...inputModel,
+                    value: val,
+                    errors: fieldErrors,
+                    invalid,
+                  });
+
+                  const colClass =
+                    typeof model.colClass === "string" && model.colClass.trim()
+                      ? model.colClass
+                      : "col-12";
+
+                  return (
+                    <div className={colClass} key={`inp-${iIdx}`}>
+                      <AlloyInput
+                        input={model}
+                        output={(out) => handleFieldOutput(currentTab.key, out)}
+                      />
+                    </div>
+                  );
+                })}
+
+              {currentTab.type === "pay" && (
+                <div className="col-12">
+                  {currentTab.pay && (
+                    <AlloyPay pay={currentTab.pay} output={(out) => output?.(out)} />
+                  )}
+                </div>
+              )}
+
+              {currentTab.type === "cards" && (
+                <>
+                  {currentTab.cards.map((c) => {
+                    const cardCol =
+                      typeof c.colClass === "string" && c.colClass.trim()
+                        ? c.colClass
+                        : "col-12 col-md-6";
+                    return (
+                      <div className={cardCol} key={c.id}>
+                        <AlloyCard card={c} output={(out) => output?.(out)} />
+                      </div>
+                    );
+                  })}
+                </>
               )}
             </div>
-          )}
-
-          {currentTab.type === "pay" && (
-            <div className="col-12">
-              {currentTab.pay && (
-                <AlloyPay pay={currentTab.pay} output={(out) => output?.(out)} />
-              )}
-            </div>
-          )}
-
-          {currentTab.type === "card" && (
-            <div className="col-12">
-              {currentTab.card && (
-                <AlloyCard card={currentTab.card} output={(out) => output?.(out)} />
-              )}
-            </div>
-          )}
-        </div>
+          </>
+        )}
 
         <div className="d-flex justify-content-between mt-4">
           {hasPrevious ? (
@@ -498,7 +664,7 @@ export function AlloyTabForm({ tabForm, output }) {
             {hasNext && (
               <AlloyButtonIcon buttonIcon={nextButtonModel} output={handleNext} />
             )}
-            {isLast && (
+            {(isLast || isMixed) && (
               <AlloyButtonIcon buttonIcon={finishButtonModel} output={handleFinish} />
             )}
           </div>

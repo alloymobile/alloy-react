@@ -53,7 +53,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyCrud", to: "/organ/crud", icon: "fa-solid fa-bars-progress" },          
           { label: "AlloyPost", to: "/organ/post", icon: "fa-solid fa-bars-progress" }, 
           { label: "AlloyMarquee", to: "/organ/marquee", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyMosaic", to: "/organ/mosaic", icon: "fa-solid fa-bars-progress" },                  
+          { label: "AlloyMosaic", to: "/organ/mosaic", icon: "fa-solid fa-bars-progress" },  
+          { label: "AlloyMediaGallery", to: "/organ/media-gallery", icon: "fa-solid fa-bars-progress" },                 
         ]:
       [];
 

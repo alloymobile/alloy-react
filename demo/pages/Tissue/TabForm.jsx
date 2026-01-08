@@ -2,11 +2,8 @@
 import React, { useMemo, useState } from "react";
 import { AlloyTabForm, TabFormObject } from "../../../src";
 
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-
 /* -------------------------------------------------------
- * Stripe publishable key
+ * Stripe publishable key (passed into Pay tab config)
  * ----------------------------------------------------- */
 
 const STRIPE_PUBLISHABLE_KEY = (() => {
@@ -26,198 +23,23 @@ const STRIPE_KEY_OK =
   typeof STRIPE_PUBLISHABLE_KEY === "string" &&
   STRIPE_PUBLISHABLE_KEY.trim().startsWith("pk_");
 
-const stripePromise = loadStripe(
-  (STRIPE_PUBLISHABLE_KEY && STRIPE_PUBLISHABLE_KEY.trim()) || "pk_test_replace_me"
-);
-
 /* -------------------------------------------------------
- * Embedded object samples (CRUD / PAY / CARD)
+ * Embedded object samples (PAY / CARDS)
  * ----------------------------------------------------- */
-
-const VENDOR_CRUD_CARD = {
-  id: "vendorCrudCard",
-  className: "container-fluid",
-  type: "card",
-  documentClass: "col-sm-6 col-md-4 col-lg-3 mb-3",
-  modal: {
-    id: "vendorCardModal",
-    title: "Vendor",
-    className: "modal fade",
-    action: "Create",
-    submit: {
-      name: "Create",
-      className: "btn btn-primary",
-      active: "active",
-    },
-    fields: [
-      { name: "id", label: "Vendor ID", type: "hidden", layout: "text" },
-      {
-        name: "vendorName",
-        label: "Vendor Name",
-        type: "text",
-        layout: "text",
-        placeholder: "Enter vendor name",
-        required: true,
-        minLength: 3,
-      },
-      {
-        name: "email",
-        label: "Email",
-        type: "email",
-        layout: "text",
-        placeholder: "name@example.com",
-        required: true,
-      },
-      { name: "city", label: "City", type: "text", layout: "text", placeholder: "Toronto" },
-      {
-        name: "status",
-        label: "Status",
-        type: "select",
-        layout: "text",
-        options: [
-          { value: "active", label: "Active" },
-          { value: "pending", label: "Pending" },
-          { value: "inactive", label: "Inactive" },
-        ],
-        value: "active",
-        required: true,
-      },
-    ],
-    data: {
-      id: "",
-      vendorName: "",
-      email: "",
-      city: "",
-      status: "active",
-    },
-  },
-  toast: {
-    id: "vendorCardDeleteToast",
-    title: "Delete Vendor",
-    className: "modal fade",
-    action: "deleteVendorConfirmed",
-    submit: {
-      name: "Delete",
-      className: "btn btn-danger",
-      active: "active",
-    },
-    message: "Are you sure you want to delete this vendor card? This action cannot be undone.",
-  },
-  search: {
-    name: "vendorSearchCard",
-    id: "vendorSearchCard",
-    type: "text",
-    layout: "icon",
-    icon: { iconClass: "fa-solid fa-magnifying-glass" },
-    label: "Search Vendors",
-    placeholder: "Search by name, email, city…",
-    className: "form-control",
-  },
-  add: {
-    id: "addVendorCardButton",
-    name: "Add vendor",
-    icon: { iconClass: "fa-solid fa-plus" },
-    className: "btn btn-primary",
-    title: "Add Vendor",
-    ariaLabel: "Add Vendor",
-  },
-  document: [
-    {
-      id: "v001",
-      className: "card border shadow-sm h-100",
-      link: "",
-      header: { name: "Alpha Precast Ltd.", className: "card-header fw-bold" },
-      body: { name: "Toronto • Active", className: "card-body pb-2" },
-      fields: [
-        { name: "v001", className: "d-none", tag: "div", id: "id" },
-        { name: "Alpha Precast Ltd.", className: "d-none", tag: "div", id: "vendorName" },
-        { name: "active", className: "d-none", tag: "div", id: "status" },
-        { name: "info@alphaprecast.com", className: "small text-muted", tag: "div", id: "email" },
-        { name: "Toronto", className: "small", tag: "div", id: "city" },
-      ],
-      footer: { name: "", className: "card-footer bg-transparent border-0 pt-0" },
-      type: "AlloyButtonBar",
-      action: {
-        type: "AlloyButtonIcon",
-        className: "nav justify-content-end gap-2",
-        buttonClass: "nav-item",
-        selected: "active",
-        buttons: [
-          {
-            id: "editVendorCardBtn1",
-            name: "Edit",
-            icon: { iconClass: "fa-solid fa-pen" },
-            className: "btn btn-outline-primary btn-sm",
-          },
-          {
-            id: "deleteVendorCardBtn1",
-            name: "Delete",
-            icon: { iconClass: "fa-solid fa-trash" },
-            className: "btn btn-outline-danger btn-sm",
-          },
-        ],
-      },
-    },
-    {
-      id: "v002",
-      className: "card border shadow-sm h-100",
-      link: "",
-      header: { name: "Beta Concrete Inc.", className: "card-header fw-bold" },
-      body: { name: "Hamilton • Pending", className: "card-body pb-2" },
-      fields: [
-        { name: "v002", className: "d-none", tag: "div", id: "id" },
-        { name: "Beta Concrete Inc.", className: "d-none", tag: "div", id: "vendorName" },
-        { name: "pending", className: "d-none", tag: "div", id: "status" },
-        { name: "contact@betaconcrete.com", className: "small text-muted", tag: "div", id: "email" },
-        { name: "Hamilton", className: "small", tag: "div", id: "city" },
-      ],
-      footer: { name: "", className: "card-footer bg-transparent border-0 pt-0" },
-      type: "AlloyButtonBar",
-      action: {
-        type: "AlloyButtonIcon",
-        className: "nav justify-content-end gap-2",
-        buttonClass: "nav-item",
-        selected: "active",
-        buttons: [
-          {
-            id: "editVendorCardBtn2",
-            name: "Edit",
-            icon: { iconClass: "fa-solid fa-pen" },
-            className: "btn btn-outline-primary btn-sm",
-          },
-          {
-            id: "deleteVendorCardBtn2",
-            name: "Delete",
-            icon: { iconClass: "fa-solid fa-trash" },
-            className: "btn btn-outline-danger btn-sm",
-          },
-        ],
-      },
-    },
-  ],
-  page: {
-    id: "vendorPageCard",
-    name: "Vendors (cards)",
-    className: "d-flex justify-content-end align-items-center mt-3",
-    listClassName: "pagination justify-content-end mb-0",
-    itemClassName: "page-item",
-    activeClassName: "active",
-    disabledClassName: "disabled",
-    totalPages: 5,
-    totalElements: 200,
-    last: false,
-    numberOfElements: 12,
-    size: 12,
-    number: 0,
-    first: true,
-    empty: false,
-  },
-};
 
 const ALLOY_PAY_DEMO = {
   id: "alloyPayDemo",
   name: "Payment",
   className: "col-12 col-md-8 mx-auto",
+
+  // New: AlloyPay handles <Elements> internally, so pass the key here.
+  publicKey:
+    (STRIPE_PUBLISHABLE_KEY && STRIPE_PUBLISHABLE_KEY.trim()) || "pk_test_replace_me",
+
+  // (Optional) keep alias for backward compatibility if your PayObject supports it
+  publishableKey:
+    (STRIPE_PUBLISHABLE_KEY && STRIPE_PUBLISHABLE_KEY.trim()) || "pk_test_replace_me",
+
   brandIcon: { iconClass: "fa-brands fa-cc-stripe fa-2xl", className: "text-primary" },
   cardIcon: { iconClass: "fa-solid fa-credit-card", className: "text-secondary" },
   expiryIcon: { iconClass: "fa-solid fa-calendar-days", className: "text-secondary" },
@@ -273,196 +95,244 @@ const ALLOY_CARD_DEMO = {
   },
 };
 
+const ALLOY_CARD_DEMO_2 = {
+  id: "demoTextCard02",
+  className: "card border m-2 shadow",
+  header: {
+    id: "demoTextHeader2",
+    className: "card-header fw-semibold",
+    name: "Second Text Card",
+  },
+  body: {
+    id: "demoTextBody2",
+    className: "card-body p-3",
+  },
+  fields: [
+    {
+      id: "txt2-title",
+      colClass: "col-12",
+      className: "fw-semibold fs-5 mb-1",
+      name: "Grace Hopper",
+    },
+    {
+      id: "txt2-role",
+      colClass: "col-12",
+      className: "text-muted mb-1",
+      name: "Compiler + COBOL",
+    },
+    {
+      id: "txt2-note",
+      colClass: "col-12",
+      className: "small text-secondary",
+      name: 'This card is here to demonstrate Tab type: cards (list of AlloyCard).',
+    },
+  ],
+  footer: {
+    id: "demoTextFooter2",
+    className: "card-footer text-muted small",
+    name: "Footer (optional) — text only",
+  },
+};
+
 /* -------------------------------------------------------
- * DEFAULT TAB FORM CONFIG (for AlloyTabForm)
+ * TAB FORM CONFIGS (tabs layout + mixed layout)
+ * Supported types: inputs, pay, cards
  * ----------------------------------------------------- */
 
-const DEFAULT_TAB_FORM = JSON.stringify(
-  {
-    id: "client-registration-demo",
-    name: "Client Registration Flow",
-    status: "draft",
-    currentIndex: 0,
+const TAB_FORM_TABS = {
+  id: "client-registration-demo",
+  name: "Client Registration Flow (Tabs)",
+  status: "draft",
+  currentIndex: 0,
 
-    navButtons: {
-      previous: {
-        id: "btn-prev",
-        label: "Previous",
-        icon: { iconClass: "fa-solid fa-arrow-left" },
-        className: "btn btn-outline-secondary btn-sm",
-        type: "button",
-      },
-      next: {
-        id: "btn-next",
-        label: "Next",
-        icon: { iconClass: "fa-solid fa-arrow-right" },
-        className: "btn btn-primary btn-sm",
-        type: "button",
-      },
-      finish: {
-        id: "btn-finish",
-        label: "Finish",
-        icon: { iconClass: "fa-regular fa-circle-check" },
-        className: "btn btn-success btn-sm",
-        type: "button",
-      },
+  navButtons: {
+    previous: {
+      id: "btn-prev",
+      label: "Previous",
+      icon: { iconClass: "fa-solid fa-arrow-left" },
+      className: "btn btn-outline-secondary btn-sm",
+      type: "button",
+    },
+    next: {
+      id: "btn-next",
+      label: "Next",
+      icon: { iconClass: "fa-solid fa-arrow-right" },
+      className: "btn btn-primary btn-sm",
+      type: "button",
+    },
+    finish: {
+      id: "btn-finish",
+      label: "Finish",
+      icon: { iconClass: "fa-regular fa-circle-check" },
+      className: "btn btn-success btn-sm",
+      type: "button",
+    },
+  },
+
+  tabs: [
+    {
+      id: "tab-inputs",
+      key: "inputs",
+      type: "inputs",
+      title: "Inputs",
+      subtitle: "Enter account + company details.",
+      order: 1,
+      required: true,
+      stage: "registration",
+      status: "in_progress",
+      icon: { iconClass: "fa-regular fa-pen-to-square" },
+
+      className: "col-12 col-lg-6",
+
+      inputs: [
+        {
+          name: "email",
+          type: "email",
+          label: "Email",
+          placeholder: "you@example.com",
+          layout: "floating",
+          icon: { iconClass: "fa-regular fa-envelope" },
+          required: true,
+          value: "",
+          className: "form-control",
+        },
+        {
+          name: "password",
+          type: "password",
+          label: "Password",
+          placeholder: "Create a password",
+          layout: "floating",
+          icon: { iconClass: "fa-solid fa-lock" },
+          required: true,
+          passwordStrength: true,
+          value: "",
+          className: "form-control",
+        },
+        {
+          name: "confirmPassword",
+          type: "password",
+          label: "Confirm password",
+          placeholder: "Re-enter password",
+          layout: "floating",
+          icon: { iconClass: "fa-solid fa-lock" },
+          required: true,
+          matchWith: "password",
+          value: "",
+          className: "form-control",
+        },
+        {
+          name: "companyName",
+          type: "text",
+          label: "Company name",
+          placeholder: "ACME Concrete Ltd.",
+          layout: "floating",
+          icon: { iconClass: "fa-regular fa-building" },
+          required: true,
+          value: "",
+          className: "form-control",
+        },
+        {
+          name: "country",
+          type: "text",
+          label: "Country",
+          placeholder: "Canada",
+          layout: "floating",
+          icon: { iconClass: "fa-solid fa-globe" },
+          required: true,
+          value: "",
+          className: "form-control",
+        },
+        {
+          name: "website",
+          type: "url",
+          label: "Website (optional)",
+          placeholder: "https://example.com",
+          layout: "floating",
+          icon: { iconClass: "fa-solid fa-link" },
+          required: false,
+          value: "",
+          className: "form-control",
+        },
+      ],
     },
 
-    tabs: [
-      {
-        id: "tab-inputs",
-        key: "inputs",
-        type: "inputs",
-        title: "Inputs",
-        subtitle: "Enter account + company details.",
-        order: 1,
-        required: true,
-        stage: "registration",
-        status: "in_progress",
-        icon: { iconClass: "fa-regular fa-pen-to-square" },
+    {
+      id: "tab-pay",
+      key: "pay",
+      type: "pay",
+      title: "Payment",
+      subtitle: "Enter payment details.",
+      order: 2,
+      required: false,
+      stage: "registration",
+      status: "not_started",
+      icon: { iconClass: "fa-solid fa-credit-card" },
 
-        inputs: [
-          {
-            name: "email",
-            type: "email",
-            label: "Email",
-            placeholder: "you@example.com",
-            layout: "floating",
-            icon: { iconClass: "fa-regular fa-envelope" },
-            required: true,
-            value: "",
-            className: "form-control",
-          },
-          {
-            name: "password",
-            type: "password",
-            label: "Password",
-            placeholder: "Create a password",
-            layout: "floating",
-            icon: { iconClass: "fa-solid fa-lock" },
-            required: true,
-            passwordStrength: true,
-            value: "",
-            className: "form-control",
-          },
-          {
-            name: "confirmPassword",
-            type: "password",
-            label: "Confirm password",
-            placeholder: "Re-enter password",
-            layout: "floating",
-            icon: { iconClass: "fa-solid fa-lock" },
-            required: true,
-            matchWith: "password",
-            value: "",
-            className: "form-control",
-          },
-          {
-            name: "companyName",
-            type: "text",
-            label: "Company name",
-            placeholder: "ACME Concrete Ltd.",
-            layout: "floating",
-            icon: { iconClass: "fa-regular fa-building" },
-            required: true,
-            value: "",
-            className: "form-control",
-          },
-          {
-            name: "country",
-            type: "text",
-            label: "Country",
-            placeholder: "Canada",
-            layout: "floating",
-            icon: { iconClass: "fa-solid fa-globe" },
-            required: true,
-            value: "",
-            className: "form-control",
-          },
-          {
-            name: "website",
-            type: "url",
-            label: "Website (optional)",
-            placeholder: "https://example.com",
-            layout: "floating",
-            icon: { iconClass: "fa-solid fa-link" },
-            required: false,
-            value: "",
-            className: "form-control",
-          },
-        ],
-      },
+      className: "col-12 col-lg-6",
 
-      {
-        id: "tab-crud",
-        key: "crud",
-        type: "crud",
-        title: "CRUD",
-        subtitle: "Manage embedded data (CRUD).",
-        order: 2,
-        required: false,
-        stage: "registration",
-        status: "not_started",
-        icon: { iconClass: "fa-solid fa-database" },
-        crud: VENDOR_CRUD_CARD,
-      },
+      pay: ALLOY_PAY_DEMO,
+    },
 
-      {
-        id: "tab-pay",
-        key: "pay",
-        type: "pay",
-        title: "Payment",
-        subtitle: "Enter payment details.",
-        order: 3,
-        required: false,
-        stage: "registration",
-        status: "not_started",
-        icon: { iconClass: "fa-solid fa-credit-card" },
-        pay: ALLOY_PAY_DEMO,
-      },
+    {
+      id: "tab-cards",
+      key: "cards",
+      type: "cards",
+      title: "Cards",
+      subtitle: "List of cards rendered by AlloyCard (type: cards).",
+      order: 3,
+      required: false,
+      stage: "registration",
+      status: "not_started",
+      icon: { iconClass: "fa-regular fa-clone" },
 
-      {
-        id: "tab-summary",
-        key: "summary",
-        type: "card",
-        title: "Summary",
-        subtitle: "Summary view rendered by AlloyCard.",
-        order: 4,
-        required: false,
-        stage: "registration",
-        status: "not_started",
-        icon: { iconClass: "fa-solid fa-clipboard-check" },
-        card: ALLOY_CARD_DEMO,
-      },
-    ],
-  },
-  null,
-  2
-);
+      className: "col-12 col-lg-6",
+
+      cards: [ALLOY_CARD_DEMO, ALLOY_CARD_DEMO_2],
+    },
+  ],
+};
+
+const TAB_FORM_MIXED = {
+  ...TAB_FORM_TABS,
+  id: "client-registration-mixed-demo",
+  name: "Client Registration Flow (Mixed)",
+  layout: "mixed",
+  currentIndex: 0,
+};
+
+const DEFAULT_TAB_FORM = JSON.stringify(TAB_FORM_TABS, null, 2);
+const DEFAULT_MIXED_FORM = JSON.stringify(TAB_FORM_MIXED, null, 2);
 
 const TAG_SNIPPET = `const model = new TabFormObject(config);
 <AlloyTabForm tabForm={model} output={handleOutput} />`;
 
 export default function TabFormPage() {
-  const [jsonConfig, setJsonConfig] = useState(DEFAULT_TAB_FORM);
-  const [submitOut, setSubmitOut] = useState(
-    "// Latest OutputObject will appear here (tab-form nav, input, crud, pay, card)"
+  const [activeDemo, setActiveDemo] = useState("tabs");
+
+  const [jsonConfigTabs, setJsonConfigTabs] = useState(DEFAULT_TAB_FORM);
+  const [jsonConfigMixed, setJsonConfigMixed] = useState(DEFAULT_MIXED_FORM);
+
+  const [submitOutTabs, setSubmitOutTabs] = useState(
+    "// Latest OutputObject will appear here (tabs layout)"
+  );
+  const [submitOutMixed, setSubmitOutMixed] = useState(
+    "// Latest OutputObject will appear here (mixed layout)"
   );
 
-  const { model, parseError } = useMemo(() => {
+  const { model: modelTabs, parseError: parseErrorTabs } = useMemo(() => {
     try {
-      const cfg = JSON.parse(jsonConfig);
+      const cfg = JSON.parse(jsonConfigTabs);
       const m = new TabFormObject(cfg);
       return { model: m, parseError: "" };
     } catch (e) {
       const msg = String(e?.message || e || "Invalid JSON");
       return {
         model: new TabFormObject({
-          id: "invalid-config",
-          name: "Invalid config",
+          id: "invalid-config-tabs",
+          name: "Invalid config (tabs)",
           tabs: [
             {
-              id: "error-tab",
+              id: "error-tab-tabs",
               key: "error",
               title: "Invalid JSON",
               order: 1,
@@ -477,28 +347,67 @@ export default function TabFormPage() {
         parseError: msg,
       };
     }
-  }, [jsonConfig]);
+  }, [jsonConfigTabs]);
 
-  function handleOutput(payload) {
+  const { model: modelMixed, parseError: parseErrorMixed } = useMemo(() => {
+    try {
+      const cfg = JSON.parse(jsonConfigMixed);
+      const m = new TabFormObject(cfg);
+      return { model: m, parseError: "" };
+    } catch (e) {
+      const msg = String(e?.message || e || "Invalid JSON");
+      return {
+        model: new TabFormObject({
+          id: "invalid-config-mixed",
+          name: "Invalid config (mixed)",
+          layout: "mixed",
+          tabs: [
+            {
+              id: "error-tab-mixed",
+              key: "error",
+              title: "Invalid JSON",
+              order: 1,
+              required: false,
+              stage: "error",
+              status: "in_progress",
+              type: "inputs",
+              inputs: [],
+            },
+          ],
+        }),
+        parseError: msg,
+      };
+    }
+  }, [jsonConfigMixed]);
+
+  function handleOutputTabs(payload) {
     const plain =
       payload && typeof payload.toJSON === "function" ? payload.toJSON() : payload;
-    setSubmitOut(JSON.stringify(plain, null, 2));
+    setSubmitOutTabs(JSON.stringify(plain, null, 2));
   }
 
-  function resetJson() {
-    setJsonConfig(DEFAULT_TAB_FORM);
-    setSubmitOut(
-      "// Latest OutputObject will appear here (tab-form nav, input, crud, pay, card)"
-    );
+  function handleOutputMixed(payload) {
+    const plain =
+      payload && typeof payload.toJSON === "function" ? payload.toJSON() : payload;
+    setSubmitOutMixed(JSON.stringify(plain, null, 2));
+  }
+
+  function resetJsonTabs() {
+    setJsonConfigTabs(DEFAULT_TAB_FORM);
+    setSubmitOutTabs("// Latest OutputObject will appear here (tabs layout)");
+  }
+
+  function resetJsonMixed() {
+    setJsonConfigMixed(DEFAULT_MIXED_FORM);
+    setSubmitOutMixed("// Latest OutputObject will appear here (mixed layout)");
   }
 
   return (
     <div className="container py-3">
       <h3 className="mb-3 text-center">AlloyTabForm</h3>
       <p className="text-muted text-center mb-4">
-        Multi-step flow. Each tab renders ONE type: inputs (default), crud, pay, or
-        card. Child components emit their own OutputObject and AlloyTabForm forwards
-        it to the parent.
+        Multi-step flow. Tabs layout renders one tab at a time. Mixed layout renders all
+        sections on the same page. Supported types: inputs, pay, cards.
       </p>
 
       {!STRIPE_KEY_OK && (
@@ -518,73 +427,196 @@ export default function TabFormPage() {
         </div>
       </div>
 
-      <div className="row mb-5">
-        <div className="col-12 mx-auto mb-4">
-          <Elements stripe={stripePromise}>
-            <AlloyTabForm tabForm={model} output={handleOutput} />
-          </Elements>
+      <div className="row mb-4">
+        <div className="col-12">
+          <ul className="nav nav-tabs justify-content-center" role="tablist">
+            <li className="nav-item" role="presentation">
+              <button
+                type="button"
+                id="demo-tabs-tab"
+                className={`nav-link ${activeDemo === "tabs" ? "active" : ""}`}
+                role="tab"
+                aria-controls="demo-tabs-pane"
+                aria-selected={activeDemo === "tabs"}
+                onClick={() => setActiveDemo("tabs")}
+              >
+                Tabs layout
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                type="button"
+                id="demo-mixed-tab"
+                className={`nav-link ${activeDemo === "mixed" ? "active" : ""}`}
+                role="tab"
+                aria-controls="demo-mixed-pane"
+                aria-selected={activeDemo === "mixed"}
+                onClick={() => setActiveDemo("mixed")}
+              >
+                Mixed layout
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
-      <div className="row g-3 align-items-stretch justify-content-center mb-5">
-        <div className="col-12 col-lg-6">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">
-              TabForm JSON (editable) — inputs + crud + pay + card
-            </span>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary"
-              onClick={resetJson}
-            >
-              Reset
-            </button>
+      <div className="tab-content">
+        {/* ----------------------------- TABS LAYOUT DEMO ----------------------------- */}
+        <div
+          id="demo-tabs-pane"
+          className={`tab-pane fade ${activeDemo === "tabs" ? "show active" : ""}`}
+          role="tabpanel"
+          aria-labelledby="demo-tabs-tab"
+        >
+          <div className="row mb-2">
+            <div className="col-12">
+              <h5 className="mb-1">Demo A — Tabs layout</h5>
+              <div className="text-muted small">
+                One tab visible at a time. Includes a <code>type: "cards"</code> tab.
+              </div>
+            </div>
           </div>
 
-          <textarea
-            className={`form-control font-monospace ${parseError ? "is-invalid" : ""}`}
-            rows={20}
-            value={jsonConfig}
-            onChange={(e) => setJsonConfig(e.target.value)}
-            spellCheck={false}
-          />
-          {parseError && (
-            <div className="invalid-feedback d-block mt-1">{parseError}</div>
-          )}
+          <div className="row mb-5">
+            <div className="col-12 mx-auto mb-4">
+              <AlloyTabForm tabForm={modelTabs} output={handleOutputTabs} />
+            </div>
 
-          <div className="form-text">
-            <ul className="mb-0 ps-3">
-              <li>
-                Each tab can set <code>type</code>: <code>"inputs"</code>,{" "}
-                <code>"crud"</code>, <code>"pay"</code>, <code>"card"</code>.
-              </li>
-              <li>
-                For <code>type: "inputs"</code>, provide <code>inputs[]</code>.
-              </li>
-              <li>
-                For <code>type: "crud"</code>, provide <code>crud</code>.
-              </li>
-              <li>
-                For <code>type: "pay"</code>, provide <code>pay</code> (Stripe Elements).
-              </li>
-              <li>
-                For <code>type: "card"</code>, provide <code>card</code>.
-              </li>
-            </ul>
+            <div className="row g-3 align-items-stretch justify-content-center mb-5">
+              <div className="col-12 col-lg-6">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-semibold">TabForm JSON (Tabs layout) — editable</span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={resetJsonTabs}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <textarea
+                  className={`form-control font-monospace ${
+                    parseErrorTabs ? "is-invalid" : ""
+                  }`}
+                  rows={20}
+                  value={jsonConfigTabs}
+                  onChange={(e) => setJsonConfigTabs(e.target.value)}
+                  spellCheck={false}
+                />
+                {parseErrorTabs && (
+                  <div className="invalid-feedback d-block mt-1">{parseErrorTabs}</div>
+                )}
+
+                <div className="form-text">
+                  <ul className="mb-0 ps-3">
+                    <li>
+                      Tab <code>type</code>: <code>"inputs"</code>, <code>"pay"</code>,{" "}
+                      <code>"cards"</code>.
+                    </li>
+                    <li>
+                      For <code>type: "pay"</code>, provide <code>pay.publicKey</code> (Stripe
+                      publishable key).
+                    </li>
+                    <li>
+                      For <code>type: "cards"</code>, provide <code>cards: []</code> (list of
+                      card configs).
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="col-12 col-lg-6">
+                <div className="fw-semibold mb-2 text-center text-lg-start">
+                  Latest output (Tabs)
+                </div>
+                <textarea
+                  className="form-control font-monospace bg-light border"
+                  rows={20}
+                  value={submitOutTabs}
+                  readOnly
+                  spellCheck={false}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="col-12 col-lg-6">
-          <div className="fw-semibold mb-2 text-center text-lg-start">
-            Latest output
+        {/* ----------------------------- MIXED LAYOUT DEMO ----------------------------- */}
+        <div
+          id="demo-mixed-pane"
+          className={`tab-pane fade ${activeDemo === "mixed" ? "show active" : ""}`}
+          role="tabpanel"
+          aria-labelledby="demo-mixed-tab"
+        >
+          <div className="row mb-2">
+            <div className="col-12">
+              <h5 className="mb-1">Demo B — Mixed layout</h5>
+              <div className="text-muted small">
+                <code>layout: "mixed"</code> renders all sections in one page (fieldset/legend
+                grouping inside AlloyTabForm).
+              </div>
+            </div>
           </div>
-          <textarea
-            className="form-control font-monospace bg-light border"
-            rows={20}
-            value={submitOut}
-            readOnly
-            spellCheck={false}
-          />
+
+          <div className="row mb-5">
+            <div className="col-12 mx-auto mb-4">
+              <AlloyTabForm tabForm={modelMixed} output={handleOutputMixed} />
+            </div>
+
+            <div className="row g-3 align-items-stretch justify-content-center mb-5">
+              <div className="col-12 col-lg-6">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-semibold">TabForm JSON (Mixed layout) — editable</span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={resetJsonMixed}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <textarea
+                  className={`form-control font-monospace ${
+                    parseErrorMixed ? "is-invalid" : ""
+                  }`}
+                  rows={20}
+                  value={jsonConfigMixed}
+                  onChange={(e) => setJsonConfigMixed(e.target.value)}
+                  spellCheck={false}
+                />
+                {parseErrorMixed && (
+                  <div className="invalid-feedback d-block mt-1">{parseErrorMixed}</div>
+                )}
+
+                <div className="form-text">
+                  <ul className="mb-0 ps-3">
+                    <li>
+                      Set <code>layout</code> on the form: <code>"tabs"</code> (default) or{" "}
+                      <code>"mixed"</code>.
+                    </li>
+                    <li>
+                      Mixed layout validates all <code>type: "inputs"</code> sections on Finish.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="col-12 col-lg-6">
+                <div className="fw-semibold mb-2 text-center text-lg-start">
+                  Latest output (Mixed)
+                </div>
+                <textarea
+                  className="form-control font-monospace bg-light border"
+                  rows={20}
+                  value={submitOutMixed}
+                  readOnly
+                  spellCheck={false}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -53,6 +53,7 @@ import ProductActionPage from "./pages/Tissue/ProductAction.jsx";
 import MediaPage from "./pages/Cell/Media.jsx";
 import MosaicPage from "./pages/Organ/Mosaic.jsx";
 import QuantityPage from "./pages/Cell/Quantity.jsx";
+import MediaGalleryPage from "./pages/Organ/MediaGallery.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -112,7 +113,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="crud" element={<CrudPage />} />                  
           <Route path="post" element={<PostPage />} />   
           <Route path="marquee" element={<MarqueePage />} />  
-          <Route path="mosaic" element={<MosaicPage />} />            
+          <Route path="mosaic" element={<MosaicPage />} />     
+          <Route path="media-gallery" element={<MediaGalleryPage />} />            
         </Route>
       </Route>
     </Routes>

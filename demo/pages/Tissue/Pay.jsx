@@ -1,47 +1,45 @@
 // pages/Organ/Pay.jsx
 import React, { useMemo, useState } from "react";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
 
 import { AlloyPay, PayObject } from "../../../src";
 import { OutputObject } from "../../../src/utils/idHelper.js";
 
 /* -------------------------------------------------------
- * Stripe publishable key
+ * Stripe publishable key (now passed into PayObject as publicKey)
  * ----------------------------------------------------- */
-const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_3razFwq1sWDPvXkxGX5C8ORi00HyfFcIeL"
-);
+
+const DEFAULT_PUBLIC_KEY =
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_STRIPE_PUBLIC_KEY ||
+  "pk_test_3razFwq1sWDPvXkxGX5C8ORi00HyfFcIeL";
 
 /* -------------------------------------------------------
  * DEFAULT PAY JSON CONFIG
- *
- * Single JSON blob with everything for AlloyPay:
- *  - id, name, className
- *  - brandIcon / cardIcon / expiryIcon / cvcIcon
- *  - submit button (IMPORTANT: must contain icon)
- *  - disclaimer
  * ----------------------------------------------------- */
+
 const DEFAULT_PAY_JSON = JSON.stringify(
   {
     id: "alloyPayDemo",
     name: "Payment",
     className: "col-12 col-md-8 mx-auto",
+
+    publicKey: DEFAULT_PUBLIC_KEY,
+
     brandIcon: {
       iconClass: "fa-brands fa-cc-stripe fa-2xl",
-      className: "text-primary"
+      className: "text-primary",
     },
     cardIcon: {
       iconClass: "fa-solid fa-credit-card",
-      className: "text-secondary"
+      className: "text-secondary",
     },
     expiryIcon: {
       iconClass: "fa-solid fa-calendar-days",
-      className: "text-secondary"
+      className: "text-secondary",
     },
     cvcIcon: {
       iconClass: "fa-solid fa-lock",
-      className: "text-secondary"
+      className: "text-secondary",
     },
     submit: {
       name: "Pay now",
@@ -50,9 +48,9 @@ const DEFAULT_PAY_JSON = JSON.stringify(
       disabled: false,
       loading: false,
       ariaLabel: "Pay now",
-      title: "Pay now"
+      title: "Pay now",
     },
-    disclaimer: "*AlloyMobile do not store your credit card information."
+    disclaimer: "*AlloyMobile do not store your credit card information.",
   },
   null,
   2
@@ -82,7 +80,6 @@ export default function PayPage() {
     } catch (e) {
       setPayParseError(String(e.message || e));
 
-      // Safe fallback with disabled button so UI still renders
       return new PayObject({
         id: "alloyPayInvalid",
         name: "Invalid JSON (AlloyPay)",
@@ -94,10 +91,9 @@ export default function PayPage() {
           disabled: true,
           loading: false,
           ariaLabel: "Pay (disabled)",
-          title: "Pay (disabled)"
+          title: "Pay (disabled)",
         },
-        disclaimer:
-          "Fix the JSON on the left to preview a real payment form."
+        disclaimer: "Fix the JSON on the left to preview a real payment form.",
       });
     }
   }, [payJson]);
@@ -108,9 +104,7 @@ export default function PayPage() {
 
   function handlePayOutput(out) {
     const payload =
-      out instanceof OutputObject && typeof out.toJSON === "function"
-        ? out.toJSON()
-        : out;
+      out instanceof OutputObject && typeof out.toJSON === "function" ? out.toJSON() : out;
 
     setPayOutputJson(JSON.stringify(payload, null, 2));
   }
@@ -121,9 +115,7 @@ export default function PayPage() {
 
   function resetPay() {
     setPayJson(DEFAULT_PAY_JSON);
-    setPayOutputJson(
-      "// Interact with Stripe fields and click Pay now to see OutputObject here…"
-    );
+    setPayOutputJson("// Interact with Stripe fields and click Pay now to see OutputObject here…");
     setPayParseError("");
   }
 
@@ -132,7 +124,7 @@ export default function PayPage() {
       const parsed = JSON.parse(payJson);
       setPayJson(JSON.stringify(parsed, null, 2));
     } catch {
-      // ignore; parse error already shown
+      // ignore
     }
   }
 
@@ -144,28 +136,32 @@ export default function PayPage() {
     <div className="container py-3">
       <h3 className="mb-3 text-center">AlloyPay (Stripe)</h3>
 
+      {!payParseError && (!payModel.publicKey || !String(payModel.publicKey).trim()) && (
+        <div className="alert alert-warning small">
+          Stripe public key is not set. Set <code>publicKey</code> in the JSON (or provide{" "}
+          <code>VITE_STRIPE_PUBLISHABLE_KEY</code> / <code>VITE_STRIPE_PUBLIC_KEY</code>) so
+          payment fields can initialize.
+        </div>
+      )}
+
       {/* Usage snippet */}
       <div className="row mb-3">
         <div className="col-12 d-flex align-items-center justify-content-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
             <code>
-{`import { Elements, loadStripe } from "@stripe/react-stripe-js";
-import { AlloyPay, PayObject } from "alloy-react";
-
-const stripePromise = loadStripe("<your-publishable-key>");
+{`import { AlloyPay, PayObject } from "alloy-react";
 
 function Example() {
-  const payModel = new PayObject(payConfig);
+  const payModel = new PayObject({
+    publicKey: "<your-publishable-key>",
+    // ...icons, submit, disclaimer
+  });
 
   function handleOutput(out) {
     console.log(out.toJSON ? out.toJSON() : out);
   }
 
-  return (
-    <Elements stripe={stripePromise}>
-      <AlloyPay pay={payModel} output={handleOutput} />
-    </Elements>
-  );
+  return <AlloyPay pay={payModel} output={handleOutput} />;
 }`}
             </code>
           </pre>
@@ -175,23 +171,19 @@ function Example() {
       {/* Live preview */}
       <div className="row mb-4">
         <div className="col-12">
-          <Elements stripe={stripePromise}>
-            <AlloyPay pay={payModel} output={handlePayOutput} />
-          </Elements>
+          <AlloyPay pay={payModel} output={handlePayOutput} />
 
           <div className="small text-secondary mt-2 text-center">
             <strong>Pay now</strong> will:
             <br />
             - Call Stripe <code>createPaymentMethod</code> with the card data
             <br />
-            - On success, emit an OutputObject where{" "}
-            <code>type="pay"</code>, <code>action="Pay now"</code> (or your
-            submit button name), and <code>data</code> contains{" "}
-            <code>paymentMethodId</code> and the full{" "}
-            <code>paymentMethod</code> object from Stripe.
+            - On success, emit an OutputObject where <code>type="pay"</code>,{" "}
+            <code>action="Pay now"</code> (or your submit button name), and <code>data</code>{" "}
+            contains <code>paymentMethodId</code> and the full <code>paymentMethod</code> object.
             <br />
-            - On error, emit <code>error=true</code> with Stripe error{" "}
-            <code>message</code> and <code>code</code>.
+            - On error, emit <code>error=true</code> with Stripe error <code>message</code> and{" "}
+            <code>code</code>.
           </div>
         </div>
       </div>
@@ -201,9 +193,7 @@ function Example() {
         {/* Left: Input JSON */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold">
-              AlloyPay Input JSON (editable)
-            </span>
+            <span className="fw-semibold">AlloyPay Input JSON (editable)</span>
             <div className="d-flex gap-2">
               <button
                 type="button"
@@ -218,41 +208,35 @@ function Example() {
                 onClick={formatPay}
                 title="Format JSON"
               >
-                <i
-                  className="fa-solid fa-wand-magic-sparkles me-2"
-                  aria-hidden="true"
-                />
+                <i className="fa-solid fa-wand-magic-sparkles me-2" aria-hidden="true" />
                 Format
               </button>
             </div>
           </div>
 
           <textarea
-            className={`form-control font-monospace ${
-              payParseError ? "is-invalid" : ""
-            }`}
+            className={`form-control font-monospace ${payParseError ? "is-invalid" : ""}`}
             rows={22}
             value={payJson}
             onChange={(e) => setPayJson(e.target.value)}
             spellCheck={false}
           />
-          {payParseError && (
-            <div className="invalid-feedback d-block mt-1">
-              {payParseError}
-            </div>
-          )}
+          {payParseError && <div className="invalid-feedback d-block mt-1">{payParseError}</div>}
 
           <div className="form-text">
-            Required pieces:
+            Recommended pieces:
             <ul className="mb-0">
+              <li>
+                <code>publicKey</code> should be set to your Stripe publishable key (starts with{" "}
+                <code>pk_</code>).
+              </li>
               <li>
                 <code>submit.icon.iconClass</code> must exist (to satisfy{" "}
                 <code>ButtonSubmitObject</code>).
               </li>
               <li>
-                <code>brandIcon</code>, <code>cardIcon</code>,{" "}
-                <code>expiryIcon</code>, <code>cvcIcon</code> should have{" "}
-                <code>iconClass</code> for the relevant FontAwesome icons.
+                <code>brandIcon</code>, <code>cardIcon</code>, <code>expiryIcon</code>,{" "}
+                <code>cvcIcon</code> should have <code>iconClass</code>.
               </li>
               <li>
                 <code>name</code> sets the section title (e.g. "Payment").
@@ -294,7 +278,8 @@ function Example() {
   "error": false,
   "data": {
     "paymentMethodId": "pm_12345",
-    "paymentMethod": { /* full Stripe PaymentMethod */ }
+    "paymentMethod": { /* full Stripe PaymentMethod */ },
+    "publicKey": "pk_..."
   }
 }`}
             </pre>
@@ -308,7 +293,8 @@ function Example() {
   "error": true,
   "data": {
     "message": "Your card was declined.",
-    "code": "card_declined"
+    "code": "card_declined",
+    "publicKey": "pk_..."
   }
 }`}
             </pre>
