@@ -30,11 +30,14 @@ export class LogoObject {
 
 /* ----------------------------- TagObject ----------------------------- */
 
+/* ----------------------------- TagObject ----------------------------- */
+
 export class TagObject {
   constructor(tag = {}) {
     this.id = tag.id ?? generateId("tag");
     this.name = typeof tag.name === "string" ? tag.name : "";
     this.className = typeof tag.className === "string" ? tag.className : "badge bg-secondary";
+    this.title = typeof tag.title === "string" ? tag.title : "";
   }
 }
 

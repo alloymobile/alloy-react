@@ -22,9 +22,9 @@ const DEFAULT_JSON_BTN = JSON.stringify(
       className: "text-center fw-semibold mb-2",
     },
     buttons: [
-      { id: "save",  name: "Save",   className: "btn btn-primary" },
-      { id: "reset", name: "Reset",  className: "btn btn-outline-secondary" },
-      { id: "del",   name: "Delete", className: "btn btn-danger" },
+      { id: "save", name: "Save", className: "btn btn-primary" },
+      { id: "reset", name: "Reset", className: "btn btn-outline-secondary" },
+      { id: "del", name: "Delete", className: "btn btn-danger" },
     ],
   },
   null,
@@ -66,6 +66,52 @@ const DEFAULT_JSON_BTN_ICON = JSON.stringify(
   2
 );
 
+const DEFAULT_JSON_BTN_MIXED = JSON.stringify(
+  {
+    type: "AlloyButton",
+    className: "nav justify-content-center gap-2",
+    buttonClass: "nav-item",
+    selected: "active",
+    title: {
+      name: "Actions + Dropdown",
+      className: "text-center fw-semibold mb-2",
+    },
+    buttons: [
+      { id: "save", name: "Save", className: "btn btn-primary" },
+      {
+        type: "dropdown",
+        id: "userMenu",
+        name: "",
+        className: "btn btn-outline-secondary btn-sm dropdown-toggle",
+        icon: { iconClass: "fa-regular fa-user" },
+        linkBar: {
+          type: "AlloyLinkIcon",
+          className: "dropdown-menu dropdown-menu-end",
+          linkClass: "dropdown-item d-flex align-items-center gap-2",
+          selected: "active",
+          links: [
+            {
+              id: "profile",
+              href: "/private/member/profile",
+              icon: { iconClass: "fa-regular fa-id-card" },
+              name: "Profile",
+            },
+            {
+              id: "signout",
+              href: "#",
+              icon: { iconClass: "fa-solid fa-arrow-right-from-bracket" },
+              name: "Sign out",
+            },
+          ],
+        },
+      },
+      { id: "del", name: "Delete", className: "btn btn-danger" },
+    ],
+  },
+  null,
+  2
+);
+
 /* ───────────────────────── UI helpers ───────────────────────────────────── */
 
 function tagSnippet() {
@@ -88,12 +134,17 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
       setParseError(String(e.message || e));
       // safe fallback if JSON is currently invalid
       return new ButtonBarObject({
-        type: tabType,
+        type: tabType === "AlloyButtonIcon" ? "AlloyButtonIcon" : "AlloyButton",
         className: "nav justify-content-center gap-2",
         buttonClass: "nav-item",
         selected: "active",
         title: {
-          name: tabType === "AlloyButton" ? "Actions" : "Shortcuts",
+          name:
+            tabType === "AlloyButtonIcon"
+              ? "Shortcuts"
+              : tabType === "AlloyButtonMixed"
+              ? "Actions + Dropdown"
+              : "Actions",
           className: "text-center fw-semibold mb-2",
         },
         buttons: [],
@@ -111,7 +162,9 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
 
   return (
     <div className="card p-3 mb-4">
-      <h5 className="mb-3 text-center">{tabType}</h5>
+      <h5 className="mb-3 text-center">
+        {tabType === "AlloyButtonMixed" ? "AlloyButton (with Dropdown)" : tabType}
+      </h5>
 
       {/* Row 1 — Usage snippet */}
       <div className="row mb-3">
@@ -151,7 +204,9 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
                   const def =
                     tabType === "AlloyButton"
                       ? DEFAULT_JSON_BTN
-                      : DEFAULT_JSON_BTN_ICON;
+                      : tabType === "AlloyButtonIcon"
+                      ? DEFAULT_JSON_BTN_ICON
+                      : DEFAULT_JSON_BTN_MIXED;
                   setJsonState(def);
                   setOutputJson("// Interact with the bar to see events here…");
                 }}
@@ -193,6 +248,10 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
                 <code>ButtonIconObject</code>.
               </li>
               <li>
+                For dropdown support, add a button entry with{" "}
+                <code>type: "dropdown"</code> and a <code>linkBar</code>.
+              </li>
+              <li>
                 When you click a button in the preview, that one becomes
                 selected and gets <code>selected</code> (like{" "}
                 <code>"active"</code>) injected into its{" "}
@@ -227,7 +286,7 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
             This is the normalized <code>OutputObject</code>, typically:
             <ul className="mb-0 ps-3">
               <li>
-                <code>type</code>: <code>"button"</code>
+                <code>type</code>: <code>"button"</code> or <code>"dropdown"</code>
               </li>
               <li>
                 <code>action</code>: e.g. <code>"click"</code>,{" "}
@@ -246,6 +305,9 @@ function Section({ tabType, jsonState, setJsonState, outputJson, setOutputJson }
                   </li>
                   <li>
                     For icon variant: <code>button.iconClass</code> if present.
+                  </li>
+                  <li>
+                    For dropdown: <code>data.link</code> includes the clicked dropdown link.
                   </li>
                 </ul>
               </li>
@@ -268,11 +330,15 @@ export default function ButtonBarPage() {
 
   const [jsonBtn, setJsonBtn] = useState(DEFAULT_JSON_BTN);
   const [jsonBtnIcon, setJsonBtnIcon] = useState(DEFAULT_JSON_BTN_ICON);
+  const [jsonBtnMixed, setJsonBtnMixed] = useState(DEFAULT_JSON_BTN_MIXED);
 
   const [outputBtn, setOutputBtn] = useState(
     "// Interact with the bar to see events here…"
   );
   const [outputBtnIcon, setOutputBtnIcon] = useState(
+    "// Interact with the bar to see events here…"
+  );
+  const [outputBtnMixed, setOutputBtnMixed] = useState(
     "// Interact with the bar to see events here…"
   );
 
@@ -303,6 +369,17 @@ export default function ButtonBarPage() {
             AlloyButtonIcon
           </button>
         </li>
+
+        <li className="nav-item">
+          <button
+            className={`nav-link ${
+              activeTab === "AlloyButtonMixed" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("AlloyButtonMixed")}
+          >
+            AlloyButton + Dropdown
+          </button>
+        </li>
       </ul>
 
       {/* Panels */}
@@ -323,6 +400,16 @@ export default function ButtonBarPage() {
           setJsonState={setJsonBtnIcon}
           outputJson={outputBtnIcon}
           setOutputJson={setOutputBtnIcon}
+        />
+      )}
+
+      {activeTab === "AlloyButtonMixed" && (
+        <Section
+          tabType="AlloyButtonMixed"
+          jsonState={jsonBtnMixed}
+          setJsonState={setJsonBtnMixed}
+          outputJson={outputBtnMixed}
+          setOutputJson={setOutputBtnMixed}
         />
       )}
     </div>

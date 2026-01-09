@@ -54,6 +54,8 @@ import MediaPage from "./pages/Cell/Media.jsx";
 import MosaicPage from "./pages/Organ/Mosaic.jsx";
 import QuantityPage from "./pages/Cell/Quantity.jsx";
 import MediaGalleryPage from "./pages/Organ/MediaGallery.jsx";
+import NavBarActionPage from "./pages/Tissue/NavBarAction.jsx";
+import ButtonDropDownPage from "./pages/Cell/ButtonDropDown.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -71,6 +73,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="button" element={<ButtonPage />} />   
           <Route path="button-icon" element={<ButtonIconPage />} />   
           <Route path="button-submit" element={<ButtonSubmitPage />} /> 
+          <Route path="button-dropdown" element={<ButtonDropDownPage />} />           
           <Route path="input" element={<InputPage />} /> 
           <Route path="input-icon" element={<InputIconPage />} /> 
           <Route path="input-floating" element={<InputFloatingPage />} />         
@@ -98,7 +101,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="video" element={<VideoPage />} />   
           <Route path="pagination" element={<PaginationPage />} />      
           <Route path="image" element={<ImagePage />} />      
-          <Route path="product-action" element={<ProductActionPage />} />         
+          <Route path="product-action" element={<ProductActionPage />} />    
+          <Route path="navbar-action" element={<NavBarActionPage />} />                  
         </Route>
         <Route path="/organ" element={<Organ />}> 
           <Route path="email" element={<EmailPage />} />   
