@@ -104,26 +104,29 @@ const DEFAULT_INPUTS = {
     ]
   },
 
-  // ✅ Multiselect demo (NEW)
-  // - Renders as <select multiple>
-  // - Value is string[] (array of selected values)
-  // - Use `size` to control visible rows (default 4)
+  // ✅ Multiselect demo (UPDATED: emits string[] like checkbox)
   multiselect: {
-    name: "permissions",
-    label: "Permissions",
+    name: "categories",
+    label: "Categories",
     type: "multiselect",
     layout: "text",
     required: true,
-    className: "form-select",
-    size: 5,
+    className: "form-control",
+    searchable: true,
+    placeholder: "Type to search categories...",
+
+    // key/value rule (like checkbox/select)
     options: [
-      { value: "read", label: "Read" },
-      { value: "write", label: "Write" },
-      { value: "delete", label: "Delete" },
-      { value: "admin", label: "Admin" },
-      { value: "export", label: "Export" },
-      { value: "import", label: "Import" }
-    ]
+      { value: "cat-001", label: "Concrete Pipes", slug: "concrete-pipes" },
+      { value: "cat-002", label: "Precast Slabs", slug: "precast-slabs" },
+      { value: "cat-003", label: "Rebar", slug: "rebar" },
+      { value: "cat-004", label: "Cement Products", slug: "cement-products" },
+      { value: "cat-005", label: "Aggregates", slug: "aggregates" },
+      { value: "cat-006", label: "Steel & Wire", slug: "steel-wire" }
+    ],
+
+    // value is string[]
+    value: ["cat-003"]
   },
 
   date: {
@@ -135,10 +138,6 @@ const DEFAULT_INPUTS = {
     className: "form-control"
   },
 
-  // ✅ Datetime-local demo (NEW)
-  // - Renders as <input type="datetime-local">
-  // - Value format: "YYYY-MM-DDTHH:mm" (e.g., "2024-01-15T14:30")
-  // - Use `min` and `max` to constrain date/time range
   "datetime-local": {
     name: "appointmentTime",
     label: "Appointment Date & Time",
@@ -150,9 +149,6 @@ const DEFAULT_INPUTS = {
     max: "2025-12-31T23:59"
   },
 
-  // ✅ Time demo (NEW)
-  // - Renders as <input type="time">
-  // - Value format: "HH:mm" (e.g., "14:30")
   time: {
     name: "preferredTime",
     label: "Preferred Time",
@@ -178,9 +174,6 @@ const DEFAULT_INPUTS = {
     ]
   },
 
-  // ✅ File upload demo (MULTI enabled)
-  // - With fileUploader: emits string (single) OR string[] (multi) URLs.
-  // - Without fileUploader: emits File (single) OR File[] (multi).
   file: {
     name: "attachments",
     label: "Upload Files (multi)",
@@ -192,8 +185,6 @@ const DEFAULT_INPUTS = {
     multiple: true
   },
 
-  // ✅ Canvas demo (signature/drawing)
-  // Emits data.value as a string like: "data:image/png;base64,iVBORw0K..."
   canvas: {
     name: "signature",
     label: "Signature (canvas)",
@@ -203,7 +194,6 @@ const DEFAULT_INPUTS = {
     width: 600,
     height: 220,
     canvasStrokeWidth: 2
-    // disabled: true
   }
 };
 
@@ -212,25 +202,16 @@ const TABS = Object.keys(DEFAULT_INPUTS);
 export default function InputPage() {
   const [tab, setTab] = useState("text");
 
-  // left textarea (editable JSON for the current tab)
   const [inputJson, setInputJson] = useState(
     JSON.stringify(DEFAULT_INPUTS["text"], null, 2)
   );
 
-  // right textarea (live output from AlloyInput's output callback)
   const [outputJson, setOutputJson] = useState(
     "// Interact with the field (type, blur, select, etc.)"
   );
 
-  // parse error text shown under the JSON editor
   const [parseError, setParseError] = useState("");
 
-  /**
-   * Parse JSON safely (no setState inside render).
-   * Returns:
-   *  - inputModel: InputObject always (fallbacks to current tab default)
-   *  - parseErr: string (empty if ok)
-   */
   const { inputModel, parseErr } = useMemo(() => {
     try {
       const raw = JSON.parse(inputJson || "{}");
@@ -241,20 +222,15 @@ export default function InputPage() {
     }
   }, [inputJson, tab]);
 
-  // reflect parse error in state (so the UI can show invalid styling)
   useEffect(() => {
     setParseError(parseErr);
   }, [parseErr]);
 
-  // Demo-only fileUploader:
-  // returns a local blob URL so you can see URL behavior without a backend.
   async function demoFileUploader(fieldName, file) {
-    // eslint-disable-next-line no-unused-vars
     const _ = fieldName;
     return URL.createObjectURL(file);
   }
 
-  // AlloyInput calls this on change/blur with OutputObject
   function handleOutput(out) {
     const payload =
       out && typeof out.toJSON === "function" ? out.toJSON() : out;
@@ -270,24 +246,21 @@ export default function InputPage() {
     setParseError("");
   }
 
-  // helper: pretty-print the JSON in the left editor
   function handleFormat() {
     try {
       const parsed = JSON.parse(inputJson);
       setInputJson(JSON.stringify(parsed, null, 2));
     } catch {
-      // ignore; parseError already shown
+      // ignore
     }
   }
 
-  // Enable uploader only for file tab (keeps other tabs pure)
   const uploader = tab === "file" ? demoFileUploader : undefined;
 
   return (
     <div className="container py-3">
       <h3 className="mb-4 text-center">AlloyInput</h3>
 
-      {/* Tabs for each field type */}
       <ul className="nav nav-underline nav-fill mb-3 flex-wrap">
         {TABS.map((key) => (
           <li className="nav-item" key={key}>
@@ -302,7 +275,6 @@ export default function InputPage() {
         ))}
       </ul>
 
-      {/* Usage snippet */}
       <div className="row g-3 mb-3">
         <div className="col-12 text-center">
           <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
@@ -313,10 +285,8 @@ export default function InputPage() {
         </div>
       </div>
 
-      {/* Live field preview */}
       <div className="row g-3 mb-3">
         <div className="col-12 col-md-8 offset-md-2 col-lg-6 offset-lg-3">
-          {/* key={tab} remounts when switching types (keeps demo clean) */}
           <AlloyInput
             key={tab}
             input={inputModel}
@@ -330,51 +300,11 @@ export default function InputPage() {
               change <code>minLength</code>, tweak <code>pattern</code>, etc.
             </div>
 
-            {tab === "file" && (
-              <div className="mt-1">
-                File tab is configured with <code>multiple: true</code>. Select
-                multiple files to see <code>data.value</code> become an array.
-                This demo uses a <code>fileUploader</code> that returns local blob
-                URLs (no backend needed), so output becomes <code>string[]</code>.
-              </div>
-            )}
-
-            {tab === "canvas" && (
-              <div className="mt-1">
-                Canvas value emits as a <strong>DataURL string</strong> (includes{" "}
-                <code>data:image/png;base64,</code> prefix). Use the output panel
-                to copy it.
-              </div>
-            )}
-
-            {tab === "datetime-local" && (
-              <div className="mt-1">
-                Datetime-local emits value in <strong>ISO format</strong>:{" "}
-                <code>YYYY-MM-DDTHH:mm</code> (e.g., <code>2024-01-15T14:30</code>).
-                Use <code>min</code> and <code>max</code> to constrain the date/time range.
-              </div>
-            )}
-
-            {tab === "time" && (
-              <div className="mt-1">
-                Time emits value in <strong>24-hour format</strong>:{" "}
-                <code>HH:mm</code> (e.g., <code>14:30</code>).
-                Use <code>min</code> and <code>max</code> to constrain the time range.
-              </div>
-            )}
-
             {tab === "multiselect" && (
               <div className="mt-1">
-                Multiselect emits <code>data.value</code> as a <strong>string[]</strong>{" "}
-                (array of selected values). Hold <code>Ctrl</code> (or <code>Cmd</code> on Mac)
-                to select multiple options. Use <code>size</code> to control visible rows.
-              </div>
-            )}
-
-            {tab === "switch" && (
-              <div className="mt-1">
-                Switch emits <code>data.value</code> as a <strong>boolean</strong>{" "}
-                (<code>true</code>/<code>false</code>).
+                Multiselect (searchable) emits <code>data.value</code> as a{" "}
+                <strong>string[]</strong> (array of selected <code>value</code>s),
+                same as checkbox groups.
               </div>
             )}
 
@@ -393,7 +323,6 @@ export default function InputPage() {
 
       {/* JSON editor (left) and callback output (right) */}
       <div className="row g-3 align-items-stretch">
-        {/* LEFT: Input JSON editor */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="fw-semibold mb-0">Input JSON (editable)</label>
@@ -425,55 +354,8 @@ export default function InputPage() {
           {parseError && (
             <div className="invalid-feedback d-block mt-1">{parseError}</div>
           )}
-
-          <div className="form-text">
-            <ul className="mb-0 ps-3">
-              <li>
-                Only <code>name</code> is required.
-              </li>
-              <li>
-                <code>className</code> styles the control. Examples:{" "}
-                <code>"form-control"</code>, <code>"form-select"</code>,{" "}
-                <code>"form-check-input"</code>, or your own classes.
-              </li>
-              <li>
-                For checkbox / radio, pass{" "}
-                <code>
-                  options: [ &#123;value:"news", label:"News"&#125;, ... ]
-                </code>
-              </li>
-              <li>
-                For <code>multiselect</code>, pass <code>options</code> array and
-                optionally <code>size</code> (visible rows, default 4).
-              </li>
-              <li>
-                For <code>datetime-local</code> and <code>time</code>, use{" "}
-                <code>min</code> and <code>max</code> to constrain values.
-              </li>
-              <li>
-                To enforce strong password rules, set{" "}
-                <code>passwordStrength: true</code>.
-              </li>
-              <li>
-                <code>type: "file"</code> supports <code>accept</code> and{" "}
-                <code>multiple</code>. If you pass <code>fileUploader</code> to{" "}
-                <code>AlloyInput</code>, value becomes a URL string (<code>multiple</code>{" "}
-                emits <code>string[]</code>).
-              </li>
-              <li>
-                <code>type: "canvas"</code> supports optional <code>width</code>,{" "}
-                <code>height</code>, <code>canvasStrokeWidth</code>, and{" "}
-                <code>disabled</code>.
-              </li>
-              <li>
-                Optional: set an explicit <code>id</code> in JSON. If you omit it,
-                AlloyInput generates an SSR-safe id internally.
-              </li>
-            </ul>
-          </div>
         </div>
 
-        {/* RIGHT: Output payload from AlloyInput */}
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="fw-semibold mb-0">
@@ -502,39 +384,8 @@ export default function InputPage() {
           />
 
           <div className="form-text">
-            The callback receives a normalized <code>OutputObject</code>, e.g.:
-            <pre className="bg-light border rounded-3 p-2 mt-2 small mb-2">
-{`{
-  "id": "input-<stable>",
-  "type": "input",
-  "action": "change",   // or "blur"
-  "error": false,       // true if validation failed
-  "data": {
-    "name": "email",
-    "value": "user@example.com",
-    "errors": []
-  }
-}`}
-            </pre>
-            Use <code>error</code> to know if the field is currently invalid,
-            and read <code>data.value</code> for the latest value.
-            <div className="mt-2">
-              For <code>type: "canvas"</code>, <code>data.value</code> will be a
-              DataURL string like <code>data:image/png;base64,...</code>.
-            </div>
-            <div className="mt-1">
-              For <code>type: "file"</code> with <code>multiple: true</code>,{" "}
-              <code>data.value</code> will be an array (e.g. <code>string[]</code>{" "}
-              when uploader is used).
-            </div>
-            <div className="mt-1">
-              For <code>type: "multiselect"</code>,{" "}
-              <code>data.value</code> will be a <code>string[]</code> of selected values.
-            </div>
-            <div className="mt-1">
-              For <code>type: "datetime-local"</code>,{" "}
-              <code>data.value</code> will be <code>"YYYY-MM-DDTHH:mm"</code> format.
-            </div>
+            For <code>type: "multiselect"</code>,{" "}
+            <code>data.value</code> will be a <code>string[]</code> of selected values.
           </div>
         </div>
       </div>

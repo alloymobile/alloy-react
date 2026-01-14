@@ -1,269 +1,133 @@
-// src/utils/idHelper.js
+// src/utils/idHelper.js (BlockObject excerpt)
+
 import { IconObject } from "../components/cell/AlloyIcon.jsx";
-import { useId, useMemo } from "react";
+import { ButtonIconObject } from "../components/cell/AlloyButtonIcon.jsx";
+import { LinkIconObject } from "../components/cell/AlloyLinkIcon.jsx";
+import { QuantityObject } from "../components/cell/AlloyQuantity.jsx";
+import { MediaObject } from "../components/cell/AlloyMedia.jsx";
 
-/**
- * SSR/CSR-consistent DOM id.
- * - If providedId exists, return it.
- * - Otherwise generate a stable id using React's useId().
- *
- * Usage:
- *   const id = useDomId("icon", icon.id);
- */
-export function useDomId(prefix = "id", providedId) {
-  const rid = useId();
+/* ----------------------------- helpers ----------------------------- */
 
-  return useMemo(() => {
-    if (typeof providedId === "string" && providedId.trim() !== "") return providedId.trim();
+let idCounter = 0;
 
-    // React useId() may include ":"; it's valid in HTML, but we can clean it
-    const clean = String(rid).replace(/[:]/g, "");
-    return `${prefix}-${clean}`;
-  }, [prefix, providedId, rid]);
-}
-
-
-
-/**
- * Generate a unique ID string with a given prefix.
- *
- * Examples:
- *   generateId("link")   -> "link-1730145329012-x8f3k"
- *   generateId("input")  -> "input-1730145329012-p2a9q"
- *
- * - Timestamp gives us high uniqueness across runs / reloads / bundles.
- * - Random slug protects from two calls in the same millisecond.
- *
- * This is appropriate for DOM ids, React keys, etc.
- *
- * @param {string} prefix - semantic prefix like "link", "btn", "row", etc.
- * @returns {string} unique id
- */
 export function generateId(prefix = "id") {
-  const ts = Date.now(); // ms since epoch
-  const rand = Math.random().toString(36).slice(2, 7); // short random token
-  return `${prefix}-${ts}-${rand}`;
+  idCounter += 1;
+  return `${prefix}-${idCounter}`;
 }
 
-/**
- * TagObject
- *
- * Lightweight label/title model reused across the library.
- *
- * Fields:
- *  - id?: string        DOM id. Auto-generated if not provided.
- *  - name?: string      Text to render. If falsy ("" / undefined / null), consumers should NOT render.
- *  - className?: string Classes to style that label wrapper.
- *
- * Rendering rule:
- *   If `name` is missing or empty, nothing should render.
- */
+/* ----------------------------- LogoObject ----------------------------- */
+
+export class LogoObject {
+  constructor(logo = {}) {
+    const toSize = (v) => {
+      if (v == null) return undefined;
+      if (typeof v === "number" && Number.isFinite(v)) return v; // React => px
+      if (typeof v === "string" && v.trim()) return v.trim();   // e.g. "180px", "auto", "10rem"
+      return undefined;
+    };
+
+    this.id = logo.id ?? generateId("logo");
+    this.imageUrl = typeof logo.imageUrl === "string" ? logo.imageUrl : "";
+    this.alt = typeof logo.alt === "string" ? logo.alt : "Logo";
+    this.width = toSize(logo.width);
+    this.height = toSize(logo.height);
+    this.className = typeof logo.className === "string" ? logo.className : "";
+  }
+}
+
+
+/* ----------------------------- TagObject ----------------------------- */
+
+/* ----------------------------- TagObject ----------------------------- */
+
 export class TagObject {
   constructor(tag = {}) {
-    const { id, name, className } = tag;
-
-    this.id = id ?? generateId("tag");
-    this.name = name ?? "";        // empty string = "do not render"
-    this.className = className ?? "";
+    this.id = tag.id ?? generateId("tag");
+    this.name = typeof tag.name === "string" ? tag.name : "";
+    this.className = typeof tag.className === "string" ? tag.className : "badge bg-secondary";
+    this.title = typeof tag.title === "string" ? tag.title : "";
   }
 }
-/**
- * OutputObject
- * - id: unique identifier of the source (e.g. "button1", "form-123")
- * - type: semantic source type, e.g. "button", "form", "icon"
- * - action: semantic action, e.g. "click", "submit", "change"
- * - error: boolean flag (default false)
- * - data: any key/value payload
- *          - if error === false: data contains your normal payload
- *          - if error === true:  data contains your error info (e.g. { message })
- */
+
+/* ----------------------------- OutputObject ----------------------------- */
+
 export class OutputObject {
-  /**
-   * @param {Object} [output]
-   * @param {string} [output.id]             - Optional top-level id; if omitted we try data.id, else "".
-   * @param {string} [output.type=""]        - "button" | "form" | "icon" | ...
-   * @param {string} [output.action=""]      - "click" | "submit" | "change" | ...
-   * @param {Object} [output.data={}]        - Payload; shape depends on error flag.
-   * @param {boolean} [output.error=false]   - Error flag
-   */
-  constructor(output = {}) {
-    const {
-      id,
-      type = "",
-      action = "",
-      data = {},
-      error = false
-    } = output || {};
-
-    // Prefer explicit id, else fall back to data.id, else ""
-    const resolvedId =
-      typeof id !== "undefined"
-        ? id
-        : (data && typeof data.id !== "undefined" ? data.id : "");
-
-    this.id = resolvedId;
-    this.type = type;
-    this.action = action;
-    this.error = Boolean(error);
-    this.data = { ...data }; // no forced id/name inside data anymore
+  constructor(cfg = {}) {
+    this.id = cfg.id ?? "";
+    this.type = cfg.type ?? "";
+    this.action = cfg.action ?? "";
+    this.error = !!cfg.error;
+    this.errorMessage = Array.isArray(cfg.errorMessage) ? cfg.errorMessage : [];
+    this.data = cfg.data && typeof cfg.data === "object" ? cfg.data : {};
   }
 
-  /**
-   * Helper: success (non-error) payload
-   *
-   * Usage:
-   *   OutputObject.ok({
-   *     id: "button1",
-   *     type: "button",
-   *     action: "mouseleave",
-   *     data: { name: "Primary" }
-   *   });
-   */
-  static ok({ id = "", type = "", action = "", data = {} } = {}) {
-    return new OutputObject({
-      id,
-      type,
-      action,
-      error: false,
-      data
-    });
+  static ok(cfg = {}) {
+    return new OutputObject({ ...cfg, error: false, errorMessage: [] });
   }
 
-  /**
-   * Helper: error payload
-   *
-   * Usage:
-   *   OutputObject.errorOf({
-   *     id: "button1",
-   *     type: "button",
-   *     action: "mouseleave",
-   *     message: "There is an error in the button"
-   *   });
-   */
-  static errorOf({
-    id = "",
-    type = "",
-    action = "",
-    message = "",
-    data = {}
-  } = {}) {
-    const mergedData = { ...data };
-
-    // Put message into data.message if provided,
-    // but don't override an existing message unless you want to.
-    if (message && mergedData.message == null) {
-      mergedData.message = String(message);
-    }
-
+  static err(cfg = {}, messages = []) {
     return new OutputObject({
-      id,
-      type,
-      action,
+      ...cfg,
       error: true,
-      data: mergedData
+      errorMessage: Array.isArray(messages) ? messages : [messages],
     });
   }
 
-  /**
-   * Mark this instance as error and merge extra fields into data.
-   *
-   * Example:
-   *   out.addError("Bad value", { code: "BAD_VALUE" });
-   */
-  addError(message, extra = {}) {
-    this.error = true;
-    const next = { ...this.data, ...extra };
-
-    if (message) {
-      // keep/attach a message; don't blindly overwrite if already present
-      if (next.message == null) {
-        next.message = String(message);
-      }
-    }
-
-    this.data = next;
-    return this;
-  }
-
-  /** Clear error flag; keep existing data as-is */
-  clearError() {
-    this.error = false;
-    return this;
-  }
-
-  /** Safe JSON representation */
   toJSON() {
     return {
       id: this.id,
       type: this.type,
       action: this.action,
       error: this.error,
-      data: { ...this.data }
+      errorMessage: this.errorMessage,
+      data: this.data,
     };
   }
 }
 
-export class LogoObject {
-  constructor(logo = {}) {
-    this.id = logo.id ?? generateId("logo");
+/* ----------------------------- useDomId hook ----------------------------- */
 
-    this.imageUrl =
-      logo.imageUrl ??
-      "https://alloymobile.blob.core.windows.net/alloymobile/alloymobile.png";
+import { useRef } from "react";
 
-    this.alt = logo.alt ?? "Alloymobile";
-
-    // Fill available width but don't bleed
-    this.width = logo.width ?? "100%";
-    this.height = logo.height ?? "auto";
-
-    this.className =
-      logo.className ??
-      "img-fluid d-block w-100 h-auto object-fit-contain";
+export function useDomId(prefix = "id", providedId) {
+  const idRef = useRef(providedId || null);
+  if (!idRef.current) {
+    idRef.current = generateId(prefix);
   }
+  return idRef.current;
 }
 
+/* ----------------------------- BlockObject ----------------------------- */
+
 /**
- * BlockObject
+ * BlockObject - Universal field container for card layouts
  *
- * A generic piece of UI inside a Bootstrap grid:
- *  - can render:
- *      - text (name)
- *      - icon + text (IconObject)
- *      - logo (LogoObject)
- *      - tags stack (TagObject[])
- *  - layout:
- *      - colClass → outer column width
- *      - className → inner styling
+ * Supports rendering ONE of the following (checked in priority order):
+ *   1. media      → AlloyMedia (gallery with images/videos/3D)
+ *   2. logo       → <img> (simple image)
+ *   3. icon       → AlloyIcon
+ *   4. tags       → vertical stack of badges
+ *   5. quantity   → AlloyQuantity (number input with +/- buttons)
+ *   6. buttonIcon → AlloyButtonIcon (icon button for actions)
+ *   7. linkIcon   → AlloyLinkIcon (icon link for navigation)
+ *   8. name       → plain text (fallback)
  */
 export class BlockObject {
-  /**
-   * @param {Object} block
-   *   - id?: string
-   *   - name?: string
-   *   - className?: string         // inner styling
-   *   - colClass?: string          // outer Bootstrap col (e.g. "col-12 col-md-6")
-   *   - icon?: IconObject|{iconClass}
-   *   - iconClass?: string         // shorthand
-   *   - logo?: LogoObject|{imageUrl, alt, ...}
-   *   - tags?: TagObject[]|{id?:string,name?:string,className?:string}[]
-   *   - ariaLabel?: string
-   */
   constructor(block = {}) {
     this.id = block.id ?? generateId("block");
 
     this.name = typeof block.name === "string" ? block.name : "";
 
-    // inner styles
+    // Inner styles
     this.className = block.className ?? "";
 
-    // outer grid width – default full width
+    // Outer grid width – default full width
     this.colClass = block.colClass ?? "col-12";
 
     this.ariaLabel =
       typeof block.ariaLabel === "string" ? block.ariaLabel : this.name || "";
 
-    // Icon
+    /* ----- Icon ----- */
     const rawIcon =
       block.icon || (block.iconClass ? { iconClass: block.iconClass } : null);
     this.icon = rawIcon
@@ -272,7 +136,7 @@ export class BlockObject {
         : new IconObject(rawIcon)
       : null;
 
-    // Logo
+    /* ----- Logo ----- */
     const rawLogo = block.logo || null;
     this.logo = rawLogo
       ? rawLogo instanceof LogoObject
@@ -280,19 +144,73 @@ export class BlockObject {
         : new LogoObject(rawLogo)
       : null;
 
-    // Tags (stacked lines)
+    /* ----- Tags (stacked badges) ----- */
     const rawTags = Array.isArray(block.tags) ? block.tags : [];
     this.tags = rawTags
       .filter(Boolean)
       .map((t) => (t instanceof TagObject ? t : new TagObject(t || {})));
+
+    /* ----- Quantity (AlloyQuantity) ----- */
+    const rawQuantity = block.quantity || null;
+    if (rawQuantity) {
+      const quantityCfg = {
+        name: this.name || this.id,
+        ...rawQuantity,
+      };
+      this.quantity =
+        rawQuantity instanceof QuantityObject
+          ? rawQuantity
+          : new QuantityObject(quantityCfg);
+    } else {
+      this.quantity = null;
+    }
+
+    /* ----- ButtonIcon (AlloyButtonIcon) ----- */
+    const rawButtonIcon = block.buttonIcon || null;
+    if (rawButtonIcon) {
+      this.buttonIcon =
+        rawButtonIcon instanceof ButtonIconObject
+          ? rawButtonIcon
+          : new ButtonIconObject(rawButtonIcon);
+    } else {
+      this.buttonIcon = null;
+    }
+
+    /* ----- LinkIcon (AlloyLinkIcon) ----- */
+    const rawLinkIcon = block.linkIcon || null;
+    if (rawLinkIcon) {
+      this.linkIcon =
+        rawLinkIcon instanceof LinkIconObject
+          ? rawLinkIcon
+          : new LinkIconObject(rawLinkIcon);
+    } else {
+      this.linkIcon = null;
+    }
+
+    /* ----- Media (AlloyMedia) ----- */
+    const rawMedia = block.media || null;
+    if (rawMedia) {
+      this.media =
+        rawMedia instanceof MediaObject
+          ? rawMedia
+          : new MediaObject(rawMedia);
+    } else {
+      this.media = null;
+    }
+  }
+
+  /* ----- Type checks (priority order for rendering) ----- */
+
+  hasMedia() {
+    return !!(this.media && this.media.items && this.media.items.length > 0);
   }
 
   hasLogo() {
-    return !!this.logo;
+    return !!(this.logo && this.logo.imageUrl);
   }
 
   hasIcon() {
-    return !!this.icon;
+    return !!(this.icon && this.icon.iconClass);
   }
 
   hasTags() {
@@ -302,7 +220,33 @@ export class BlockObject {
     );
   }
 
+  hasQuantity() {
+    return !!(this.quantity && this.quantity.name);
+  }
+
+  hasButtonIcon() {
+    return !!(this.buttonIcon && this.buttonIcon.icon);
+  }
+
+  hasLinkIcon() {
+    return !!(this.linkIcon && this.linkIcon.to);
+  }
+
   hasText() {
     return !!(this.name && this.name.trim().length > 0);
   }
+
+  getContentType() {
+    if (this.hasMedia()) return "media";
+    if (this.hasLogo()) return "logo";
+    if (this.hasIcon()) return "icon";
+    if (this.hasTags()) return "tags";
+    if (this.hasQuantity()) return "quantity";
+    if (this.hasButtonIcon()) return "buttonIcon";
+    if (this.hasLinkIcon()) return "linkIcon";
+    if (this.hasText()) return "text";
+    return "empty";
+  }
 }
+
+export default BlockObject;

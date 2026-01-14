@@ -5,6 +5,9 @@ import AlloyInput, { InputObject } from "../cell/AlloyInput.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
 import AlloyIcon, { IconObject } from "../cell/AlloyIcon.jsx";
 
+import AlloyPay, { PayObject } from "../tissue/AlloyPay.jsx";
+import AlloyCard, { CardObject } from "../tissue/AlloyCard.jsx";
+
 import { generateId, OutputObject } from "../../utils/idHelper.js";
 
 /* -------------------------------------------------------
@@ -21,13 +24,64 @@ export class TabObject {
     this.stage = tab.stage ?? "";
     this.status = tab.status ?? "";
 
+    this.className =
+      typeof tab.className === "string" && tab.className.trim()
+        ? tab.className
+        : "col-12";
+
+    this.initError = "";
+
+    const t = String(tab.type ?? "inputs").trim().toLowerCase();
+    this.type = t === "pay" ? "pay" : t === "cards" ? "cards" : "inputs";
+
     this.icon = tab.icon
       ? tab.icon instanceof IconObject
         ? tab.icon
         : new IconObject(tab.icon)
       : null;
 
-    this.inputs = Array.isArray(tab.inputs) ? tab.inputs : [];
+    // ✅ NEW: one customizable class for input sleeve (keeps old layout by default)
+    this.inputClass =
+      typeof tab.inputClass === "string" && tab.inputClass.trim()
+        ? tab.inputClass
+        : "col-12 col-md-6 col-lg-5 mx-auto";
+
+    // inputs must be InputObject[]
+    this.inputs = [];
+    if (this.type === "inputs") {
+      try {
+        const rawInputs = Array.isArray(tab.inputs) ? tab.inputs : [];
+        this.inputs = rawInputs.map((i) =>
+          i instanceof InputObject ? i : new InputObject(i || {})
+        );
+      } catch (e) {
+        this.initError = String(e?.message || e);
+        this.inputs = [];
+      }
+    }
+
+    this.pay = null;
+    if (this.type === "pay") {
+      try {
+        this.pay = tab.pay instanceof PayObject ? tab.pay : new PayObject(tab.pay || {});
+      } catch (e) {
+        this.initError = String(e?.message || e);
+        this.pay = null;
+      }
+    }
+
+    this.cards = [];
+    if (this.type === "cards") {
+      try {
+        const rawCards = Array.isArray(tab.cards) ? tab.cards : [];
+        this.cards = rawCards.map((c) =>
+          c instanceof CardObject ? c : new CardObject(c || {})
+        );
+      } catch (e) {
+        this.initError = String(e?.message || e);
+        this.cards = [];
+      }
+    }
   }
 }
 
@@ -39,6 +93,9 @@ export class TabFormObject {
     this.id = cfg.id ?? generateId("tab-form");
     this.name = cfg.name ?? "";
     this.status = cfg.status ?? "draft";
+
+    // layout: "tabs" (default) or "mixed"
+    this.layout = cfg.layout === "mixed" ? "mixed" : "tabs";
 
     const rawTabs = Array.isArray(cfg.tabs) ? cfg.tabs : [];
     const mappedTabs = rawTabs.map((t) => new TabObject(t));
@@ -108,8 +165,7 @@ function validateTab(tab, tabValues) {
     if (!name) return;
 
     const messages = [];
-    const value =
-      typeof tabValues[name] !== "undefined" ? tabValues[name] : input.value;
+    const value = typeof tabValues[name] !== "undefined" ? tabValues[name] : input.value;
 
     if (input.required) {
       if (input.type === "checkbox") {
@@ -158,15 +214,15 @@ export function AlloyTabForm({ tabForm, output }) {
   const currentTabKey = currentTab ? currentTab.key : "";
   const navButtons = tabForm.navButtons || {};
 
-  // 🔑 KEY FIX: when a *new* TabFormObject comes in (e.g. after /lookup),
-  // reset internal values + errors so fields use the new `input.value`.
+  const layout = tabForm.layout || "tabs";
+  const isMixed = layout === "mixed";
+
   useEffect(() => {
     setCurrentIndex(tabForm.currentIndex);
     setValues(buildInitialValues(tabForm));
     setErrors({});
   }, [tabForm]);
 
-  // value getter
   function getValue(tabKey, name, fallback, type) {
     const tabVals = values[tabKey] || {};
     if (Object.prototype.hasOwnProperty.call(tabVals, name)) {
@@ -176,7 +232,6 @@ export function AlloyTabForm({ tabForm, output }) {
     return type === "checkbox" ? false : "";
   }
 
-  // Consume AlloyInput's OutputObject to update values + field-level errors.
   function handleFieldOutput(tabKey, out) {
     const payload = out && typeof out.toJSON === "function" ? out.toJSON() : out;
 
@@ -186,20 +241,17 @@ export function AlloyTabForm({ tabForm, output }) {
 
     if (!name) return;
 
-    // update values
     setValues((prev) => {
       const clone = { ...prev };
       const perTab = { ...(clone[tabKey] || {}) };
       perTab[name] = nextVal;
       clone[tabKey] = perTab;
 
-      // ✅ propagate the SAME AlloyInput event upwards (change/blur)
       output?.(out);
 
       return clone;
     });
 
-    // live-sync field errors
     setErrors((prev) => {
       const clone = { ...prev };
       const perTab = { ...(clone[tabKey] || {}) };
@@ -215,12 +267,12 @@ export function AlloyTabForm({ tabForm, output }) {
     });
   }
 
-  // Emit OutputObject in normalized format
   function emit(navAction, nextIndex, nextValues, nextErrors, hadError) {
     const nextTab = tabs[nextIndex] || currentTab;
     const nextKey = nextTab ? nextTab.key : currentTabKey;
 
     const baseData = {
+      navAction,
       currentIndex: nextIndex,
       currentTabKey: nextKey,
       values: nextValues,
@@ -234,7 +286,7 @@ export function AlloyTabForm({ tabForm, output }) {
     if (typeof output !== "function") return;
 
     const out = hadError
-      ? OutputObject.errorOf({
+      ? OutputObject.err({
           id: tabForm.id,
           type: "tab-form",
           action: navAction === "finish" ? "submit" : "draft",
@@ -250,8 +302,8 @@ export function AlloyTabForm({ tabForm, output }) {
     output(out);
   }
 
-  // nav handlers
   function handlePrevious() {
+    if (isMixed) return;
     if (!currentTab || currentIndex <= 0) return;
     const nextIndex = currentIndex - 1;
     setCurrentIndex(nextIndex);
@@ -259,65 +311,103 @@ export function AlloyTabForm({ tabForm, output }) {
   }
 
   function handleNext() {
+    if (isMixed) return;
     if (!currentTab || currentIndex >= totalSteps - 1) return;
-    const tabKey = currentTab.key;
-    const tabVals = values[tabKey] || {};
-    const tabErr = validateTab(currentTab, tabVals);
 
-    if (Object.keys(tabErr).length > 0) {
-      const mergedErr = {
-        ...errors,
-        [tabKey]: tabErr,
-      };
-      setErrors(mergedErr);
-      emit("next", currentIndex, values, mergedErr, true);
+    if (currentTab.type === "inputs") {
+      const tabKey = currentTab.key;
+      const tabVals = values[tabKey] || {};
+      const tabErr = validateTab(currentTab, tabVals);
+
+      if (Object.keys(tabErr).length > 0) {
+        const mergedErr = {
+          ...errors,
+          [tabKey]: tabErr,
+        };
+        setErrors(mergedErr);
+        emit("next", currentIndex, values, mergedErr, true);
+        return;
+      }
+
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+
+      const nextErrors = { ...errors };
+      delete nextErrors[tabKey];
+      setErrors(nextErrors);
+      emit("next", nextIndex, values, nextErrors, false);
       return;
     }
 
     const nextIndex = currentIndex + 1;
     setCurrentIndex(nextIndex);
-
-    const nextErrors = { ...errors };
-    delete nextErrors[tabKey];
-    setErrors(nextErrors);
-    emit("next", nextIndex, values, nextErrors, false);
+    emit("next", nextIndex, values, errors, false);
   }
 
   function handleFinish() {
-    if (!currentTab) return;
-    const tabKey = currentTab.key;
-    const tabVals = values[tabKey] || {};
-    const tabErr = validateTab(currentTab, tabVals);
+    if (!tabs.length) return;
 
-    if (Object.keys(tabErr).length > 0) {
-      const mergedErr = {
-        ...errors,
-        [tabKey]: tabErr,
-      };
-      setErrors(mergedErr);
-      emit("finish", currentIndex, values, mergedErr, true);
+    if (isMixed) {
+      let nextErrors = { ...errors };
+      let hadError = false;
+
+      tabs.forEach((tab) => {
+        if (tab.type !== "inputs") return;
+
+        const tabKey = tab.key;
+        const tabVals = values[tabKey] || {};
+        const tabErr = validateTab(tab, tabVals);
+
+        if (Object.keys(tabErr).length > 0) {
+          nextErrors = { ...nextErrors, [tabKey]: tabErr };
+          hadError = true;
+        } else if (nextErrors[tabKey]) {
+          const clone = { ...nextErrors };
+          delete clone[tabKey];
+          nextErrors = clone;
+        }
+      });
+
+      setErrors(nextErrors);
+      emit("finish", currentIndex, values, nextErrors, hadError);
       return;
     }
 
-    const nextErrors = { ...errors };
-    delete nextErrors[tabKey];
-    setErrors(nextErrors);
-    emit("finish", currentIndex, values, nextErrors, false);
+    if (!currentTab) return;
+
+    if (currentTab.type === "inputs") {
+      const tabKey = currentTab.key;
+      const tabVals = values[tabKey] || {};
+      const tabErr = validateTab(currentTab, tabVals);
+
+      if (Object.keys(tabErr).length > 0) {
+        const mergedErr = {
+          ...errors,
+          [tabKey]: tabErr,
+        };
+        setErrors(mergedErr);
+        emit("finish", currentIndex, values, mergedErr, true);
+        return;
+      }
+
+      const nextErrors = { ...errors };
+      delete nextErrors[tabKey];
+      setErrors(nextErrors);
+      emit("finish", currentIndex, values, nextErrors, false);
+      return;
+    }
+
+    emit("finish", currentIndex, values, errors, false);
   }
 
   if (!currentTab) {
-    return (
-      <div className="alert alert-warning">
-        No steps defined for this TabForm.
-      </div>
-    );
+    return <div className="alert alert-warning">No steps defined for this TabForm.</div>;
   }
 
-  const hasPrevious = currentIndex > 0;
-  const isLast = currentIndex === totalSteps - 1;
-  const hasNext = !isLast;
+  const hasPrevious = !isMixed && currentIndex > 0;
+  const isLast = isMixed ? true : currentIndex === totalSteps - 1;
+  const hasNext = !isMixed && !isLast;
 
-  // Navigation button models
   const prevButtonModel =
     hasPrevious &&
     (navButtons.previous ||
@@ -337,7 +427,7 @@ export function AlloyTabForm({ tabForm, output }) {
       }));
 
   const finishButtonModel =
-    isLast &&
+    (isLast || isMixed) &&
     (navButtons.finish ||
       new ButtonIconObject({
         name: "Finish",
@@ -347,97 +437,199 @@ export function AlloyTabForm({ tabForm, output }) {
 
   return (
     <div className="alloy-tab-form">
-      {/* Tab headers */}
-      <ul className="nav nav-tabs mb-3 flex-wrap">
-        {tabs.map((tab, idx) => {
-          const active = idx === currentIndex;
-          return (
-            <li className="nav-item" key={tab.id}>
-              <button
-                type="button"
-                className={`nav-link ${active ? "active" : ""}`}
-                onClick={() => setCurrentIndex(idx)}
-              >
-                {tab.icon && (
-                  <span className="me-1">
-                    <AlloyIcon icon={tab.icon} />
-                  </span>
-                )}
-                {tab.title || `Step ${idx + 1}`}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {/* Title + subtitle */}
-      {(currentTab.title || currentTab.subtitle) && (
-        <div className="mb-3">
-          {currentTab.title && <h5 className="mb-1">{currentTab.title}</h5>}
-          {currentTab.subtitle && (
-            <div className="text-muted small">{currentTab.subtitle}</div>
-          )}
-        </div>
+      {!isMixed && (
+        <ul className="nav nav-tabs mb-3 flex-wrap">
+          {tabs.map((tab, idx) => {
+            const active = idx === currentIndex;
+            return (
+              <li className="nav-item" key={tab.id}>
+                <button
+                  type="button"
+                  className={`nav-link ${active ? "active" : ""}`}
+                  onClick={() => setCurrentIndex(idx)}
+                >
+                  {tab.icon && (
+                    <span className="me-1">
+                      <AlloyIcon icon={tab.icon} />
+                    </span>
+                  )}
+                  {tab.title || `Step ${idx + 1}`}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
-      {/* Form body: one row / one column / inputs[] */}
       <form onSubmit={(e) => e.preventDefault()} noValidate>
-        <div className="row g-3">
-          <div className="col-12 col-md-6 col-lg-5 mx-auto">
-            {currentTab.inputs.map((inputConfig, iIdx) => {
-              const val = getValue(
-                currentTab.key,
-                inputConfig.name,
-                inputConfig.value,
-                inputConfig.type
-              );
-              const tabErr = errors[currentTab.key] || {};
-              const fieldErrors = tabErr[inputConfig.name] || [];
-              const invalid = fieldErrors.length > 0;
-
-              const model = new InputObject({
-                ...inputConfig,
-                value: val,
-                errors: fieldErrors,
-                invalid,
-              });
-
+        {isMixed ? (
+          <div className="row g-3">
+            {tabs.map((tab, idx) => {
+              const tabKey = tab.key;
+              const legendTitle = tab.title || `Step ${idx + 1}`;
               return (
-                <AlloyInput
-                  key={`inp-${iIdx}`}
-                  input={model}
-                  output={(out) => handleFieldOutput(currentTab.key, out)}
-                />
+                <div className={tab.className || "col-12"} key={tab.id}>
+                  <fieldset className="border rounded p-3">
+                    <legend className="float-none w-auto px-2 mb-0">
+                      {tab.icon && (
+                        <span className="me-1">
+                          <AlloyIcon icon={tab.icon} />
+                        </span>
+                      )}
+                      {legendTitle}
+                    </legend>
+
+                    {tab.subtitle && (
+                      <div className="text-muted small mb-3">{tab.subtitle}</div>
+                    )}
+
+                    {tab.initError ? (
+                      <div className="alert alert-danger">{tab.initError}</div>
+                    ) : null}
+
+                    {tab.type === "inputs" && (
+                      <div className="row g-3">
+                        {/* ✅ CHANGED: wrapper class now comes from tab.inputClass (default keeps old behavior) */}
+                        <div className={tab.inputClass}>
+                          {tab.inputs.map((inputModel, iIdx) => {
+                            const val = getValue(
+                              tabKey,
+                              inputModel.name,
+                              inputModel.value,
+                              inputModel.type
+                            );
+
+                            const tabErr = errors[tabKey] || {};
+                            const fieldErrors = tabErr[inputModel.name] || [];
+                            const invalid = fieldErrors.length > 0;
+
+                            const model = new InputObject({
+                              ...inputModel,
+                              value: val,
+                              errors: fieldErrors,
+                              invalid,
+                            });
+
+                            return (
+                              <AlloyInput
+                                key={`inp-${tabKey}-${iIdx}`}
+                                input={model}
+                                output={(out) => handleFieldOutput(tabKey, out)}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {tab.type === "pay" && (
+                      <div className="col-12">
+                        {tab.pay && (
+                          <AlloyPay pay={tab.pay} output={(out) => output?.(out)} />
+                        )}
+                      </div>
+                    )}
+
+                    {tab.type === "cards" && (
+                      <div className="col-12">
+                        <div className="row g-3">
+                          {tab.cards.map((c) => (
+                            <div className="col-12" key={c.id}>
+                              <AlloyCard card={c} output={(out) => output?.(out)} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </fieldset>
+                </div>
               );
             })}
           </div>
-        </div>
+        ) : (
+          <>
+            {(currentTab.title || currentTab.subtitle) && (
+              <div className="mb-3">
+                {currentTab.title && <h5 className="mb-1">{currentTab.title}</h5>}
+                {currentTab.subtitle && (
+                  <div className="text-muted small">{currentTab.subtitle}</div>
+                )}
+              </div>
+            )}
 
-        {/* Nav buttons */}
+            {currentTab.initError ? (
+              <div className="alert alert-danger">{currentTab.initError}</div>
+            ) : null}
+
+            <div className="row g-3">
+              {currentTab.type === "inputs" && (
+                <div className="row g-3">
+                  {/* ✅ CHANGED: wrapper class now comes from currentTab.inputClass (default keeps old behavior) */}
+                  <div className={currentTab.inputClass}>
+                    {currentTab.inputs.map((inputModel, iIdx) => {
+                      const val = getValue(
+                        currentTab.key,
+                        inputModel.name,
+                        inputModel.value,
+                        inputModel.type
+                      );
+                      const tabErr = errors[currentTab.key] || {};
+                      const fieldErrors = tabErr[inputModel.name] || [];
+                      const invalid = fieldErrors.length > 0;
+
+                      const model = new InputObject({
+                        ...inputModel,
+                        value: val,
+                        errors: fieldErrors,
+                        invalid,
+                      });
+
+                      return (
+                        <AlloyInput
+                          key={`inp-${iIdx}`}
+                          input={model}
+                          output={(out) => handleFieldOutput(currentTab.key, out)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {currentTab.type === "pay" && (
+                <div className="col-12">
+                  {currentTab.pay && (
+                    <AlloyPay pay={currentTab.pay} output={(out) => output?.(out)} />
+                  )}
+                </div>
+              )}
+
+              {currentTab.type === "cards" && (
+                <div className="col-12">
+                  <div className="row g-3">
+                    {currentTab.cards.map((c) => (
+                      <div className="col-12" key={c.id}>
+                        <AlloyCard card={c} output={(out) => output?.(out)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         <div className="d-flex justify-content-between mt-4">
-          {/* Left: Previous */}
           {hasPrevious ? (
-            <AlloyButtonIcon
-              buttonIcon={prevButtonModel}
-              output={() => handlePrevious()}
-            />
+            <AlloyButtonIcon buttonIcon={prevButtonModel} output={handlePrevious} />
           ) : (
             <span />
           )}
 
-          {/* Right: Next / Finish */}
           <div className="d-flex gap-2 ms-auto">
-            {hasNext && (
-              <AlloyButtonIcon
-                buttonIcon={nextButtonModel}
-                output={() => handleNext()}
-              />
-            )}
-            {isLast && (
-              <AlloyButtonIcon
-                buttonIcon={finishButtonModel}
-                output={() => handleFinish()}
-              />
+            {hasNext && <AlloyButtonIcon buttonIcon={nextButtonModel} output={handleNext} />}
+            {(isLast || isMixed) && (
+              <AlloyButtonIcon buttonIcon={finishButtonModel} output={handleFinish} />
             )}
           </div>
         </div>

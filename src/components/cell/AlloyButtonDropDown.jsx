@@ -7,15 +7,10 @@ import { LinkObject } from "../cell/AlloyLink.jsx";
 import { LinkIconObject } from "../cell/AlloyLinkIcon.jsx";
 import { LinkLogoObject } from "../cell/AlloyLinkLogo.jsx";
 
-import { generateId } from "../../utils/idHelper.js";
+import { generateId, TagObject } from "../../utils/idHelper.js";
 
 /* ---------------------------------------------------------
  * ButtonDropDownObject
- *
- * React equivalent of AlloyButtonDropDown (Angular):
- *  - id, name, type, className, active
- *  - icon: { iconClass?: string, ... }  (kept simple)
- *  - linkBar: LinkBarObject
  * ------------------------------------------------------- */
 
 export class ButtonDropDownObject {
@@ -28,6 +23,9 @@ export class ButtonDropDownObject {
       active = "",
       icon,
       linkBar,
+
+      // NEW
+      badge,
     } = res;
 
     this.id = id ?? generateId("btnDropdown");
@@ -36,8 +34,15 @@ export class ButtonDropDownObject {
     this.className = className;
     this.active = active;
 
-    // icon is kept as a simple object; it matches what your LinkIconObject expects
     this.icon = icon || { iconClass: "" };
+
+    // normalize badge → TagObject | null
+    const rawBadge = badge || null;
+    this.badge = rawBadge
+      ? rawBadge instanceof TagObject
+        ? rawBadge
+        : new TagObject(rawBadge)
+      : null;
 
     // normalize linkBar → LinkBarObject
     if (linkBar instanceof LinkBarObject) {
@@ -55,19 +60,6 @@ export class ButtonDropDownObject {
 
 /* ---------------------------------------------------------
  * AlloyButtonDropDown
- *
- * Props:
- *  - buttonDropDown : ButtonDropDownObject | plain config
- *  - output?        : (link) => void
- *
- * Behavior:
- *  - Renders a Bootstrap dropdown:
- *      <div className="dropdown">
- *        <button ... data-bs-toggle="dropdown">
- *        <AlloyLinkBar ...> as dropdown menu
- *  - Wraps each link’s onClick so:
- *      - link’s own onClick (if any) fires
- *      - then `output(link)` is called (similar to Angular EventEmitter)
  * ------------------------------------------------------- */
 
 export function AlloyButtonDropDown({ buttonDropDown, output }) {
@@ -78,7 +70,6 @@ export function AlloyButtonDropDown({ buttonDropDown, output }) {
 
   const btnIdRef = useRef(model.id);
 
-  // Enhance linkBar so dropdown items call `output(link)` on click
   const enhancedLinkBar = useMemo(() => {
     const base =
       model.linkBar instanceof LinkBarObject
@@ -88,7 +79,6 @@ export function AlloyButtonDropDown({ buttonDropDown, output }) {
     const cloned = new LinkBarObject({
       id: base.id,
       type: base.type,
-      // For dropdown, default to Bootstrap menu classes if caller didn't override
       className: base.className || "dropdown-menu",
       linkClass: base.linkClass || "dropdown-item",
       selected: base.selected || "active",
@@ -122,13 +112,17 @@ export function AlloyButtonDropDown({ buttonDropDown, output }) {
           });
         }
 
-        // Fallback – unknown type
         return link;
       }),
     });
 
     return cloned;
   }, [model.linkBar, output]);
+
+  const showBadge =
+    !!model.badge &&
+    typeof model.badge.name === "string" &&
+    model.badge.name.trim().length > 0;
 
   return (
     <div className="dropdown">
@@ -139,13 +133,23 @@ export function AlloyButtonDropDown({ buttonDropDown, output }) {
         data-bs-toggle="dropdown"
         aria-expanded="false"
       >
-        {model.icon?.iconClass && (
-          <i className={`${model.icon.iconClass} me-2`} aria-hidden="true" />
-        )}
-        <span>{model.name}</span>
+        <span className="position-relative d-inline-flex align-items-center">
+          {model.icon?.iconClass && (
+            <i className={`${model.icon.iconClass} me-2`} aria-hidden="true" />
+          )}
+          <span>{model.name}</span>
+
+          {showBadge && (
+            <span
+              className={`position-absolute top-0 start-100 translate-middle ${model.badge.className || ""}`}
+              title={model.badge.title || undefined}
+            >
+              {model.badge.name}
+            </span>
+          )}
+        </span>
       </button>
 
-      {/* This nav/ul combo becomes the dropdown menu; the UL gets className="dropdown-menu" */}
       <AlloyLinkBar linkBar={enhancedLinkBar} />
     </div>
   );

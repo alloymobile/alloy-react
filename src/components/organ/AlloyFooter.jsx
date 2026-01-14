@@ -13,19 +13,6 @@ import AlloyForm, { FormObject } from "../tissue/AlloyForm.jsx";
 
 /* ------------------------------------------------------------------
  * FooterObject
- *
- * FINAL SCHEMA:
- *   {
- *     id?: string
- *     name?: string
- *     className?: string          // applied to <footer>
- *
- *     logo?: LogoObject | {...}     // company logo
- *     details?: BlockObject | {...} // text block (we usually use name only)
- *     social?: LinkBarObject | {...} // AlloyLinkBar (typically AlloyLinkIcon)
- *     section?: Array<LinkBarObject|Object> // list of AlloyLinkBar sections
- *     subscribe?: FormObject | {...} // AlloyForm for email subscribe
- *   }
  * ------------------------------------------------------------------ */
 export class FooterObject {
   constructor(res = {}) {
@@ -33,6 +20,8 @@ export class FooterObject {
       id,
       name,
       className = "footer pt-5 pb-4 bg-dark text-light",
+
+      columns,
 
       logo,
       details,
@@ -44,6 +33,8 @@ export class FooterObject {
     this.id = id ?? generateId("footer");
     this.name = name ?? "Footer";
     this.className = className;
+
+    this.columns = Number(columns) > 0 ? Number(columns) : 3;
 
     /* ----------------- logo (LogoObject) ----------------- */
     if (logo instanceof LogoObject) {
@@ -64,7 +55,6 @@ export class FooterObject {
     } else {
       this.details = new BlockObject(
         details || {
-          // "details with name only ignore logo and icon"
           name:
             "Professional marketplace connecting precast manufacturers, engineers and buyers. New & used equipment, services and standards — in one platform.",
           className: "small opacity-75 mb-2",
@@ -84,7 +74,7 @@ export class FooterObject {
         type: rawSocial.type ?? "AlloyLinkIcon",
         linkClass: rawSocial.linkClass ?? "nav-link p-0 text-light",
         selected: rawSocial.selected ?? "active",
-        title: rawSocial.title, // TagObject handled inside LinkBarObject
+        title: rawSocial.title,
         links: Array.isArray(rawSocial.links) ? rawSocial.links : [],
       });
     }
@@ -94,7 +84,7 @@ export class FooterObject {
     this.section = rawSection.map((sec) => {
       if (sec instanceof LinkBarObject) return sec;
 
-      return new LinkBarObject({
+      const bar = new LinkBarObject({
         id: sec.id ?? generateId("footer-section"),
         className: sec.className ?? "list-unstyled small",
         type: sec.type ?? "AlloyLink",
@@ -102,13 +92,19 @@ export class FooterObject {
           sec.linkClass ??
           "d-block mb-1 text-decoration-none text-light",
         selected: sec.selected ?? "active",
-        title: sec.title, // wrapped into TagObject inside LinkBarObject
+        title: sec.title,
         links: Array.isArray(sec.links) ? sec.links : [],
       });
+
+      bar.colClass = sec.colClass;
+
+      return bar;
     });
 
-    /* ----------------- subscribe (FormObject) ----------------- */
-    if (subscribe instanceof FormObject) {
+    /* ----------------- subscribe (optional) ----------------- */
+    if (subscribe == null) {
+      this.subscribe = null;
+    } else if (subscribe instanceof FormObject) {
       this.subscribe = subscribe;
     } else {
       const rawForm = subscribe || {};
@@ -164,7 +160,6 @@ export function AlloyFooter({ footer, output }) {
     }
   };
 
-  /* ----------------- Subscribe form handler ----------------- */
   const handleSubscribeOutput = (formOut) => {
     if (!formOut) return;
 
@@ -173,9 +168,7 @@ export function AlloyFooter({ footer, output }) {
         ? formOut.toJSON()
         : formOut;
 
-    if (payload.type !== "form" || payload.action !== "submit") {
-      return;
-    }
+    if (payload.type !== "form" || payload.action !== "submit") return;
 
     const hasError = !!payload.error;
     const data = payload.data || {};
@@ -191,7 +184,6 @@ export function AlloyFooter({ footer, output }) {
     emit(out);
   };
 
-  /* ----------------- LinkBar handler (sections + social) ----------------- */
   const handleLinksOutput = (barOut) => {
     if (!barOut) return;
 
@@ -223,80 +215,58 @@ export function AlloyFooter({ footer, output }) {
 
   const sections = Array.isArray(model.section) ? model.section : [];
 
-  /* ----------------- Render ----------------- */
+  const colUnits = Number(model.columns) > 0 ? Number(model.columns) : 3;
+  const defaultColClass = `col-12 col-md-${colUnits}`;
 
   return (
     <footer id={model.id} className={model.className}>
       <div className="container">
         <div className="row g-4">
-          {/* Column 1: logo + alt text + details + social */}
-          <div className="col-12 col-md-3">
-            {/* Logo */}
+          {/* Column 1: logo + alt text + details + social + subscribe */}
+          <div className={model.details?.colClass || defaultColClass}>
             {model.logo && (
               <div className="mb-2">
                 <img
                   src={model.logo.imageUrl}
                   alt={model.logo.alt}
                   className={model.logo.className}
-                  style={{
-                    width: model.logo.width,
-                    height: model.logo.height,
-                  }}
+                  style={{ width: model.logo.width, height: model.logo.height }}
                 />
               </div>
             )}
 
-            {/* Alt text directly after logo */}
             {model.logo && model.logo.alt && (
-              <h6 className="fw-semibold mb-1">
-                {model.logo.alt}
-              </h6>
+              <h6 className="fw-semibold mb-1">{model.logo.alt}</h6>
             )}
 
-            {/* Details text (BlockObject.name only) */}
             {model.details && model.details.name && (
-              <p
-                className={
-                  model.details.className ||
-                  "small opacity-75 mb-2"
-                }
-              >
+              <p className={model.details.className || "small opacity-75 mb-2"}>
                 {model.details.name}
               </p>
             )}
 
-            {/* Social icons (title + icons handled inside AlloyLinkBar) */}
             {model.social && (
               <div className="mt-2">
-                <AlloyLinkBar
-                  linkBar={model.social}
-                  output={handleLinksOutput}
-                />
+                <AlloyLinkBar linkBar={model.social} output={handleLinksOutput} />
+              </div>
+            )}
+
+            {model.subscribe && (
+              <div className="mt-3">
+                <AlloyForm form={model.subscribe} output={handleSubscribeOutput} />
               </div>
             )}
           </div>
 
-          {/* Section columns (Explore, Company, etc.) */}
+          {/* Section columns */}
           {sections.map((sec, index) => (
             <div
               key={sec.id || `footer-section-${index}`}
-              className="col-12 col-md-3"
+              className={sec.colClass || defaultColClass}
             >
-              {/* Let AlloyLinkBar render its own title from sec.title */}
-              <AlloyLinkBar
-                linkBar={sec}
-                output={handleLinksOutput}
-              />
+              <AlloyLinkBar linkBar={sec} output={handleLinksOutput} />
             </div>
           ))}
-
-          {/* Last column: subscribe form (title fully handled by AlloyForm) */}
-          <div className="col-12 col-md-3">
-            <AlloyForm
-              form={model.subscribe}
-              output={handleSubscribeOutput}
-            />
-          </div>
         </div>
       </div>
     </footer>

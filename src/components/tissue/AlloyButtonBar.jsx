@@ -4,6 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 import AlloyButton, { ButtonObject } from "../cell/AlloyButton.jsx";
 import AlloyButtonIcon, { ButtonIconObject } from "../cell/AlloyButtonIcon.jsx";
+import AlloyButtonDropDown, {
+  ButtonDropDownObject,
+} from "../cell/AlloyButtonDropDown.jsx";
 
 import { generateId, TagObject, OutputObject } from "../../utils/idHelper.js";
 
@@ -26,8 +29,9 @@ import { generateId, TagObject, OutputObject } from "../../utils/idHelper.js";
  *                                             Defaults to "nav-item".
  * @property {Array<any>} [buttons]          - Array of button configs or already-constructed button objects.
  *                                             We will ensure each entry becomes the right model:
- *                                               - ButtonObject      (for AlloyButton)
- *                                               - ButtonIconObject  (for AlloyButtonIcon)
+ *                                               - ButtonObject          (for AlloyButton)
+ *                                               - ButtonIconObject      (for AlloyButtonIcon)
+ *                                               - ButtonDropDownObject  (for AlloyButtonDropDown inside the bar)
  * @property {string} [selected]             - CSS class to inject into the active/selected button's `active`.
  *                                             Defaults to "active".
  */
@@ -39,8 +43,7 @@ import { generateId, TagObject, OutputObject } from "../../utils/idHelper.js";
  * Responsibilities:
  *  - generate id and apply defaults for its own scalar fields
  *  - normalize `title` into a TagObject
- *  - normalize `buttons` array into ButtonObject / ButtonIconObject instances
- *    based on this.type
+ *  - normalize `buttons` array into ButtonObject / ButtonIconObject / ButtonDropDownObject instances
  *
  * No UI logic lives here.
  */
@@ -77,17 +80,25 @@ export class ButtonBarObject {
     // Normalize buttons
     const rawButtons = Array.isArray(bar.buttons) ? bar.buttons : [];
 
-    if (this.type === "AlloyButtonIcon") {
-      // We expect each button to become a ButtonIconObject
-      this.buttons = rawButtons.map((b) =>
-        b instanceof ButtonIconObject ? b : new ButtonIconObject(b)
-      );
-    } else {
+    this.buttons = rawButtons.map((b) => {
+      // Allow a dropdown item inside the same bar
+      const isDropdown =
+        b instanceof ButtonDropDownObject ||
+        b?.type === "dropdown" ||
+        b?.type === "AlloyButtonDropDown" ||
+        !!b?.linkBar;
+
+      if (isDropdown) {
+        return b instanceof ButtonDropDownObject ? b : new ButtonDropDownObject(b);
+      }
+
+      if (this.type === "AlloyButtonIcon") {
+        return b instanceof ButtonIconObject ? b : new ButtonIconObject(b);
+      }
+
       // Default "AlloyButton"
-      this.buttons = rawButtons.map((b) =>
-        b instanceof ButtonObject ? b : new ButtonObject(b)
-      );
-    }
+      return b instanceof ButtonObject ? b : new ButtonObject(b);
+    });
   }
 }
 
@@ -198,15 +209,6 @@ function cloneWithActiveAndWrapOutput(
  * Props:
  *  - buttonBar: ButtonBarObject (required)
  *  - output?: (out: OutputObject) => void
- *
- * Behavior:
- *  - Renders optional title if buttonBar.title.name is truthy
- *  - Renders a <ul> of buttons (AlloyButton or AlloyButtonIcon depending on buttonBar.type)
- *  - Tracks which button is "selected" in local state
- *  - Injects `buttonBar.selected` class name into that selected button's `active`
- *    via a cloned model
- *  - Forwards all child OutputObjects through `output`, and updates the selectedId
- *    on click
  */
 export function AlloyButtonBar({ buttonBar, output }) {
   if (!buttonBar || !(buttonBar instanceof ButtonBarObject)) {
@@ -236,7 +238,93 @@ export function AlloyButtonBar({ buttonBar, output }) {
       </div>
     ) : null;
 
-  // Render helpers for the 2 variants.
+  // Mixed renderer: supports ButtonObject + ButtonIconObject + ButtonDropDownObject
+  function renderMixedList() {
+    return (
+      <ul
+        id={ulIdRef.current}
+        className={`${buttonBar.className} list-unstyled`}
+        style={{ listStyle: "none", paddingLeft: 0, marginBottom: 0 }}
+      >
+        {buttonBar.buttons.map((btnModel, idx) => {
+          if (btnModel instanceof ButtonDropDownObject) {
+            return (
+              <li
+                key={(btnModel?.id ?? idx) + "-li"}
+                className={buttonBar.buttonClass}
+              >
+                <AlloyButtonDropDown
+                  buttonDropDown={btnModel}
+                  output={(link) => {
+                    const out = OutputObject.ok({
+                      id: btnModel.id,
+                      type: "dropdown",
+                      action: "click",
+                      data: {
+                        id: link?.id ?? "",
+                        name: link?.name ?? "",
+                        href: link?.href ?? "",
+                        link,
+                      },
+                    });
+                    output?.(out);
+                  }}
+                />
+              </li>
+            );
+          }
+
+          if (btnModel instanceof ButtonIconObject) {
+            const isSelected = (btnModel?.id ?? "") === selectedId;
+
+            const { model: clonedBtn, onAnyEvent } = cloneWithActiveAndWrapOutput(
+              btnModel,
+              buttonBar.selected,
+              isSelected,
+              setSelectedId,
+              output
+            );
+
+            return (
+              <li
+                key={(btnModel?.id ?? idx) + "-li"}
+                className={buttonBar.buttonClass}
+              >
+                <AlloyButtonIcon buttonIcon={clonedBtn} output={onAnyEvent} />
+              </li>
+            );
+          }
+
+          if (btnModel instanceof ButtonObject) {
+            const isSelected = (btnModel?.id ?? "") === selectedId;
+
+            const { model: clonedBtn, onAnyEvent } = cloneWithActiveAndWrapOutput(
+              btnModel,
+              buttonBar.selected,
+              isSelected,
+              setSelectedId,
+              output
+            );
+
+            return (
+              <li
+                key={(btnModel?.id ?? idx) + "-li"}
+                className={buttonBar.buttonClass}
+              >
+                <AlloyButton button={clonedBtn} output={onAnyEvent} />
+              </li>
+            );
+          }
+
+          throw new Error(
+            "AlloyButtonBar expects ButtonObject | ButtonIconObject | ButtonDropDownObject items."
+          );
+        })}
+      </ul>
+    );
+  }
+
+  // Render helpers for the 2 legacy variants.
   function renderAlloyButtonList() {
     return (
       <ul
@@ -314,6 +402,13 @@ export function AlloyButtonBar({ buttonBar, output }) {
 
   // Decide which list to render based on buttonBar.type
   function renderBody() {
+    const hasDropdown = buttonBar.buttons.some(
+      (b) => b instanceof ButtonDropDownObject
+    );
+    if (hasDropdown) {
+      return renderMixedList();
+    }
+
     switch (buttonBar.type) {
       case "AlloyButtonIcon":
         return renderAlloyButtonIconList();

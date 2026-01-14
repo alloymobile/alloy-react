@@ -5,10 +5,12 @@ export { AlloyLinkLogo, LinkLogoObject } from "./components/cell/AlloyLinkLogo.j
 export { AlloyButton, ButtonObject } from "./components/cell/AlloyButton.jsx";
 export { AlloyButtonIcon, ButtonIconObject } from "./components/cell/AlloyButtonIcon.jsx";
 export { AlloyButtonSubmit, ButtonSubmitObject } from "./components/cell/AlloyButtonSubmit.jsx";
+export { AlloyButtonDropDown, ButtonDropDownObject } from "./components/cell/AlloyButtonDropDown.jsx"
 export { AlloyInput, InputObject } from "./components/cell/AlloyInput.jsx";
 export { AlloySearch, SearchObject } from "./components/cell/AlloySearch.jsx";
 export { AlloyLoading, LoadingObject } from "./components/cell/AlloyLoading.jsx";
 export { AlloyMedia, MediaObject } from "./components/cell/AlloyMedia.jsx";
+export { AlloyQuantity, QuantityObject } from "./components/cell/AlloyQuantity.jsx";
 
 export { AlloyLinkBar, LinkBarObject } from "./components/tissue/AlloyLinkBar.jsx"
 export { AlloyButtonBar, ButtonBarObject } from "./components/tissue/AlloyButtonBar.jsx"
@@ -23,6 +25,7 @@ export { AlloyCarousel, CarouselObject } from "./components/tissue/AlloyCarousel
 export { AlloyImage, ImageObject } from "./components/tissue/AlloyImage.jsx"
 export { AlloyVideo, VideoObject } from "./components/tissue/AlloyVideo.jsx"
 export { AlloyProductAction, ProductActionObject } from "./components/tissue/AlloyProductAction.jsx"
+export { AlloyNavBarAction, NavBarActionObject } from "./components/tissue/AlloyNavBarAction.jsx"
 
 export { AlloyTabForm, TabFormObject, TabObject } from "./components/organ/AlloyTabForm.jsx"
 export { AlloyModal, ModalObject } from "./components/tissue/AlloyModal.jsx"
@@ -43,3 +46,5 @@ export { AlloyForget, ForgetObject } from "./components/organ/AlloyForget.jsx"
 export { AlloyPost, PostObject } from "./components/organ/AlloyPost.jsx"
 export { AlloyMarquee, MarqueeObject } from "./components/organ/AlloyMarquee.jsx"
 export { AlloyMosaic, MosaicObject } from "./components/organ/AlloyMosaic.jsx"
+export { AlloyMediaGallery, MediaGalleryObject } from "./components/organ/AlloyMediaGallery.jsx"
+export { AlloyHoverRail, HoverRailObject } from "./components/organ/AlloyHoverRail.jsx"

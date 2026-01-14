@@ -11,12 +11,14 @@ export default function Sidebar({ active }) {
           { label: "AlloyButton", to: "/cell/button", icon: "fa-solid fa-hand-pointer" },
           { label: "AlloyButtonIcon", to: "/cell/button-icon", icon: "fa-solid fa-tablet-button" },
           { label: "AlloyButtonSubmit", to: "/cell/button-submit", icon: "fa-solid fa-spinner" },
+          { label: "AlloyButtonDropDown", to: "/cell/button-dropdown", icon: "fa-solid fa-spinner" },          
           { label: "AlloyInput", to: "/cell/input", icon: "fa-solid fa-arrows-down-to-line" },
           { label: "AlloyInputIcon", to: "/cell/input-icon", icon: "fa-solid fa-box-open" },
           { label: "AlloyInputFloating", to: "/cell/input-floating", icon: "fa-solid fa-calendar-days" },
           { label: "AlloySearch", to: "/cell/search", icon: "fa-solid fa-calendar-days" },   
           { label: "AlloyLoading", to: "/cell/loading", icon: "fa-solid fa-calendar-days" },   
-          { label: "AlloyMedia", to: "/cell/media", icon: "fa-solid fa-calendar-days" },         
+          { label: "AlloyMedia", to: "/cell/media", icon: "fa-solid fa-calendar-days" },   
+          { label: "AlloyQuantity", to: "/cell/quantity", icon: "fa-solid fa-bars-progress" },                   
         ]
       : active === "tissue"
       ? [
@@ -36,7 +38,8 @@ export default function Sidebar({ active }) {
           { label: "AlloyPagination", to: "/tissue/pagination", icon: "fa-solid fa-bars-progress" },      
           { label: "AlloyImage", to: "/tissue/image", icon: "fa-solid fa-bars-progress" },    
           { label: "AlloyVideo", to: "/tissue/video", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyProductAction", to: "/tissue/product-action", icon: "fa-solid fa-bars-progress" },                                    
+          { label: "AlloyProductAction", to: "/tissue/product-action", icon: "fa-solid fa-bars-progress" },      
+          { label: "AlloyNavBarAction", to: "/tissue/navbar-action", icon: "fa-solid fa-bars-progress" },                                 
         ]
       : active === "organ"
       ? [
@@ -52,7 +55,9 @@ export default function Sidebar({ active }) {
           { label: "AlloyCrud", to: "/organ/crud", icon: "fa-solid fa-bars-progress" },          
           { label: "AlloyPost", to: "/organ/post", icon: "fa-solid fa-bars-progress" }, 
           { label: "AlloyMarquee", to: "/organ/marquee", icon: "fa-solid fa-bars-progress" },   
-          { label: "AlloyMosaic", to: "/organ/mosaic", icon: "fa-solid fa-bars-progress" },         
+          { label: "AlloyMosaic", to: "/organ/mosaic", icon: "fa-solid fa-bars-progress" },  
+          { label: "AlloyMediaGallery", to: "/organ/media-gallery", icon: "fa-solid fa-bars-progress" },  
+          { label: "AlloyHoverRail", to: "/organ/hover-rail", icon: "fa-solid fa-bars-progress" },                  
         ]:
       [];
 
