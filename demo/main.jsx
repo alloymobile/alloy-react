@@ -56,6 +56,7 @@ import QuantityPage from "./pages/Cell/Quantity.jsx";
 import MediaGalleryPage from "./pages/Organ/MediaGallery.jsx";
 import NavBarActionPage from "./pages/Tissue/NavBarAction.jsx";
 import ButtonDropDownPage from "./pages/Cell/ButtonDropDown.jsx";
+import HoverRailPage from "./pages/Organ/HoverRail.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -118,7 +119,8 @@ createRoot(document.getElementById("root")).render(
           <Route path="post" element={<PostPage />} />   
           <Route path="marquee" element={<MarqueePage />} />  
           <Route path="mosaic" element={<MosaicPage />} />     
-          <Route path="media-gallery" element={<MediaGalleryPage />} />            
+          <Route path="media-gallery" element={<MediaGalleryPage />} />  
+          <Route path="hover-rail" element={<HoverRailPage />} />              
         </Route>
       </Route>
     </Routes>

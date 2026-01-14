@@ -19,14 +19,22 @@ export function generateId(prefix = "id") {
 
 export class LogoObject {
   constructor(logo = {}) {
+    const toSize = (v) => {
+      if (v == null) return undefined;
+      if (typeof v === "number" && Number.isFinite(v)) return v; // React => px
+      if (typeof v === "string" && v.trim()) return v.trim();   // e.g. "180px", "auto", "10rem"
+      return undefined;
+    };
+
     this.id = logo.id ?? generateId("logo");
     this.imageUrl = typeof logo.imageUrl === "string" ? logo.imageUrl : "";
     this.alt = typeof logo.alt === "string" ? logo.alt : "Logo";
-    this.width = Number.isFinite(logo.width) ? logo.width : undefined;
-    this.height = Number.isFinite(logo.height) ? logo.height : undefined;
+    this.width = toSize(logo.width);
+    this.height = toSize(logo.height);
     this.className = typeof logo.className === "string" ? logo.className : "";
   }
 }
+
 
 /* ----------------------------- TagObject ----------------------------- */
 

@@ -24,11 +24,10 @@ export class TabObject {
     this.stage = tab.stage ?? "";
     this.status = tab.status ?? "";
 
-    const hasCustomClass =
-      typeof tab.className === "string" && tab.className.trim();
-    this._hasCustomClassName = !!hasCustomClass;
-
-    this.className = hasCustomClass ? tab.className : "col-12";
+    this.className =
+      typeof tab.className === "string" && tab.className.trim()
+        ? tab.className
+        : "col-12";
 
     this.initError = "";
 
@@ -41,6 +40,13 @@ export class TabObject {
         : new IconObject(tab.icon)
       : null;
 
+    // ✅ NEW: one customizable class for input sleeve (keeps old layout by default)
+    this.inputClass =
+      typeof tab.inputClass === "string" && tab.inputClass.trim()
+        ? tab.inputClass
+        : "col-12 col-md-6 col-lg-5 mx-auto";
+
+    // inputs must be InputObject[]
     this.inputs = [];
     if (this.type === "inputs") {
       try {
@@ -57,8 +63,7 @@ export class TabObject {
     this.pay = null;
     if (this.type === "pay") {
       try {
-        this.pay =
-          tab.pay instanceof PayObject ? tab.pay : new PayObject(tab.pay || {});
+        this.pay = tab.pay instanceof PayObject ? tab.pay : new PayObject(tab.pay || {});
       } catch (e) {
         this.initError = String(e?.message || e);
         this.pay = null;
@@ -69,15 +74,9 @@ export class TabObject {
     if (this.type === "cards") {
       try {
         const rawCards = Array.isArray(tab.cards) ? tab.cards : [];
-        this.cards = rawCards.map((c) => {
-          const cardObj = c instanceof CardObject ? c : new CardObject(c || {});
-          const colClass =
-            typeof c?.colClass === "string" && c.colClass.trim()
-              ? c.colClass
-              : null;
-          if (colClass) cardObj.colClass = colClass;
-          return cardObj;
-        });
+        this.cards = rawCards.map((c) =>
+          c instanceof CardObject ? c : new CardObject(c || {})
+        );
       } catch (e) {
         this.initError = String(e?.message || e);
         this.cards = [];
@@ -95,22 +94,12 @@ export class TabFormObject {
     this.name = cfg.name ?? "";
     this.status = cfg.status ?? "draft";
 
-    const rawLayout = String(cfg.layout ?? cfg.mode ?? cfg.view ?? "tabs")
-      .trim()
-      .toLowerCase();
-    this.layout = rawLayout === "mixed" ? "mixed" : "tabs";
+    // layout: "tabs" (default) or "mixed"
+    this.layout = cfg.layout === "mixed" ? "mixed" : "tabs";
 
     const rawTabs = Array.isArray(cfg.tabs) ? cfg.tabs : [];
     const mappedTabs = rawTabs.map((t) => new TabObject(t));
     this.tabs = mappedTabs.sort((a, b) => a.order - b.order);
-
-    if (this.layout === "mixed") {
-      this.tabs.forEach((t) => {
-        if (!t._hasCustomClassName) {
-          t.className = "col-12 col-lg-6";
-        }
-      });
-    }
 
     let idx = typeof cfg.currentIndex === "number" ? cfg.currentIndex : 0;
     if (idx < 0) idx = 0;
@@ -145,41 +134,38 @@ export class TabFormObject {
  * Helpers
  * ----------------------------------------------------- */
 
+// build initial values from config (per tabKey)
 function buildInitialValues(tabForm) {
   const result = {};
   tabForm.tabs.forEach((tab) => {
     const tabValues = {};
-    if (tab.type === "inputs") {
-      tab.inputs.forEach((input) => {
-        const name = input.name;
-        if (!name) return;
+    tab.inputs.forEach((input) => {
+      const name = input.name;
+      if (!name) return;
 
-        if (typeof input.value !== "undefined") {
-          tabValues[name] = input.value;
-        } else if (input.type === "checkbox") {
-          tabValues[name] = false;
-        } else {
-          tabValues[name] = "";
-        }
-      });
-    }
+      if (typeof input.value !== "undefined") {
+        tabValues[name] = input.value;
+      } else if (input.type === "checkbox") {
+        tabValues[name] = false;
+      } else {
+        tabValues[name] = "";
+      }
+    });
     result[tab.key] = tabValues;
   });
   return result;
 }
 
+// basic validation: required + matchWith
 function validateTab(tab, tabValues) {
   const errors = {};
-
-  if (tab.type !== "inputs") return errors;
 
   tab.inputs.forEach((input) => {
     const name = input.name;
     if (!name) return;
 
     const messages = [];
-    const value =
-      typeof tabValues[name] !== "undefined" ? tabValues[name] : input.value;
+    const value = typeof tabValues[name] !== "undefined" ? tabValues[name] : input.value;
 
     if (input.required) {
       if (input.type === "checkbox") {
@@ -220,7 +206,7 @@ export function AlloyTabForm({ tabForm, output }) {
 
   const [currentIndex, setCurrentIndex] = useState(tabForm.currentIndex);
   const [values, setValues] = useState(() => buildInitialValues(tabForm));
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({}); // { [tabKey]: { fieldName: string[] } }
 
   const tabs = tabForm.tabs;
   const totalSteps = tabs.length;
@@ -229,7 +215,7 @@ export function AlloyTabForm({ tabForm, output }) {
   const navButtons = tabForm.navButtons || {};
 
   const layout = tabForm.layout || "tabs";
-  const isMixed = String(layout).trim().toLowerCase() === "mixed";
+  const isMixed = layout === "mixed";
 
   useEffect(() => {
     setCurrentIndex(tabForm.currentIndex);
@@ -300,16 +286,16 @@ export function AlloyTabForm({ tabForm, output }) {
     if (typeof output !== "function") return;
 
     const out = hadError
-      ? OutputObject.errorOf({
+      ? OutputObject.err({
           id: tabForm.id,
           type: "tab-form",
-          action: navAction,
+          action: navAction === "finish" ? "submit" : "draft",
           data: baseData,
         })
       : OutputObject.ok({
           id: tabForm.id,
           type: "tab-form",
-          action: navAction,
+          action: navAction === "finish" ? "submit" : "draft",
           data: baseData,
         });
 
@@ -415,9 +401,7 @@ export function AlloyTabForm({ tabForm, output }) {
   }
 
   if (!currentTab) {
-    return (
-      <div className="alert alert-warning">No steps defined for this TabForm.</div>
-    );
+    return <div className="alert alert-warning">No steps defined for this TabForm.</div>;
   }
 
   const hasPrevious = !isMixed && currentIndex > 0;
@@ -483,14 +467,9 @@ export function AlloyTabForm({ tabForm, output }) {
             {tabs.map((tab, idx) => {
               const tabKey = tab.key;
               const legendTitle = tab.title || `Step ${idx + 1}`;
-              const tabColClass =
-                typeof tab.className === "string" && tab.className.trim()
-                  ? tab.className
-                  : "col-12 col-lg-6";
-
               return (
-                <div className={tabColClass} key={tab.id}>
-                  <fieldset className="border rounded p-3 h-100">
+                <div className={tab.className || "col-12"} key={tab.id}>
+                  <fieldset className="border rounded p-3">
                     <legend className="float-none w-auto px-2 mb-0">
                       {tab.icon && (
                         <span className="me-1">
@@ -510,65 +489,56 @@ export function AlloyTabForm({ tabForm, output }) {
 
                     {tab.type === "inputs" && (
                       <div className="row g-3">
-                        {tab.inputs.map((inputModel, iIdx) => {
-                          const val = getValue(
-                            tabKey,
-                            inputModel.name,
-                            inputModel.value,
-                            inputModel.type
-                          );
+                        {/* ✅ CHANGED: wrapper class now comes from tab.inputClass (default keeps old behavior) */}
+                        <div className={tab.inputClass}>
+                          {tab.inputs.map((inputModel, iIdx) => {
+                            const val = getValue(
+                              tabKey,
+                              inputModel.name,
+                              inputModel.value,
+                              inputModel.type
+                            );
 
-                          const tabErr = errors[tabKey] || {};
-                          const fieldErrors = tabErr[inputModel.name] || [];
-                          const invalid = fieldErrors.length > 0;
+                            const tabErr = errors[tabKey] || {};
+                            const fieldErrors = tabErr[inputModel.name] || [];
+                            const invalid = fieldErrors.length > 0;
 
-                          const model = new InputObject({
-                            ...inputModel,
-                            value: val,
-                            errors: fieldErrors,
-                            invalid,
-                          });
+                            const model = new InputObject({
+                              ...inputModel,
+                              value: val,
+                              errors: fieldErrors,
+                              invalid,
+                            });
 
-                          const colClass =
-                            typeof model.colClass === "string" && model.colClass.trim()
-                              ? model.colClass
-                              : "col-12";
-
-                          return (
-                            <div className={colClass} key={`inp-${tabKey}-${iIdx}`}>
+                            return (
                               <AlloyInput
+                                key={`inp-${tabKey}-${iIdx}`}
                                 input={model}
                                 output={(out) => handleFieldOutput(tabKey, out)}
                               />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {tab.type === "pay" && (
-                      <div className="row g-3">
-                        <div className="col-12">
-                          {tab.pay && (
-                            <AlloyPay pay={tab.pay} output={(out) => output?.(out)} />
-                          )}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
 
+                    {tab.type === "pay" && (
+                      <div className="col-12">
+                        {tab.pay && (
+                          <AlloyPay pay={tab.pay} output={(out) => output?.(out)} />
+                        )}
+                      </div>
+                    )}
+
                     {tab.type === "cards" && (
-                      <div className="row g-3">
-                        {tab.cards.map((c) => {
-                          const cardCol =
-                            typeof c.colClass === "string" && c.colClass.trim()
-                              ? c.colClass
-                              : "col-12 col-md-6";
-                          return (
-                            <div className={cardCol} key={c.id}>
+                      <div className="col-12">
+                        <div className="row g-3">
+                          {tab.cards.map((c) => (
+                            <div className="col-12" key={c.id}>
                               <AlloyCard card={c} output={(out) => output?.(out)} />
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
                     )}
                   </fieldset>
@@ -592,39 +562,39 @@ export function AlloyTabForm({ tabForm, output }) {
             ) : null}
 
             <div className="row g-3">
-              {currentTab.type === "inputs" &&
-                currentTab.inputs.map((inputModel, iIdx) => {
-                  const val = getValue(
-                    currentTab.key,
-                    inputModel.name,
-                    inputModel.value,
-                    inputModel.type
-                  );
-                  const tabErr = errors[currentTab.key] || {};
-                  const fieldErrors = tabErr[inputModel.name] || [];
-                  const invalid = fieldErrors.length > 0;
+              {currentTab.type === "inputs" && (
+                <div className="row g-3">
+                  {/* ✅ CHANGED: wrapper class now comes from currentTab.inputClass (default keeps old behavior) */}
+                  <div className={currentTab.inputClass}>
+                    {currentTab.inputs.map((inputModel, iIdx) => {
+                      const val = getValue(
+                        currentTab.key,
+                        inputModel.name,
+                        inputModel.value,
+                        inputModel.type
+                      );
+                      const tabErr = errors[currentTab.key] || {};
+                      const fieldErrors = tabErr[inputModel.name] || [];
+                      const invalid = fieldErrors.length > 0;
 
-                  const model = new InputObject({
-                    ...inputModel,
-                    value: val,
-                    errors: fieldErrors,
-                    invalid,
-                  });
+                      const model = new InputObject({
+                        ...inputModel,
+                        value: val,
+                        errors: fieldErrors,
+                        invalid,
+                      });
 
-                  const colClass =
-                    typeof model.colClass === "string" && model.colClass.trim()
-                      ? model.colClass
-                      : "col-12";
-
-                  return (
-                    <div className={colClass} key={`inp-${iIdx}`}>
-                      <AlloyInput
-                        input={model}
-                        output={(out) => handleFieldOutput(currentTab.key, out)}
-                      />
-                    </div>
-                  );
-                })}
+                      return (
+                        <AlloyInput
+                          key={`inp-${iIdx}`}
+                          input={model}
+                          output={(out) => handleFieldOutput(currentTab.key, out)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {currentTab.type === "pay" && (
                 <div className="col-12">
@@ -635,19 +605,15 @@ export function AlloyTabForm({ tabForm, output }) {
               )}
 
               {currentTab.type === "cards" && (
-                <>
-                  {currentTab.cards.map((c) => {
-                    const cardCol =
-                      typeof c.colClass === "string" && c.colClass.trim()
-                        ? c.colClass
-                        : "col-12 col-md-6";
-                    return (
-                      <div className={cardCol} key={c.id}>
+                <div className="col-12">
+                  <div className="row g-3">
+                    {currentTab.cards.map((c) => (
+                      <div className="col-12" key={c.id}>
                         <AlloyCard card={c} output={(out) => output?.(out)} />
                       </div>
-                    );
-                  })}
-                </>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </>
@@ -661,9 +627,7 @@ export function AlloyTabForm({ tabForm, output }) {
           )}
 
           <div className="d-flex gap-2 ms-auto">
-            {hasNext && (
-              <AlloyButtonIcon buttonIcon={nextButtonModel} output={handleNext} />
-            )}
+            {hasNext && <AlloyButtonIcon buttonIcon={nextButtonModel} output={handleNext} />}
             {(isLast || isMixed) && (
               <AlloyButtonIcon buttonIcon={finishButtonModel} output={handleFinish} />
             )}

@@ -1,84 +1,53 @@
 // AlloyInput.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import AlloyIcon, { IconObject } from "./AlloyIcon.jsx";
 import { useDomId, OutputObject } from "../../utils/idHelper.js";
 
 /**
  * @typedef {Object} InputOption
- * @property {string} value   - submitted value
- * @property {string} label   - visible label
+ * @property {string} value
+ * @property {string} label
  */
 
 /**
  * @typedef {Object} InputConfig
- *
- * @property {string} name                   - REQUIRED. Field name / group name.
- * @property {string} [id]                   - Optional DOM id. (SSR-safe id is generated in the component if omitted.)
- *
- * @property {string} [type]                 - Supported:
- *                                              "text" (default),
- *                                              "email",
- *                                              "password",
- *                                              "number",
- *                                              "date",
- *                                              "datetime-local",
- *                                              "time",
- *                                              "textarea",
- *                                              "select",
- *                                              "multiselect",
- *                                              "radio",
- *                                              "checkbox",
- *                                              "switch",
- *                                              "file",
- *                                              "canvas"
- *
- * @property {string} [label]                - Human label for the field or group
+ * @property {string} name
+ * @property {string} [id]
+ * @property {string} [type]
+ * @property {string} [label]
  * @property {string|string[]|File|File[]|boolean} [value]
- *                                            - checkbox group: string[]
- *                                            - multiselect: string[]
- *                                            - switch: boolean
- *                                            - file (single): File | string(url)
- *                                            - file (multi):  File[] | string[](urls)
- *                                            - canvas: DataURL string
- *
- * @property {string} [layout]               - "text"(default) | "icon" | "floating"
- * @property {IconObject|{iconClass:string}} [icon] - required for "icon" or "floating"
- *
+ * @property {string} [layout]
+ * @property {IconObject|{iconClass:string}} [icon]
  * @property {string} [placeholder]
- *
  * @property {boolean} [required]
  * @property {number}  [minLength]
  * @property {number}  [maxLength]
  * @property {number|string} [min]
  * @property {number|string} [max]
  * @property {string} [pattern]
- *
  * @property {boolean} [passwordStrength]
  * @property {string} [matchWith]
- *
  * @property {string} [className]
- * @property {InputOption[]} [options]
+ * @property {string} [colClass]
+ * @property {InputOption[]|any[]} [options]
  * @property {Array<Function>} [validators]
+ * @property {string} [iconGroupClass]
+ * @property {string} [accept]
+ * @property {boolean} [multiple]
+ * @property {boolean} [disabled]
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {number} [canvasStrokeWidth]
+ * @property {number} [size]
  *
- * @property {string} [iconGroupClass]       - extra classes for icon span in "icon" layout
- *
- * @property {string} [accept]               - file accept attribute
- * @property {boolean} [multiple]            - file: allow multiple files
- *
- * @property {boolean} [disabled]            - disables input; for canvas: disables drawing
- *
- * @property {number} [width]                - canvas width (default 420)
- * @property {number} [height]               - canvas height (default 180)
- * @property {number} [canvasStrokeWidth]    - canvas stroke width (default 2)
- *
- * @property {number} [size]                 - multiselect: visible rows (default 4)
+ * // multiselect(search UI)
+ * @property {boolean} [searchable]
+ * @property {string} [valueKey]
+ * @property {string} [labelKey]
  *
  * @property {any} [rest]
  */
 export class InputObject {
-  /**
-   * @param {InputConfig} config
-   */
   constructor(config = {}) {
     const {
       id,
@@ -98,10 +67,14 @@ export class InputObject {
       matchWith,
       passwordStrength,
       className,
+      colClass,
       options = [],
       validators = [],
       iconGroupClass,
       size,
+      searchable,
+      valueKey,
+      labelKey,
       ...rest
     } = config;
 
@@ -115,11 +88,6 @@ export class InputObject {
       );
     }
 
-    // default starting value:
-    // - checkbox group => []
-    // - multiselect => []
-    // - switch => false
-    // - everything else => ""
     let initialValue;
     if (typeof value !== "undefined") {
       initialValue = value;
@@ -134,8 +102,6 @@ export class InputObject {
     const normalizedIcon =
       icon instanceof IconObject ? icon : icon ? new IconObject(icon) : undefined;
 
-    // NOTE: Do NOT auto-generate IDs here (SSR/CSR mismatch risk in Next.js).
-    // If id is omitted, AlloyInput will generate a stable DOM id via useDomId().
     this.id = id;
     this.name = name;
     this.type = type;
@@ -145,7 +111,6 @@ export class InputObject {
     this.icon = normalizedIcon;
     this.placeholder = placeholder;
 
-    // icon group class (span around icon in "icon" layout)
     const baseIconGroupClass = "input-group-text";
     if (typeof iconGroupClass === "string" && iconGroupClass.trim() !== "") {
       this.iconGroupClass = baseIconGroupClass + " " + iconGroupClass.trim();
@@ -153,7 +118,6 @@ export class InputObject {
       this.iconGroupClass = baseIconGroupClass;
     }
 
-    // validation config
     this.required = !!required;
     this.minLength = minLength;
     this.maxLength = maxLength;
@@ -163,15 +127,13 @@ export class InputObject {
     this.matchWith = matchWith;
     this.passwordStrength = passwordStrength;
 
-    // multiselect size (visible rows)
     this.size = size;
 
-    // control classes
     if (typeof className === "string" && className.trim() !== "") {
       this.className = className.trim();
     } else {
       if (type === "select" || type === "multiselect") {
-        this.className = "form-select";
+        this.className = "form-control";
       } else if (type === "radio" || type === "checkbox" || type === "switch") {
         this.className = "form-check-input";
       } else {
@@ -179,45 +141,52 @@ export class InputObject {
       }
     }
 
+    if (typeof colClass === "string" && colClass.trim() !== "") {
+      this.colClass = colClass.trim();
+    } else {
+      this.colClass = "col-12 col-md-6 mx-auto";
+    }
+
     this.options = options;
     this.validators = validators;
+
+    // multiselect searchable config
+    this.searchable =
+      typeof searchable === "boolean" ? searchable : type === "multiselect";
+    this.valueKey = valueKey;
+    this.labelKey = labelKey;
 
     Object.assign(this, rest);
   }
 }
 
-/**
- * AlloyInput
- *
- * Props:
- *   - input: InputObject (required)
- *   - output?: (out: OutputObject) => void
- */
-/**
- * @typedef {Object} AlloyInputProps
- * @property {InputObject} input
- * @property {(out: any) => void | Promise<void>} [output]
- */
-/**
- * @param {AlloyInputProps} props
- */
 export function AlloyInput({ input, output }) {
-  // SSR/CSR-stable DOM id (React useId-based)
   const domId = useDomId("input", input.id);
 
   const [val, setVal] = useState(input.value);
   const [touched, setTouched] = useState(false);
 
+  // Multiselect (searchable) state
+  const [msOpen, setMsOpen] = useState(false);
+  const [msQuery, setMsQuery] = useState("");
+  const msWrapRef = useRef(null);
+  const msSearchRef = useRef(null);
+
   // Canvas refs/state
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
   const lastPointRef = useRef({ x: 0, y: 0 });
-  const hasDrawnRef = useRef(false); // required correctness for canvas
+  const hasDrawnRef = useRef(false);
 
   const canvasWidth = input.width ?? 420;
   const canvasHeight = input.height ?? 180;
   const strokeWidth = input.canvasStrokeWidth ?? 2;
   const disabled = !!input.disabled;
+
+  const wrapClass =
+    typeof input.colClass === "string" && input.colClass.trim() !== ""
+      ? input.colClass.trim()
+      : "col-12 col-md-6 mx-auto";
 
   /* ---------------- CANVAS HELPERS ---------------- */
 
@@ -301,7 +270,6 @@ export function AlloyInput({ input, output }) {
     const p = getPoint(e);
     lastPointRef.current = p;
 
-    // tap counts as drawn (dot)
     hasDrawnRef.current = true;
     drawLine(p, p);
   };
@@ -323,7 +291,6 @@ export function AlloyInput({ input, output }) {
 
     drawingRef.current = false;
 
-    // if user never drew, store "" so required works
     const next = hasDrawnRef.current ? getCanvasDataUrl() : "";
     setVal(next);
     emit(next, "change");
@@ -341,6 +308,11 @@ export function AlloyInput({ input, output }) {
   useEffect(() => {
     setVal(input.value);
     setTouched(false);
+
+    if (input.type === "multiselect") {
+      setMsOpen(false);
+      setMsQuery("");
+    }
 
     if (input.type === "canvas") {
       hasDrawnRef.current = Boolean(input.value);
@@ -379,7 +351,6 @@ export function AlloyInput({ input, output }) {
     const errs = [];
     const trimmed = typeof candidate === "string" ? candidate.trim() : candidate;
 
-    // required
     if (input.required) {
       const isEmptyArray = Array.isArray(trimmed) && trimmed.length === 0;
       const isEmptyScalar =
@@ -391,7 +362,6 @@ export function AlloyInput({ input, output }) {
       }
     }
 
-    // minLength / maxLength (strings only)
     if (
       typeof trimmed === "string" &&
       input.minLength != null &&
@@ -407,7 +377,6 @@ export function AlloyInput({ input, output }) {
       errs.push(`Maximum length is ${input.maxLength}`);
     }
 
-    // pattern (safe)
     if (typeof trimmed === "string" && input.pattern && input.pattern !== "") {
       try {
         const re = new RegExp(input.pattern);
@@ -420,7 +389,6 @@ export function AlloyInput({ input, output }) {
       }
     }
 
-    // password strength
     if (input.passwordStrength && typeof trimmed === "string") {
       const strongEnough = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(trimmed);
       if (!strongEnough) {
@@ -446,14 +414,14 @@ export function AlloyInput({ input, output }) {
       </div>
     );
 
-  // Emit via OutputObject (demo + AlloyForm)
+  // Emit via OutputObject
   const emit = (nextVal, action = "change") => {
     const errs = validate(nextVal);
     const hasError = errs.length > 0;
 
     if (typeof output === "function") {
       const out = new OutputObject({
-        id: domId, // always emit the real DOM id
+        id: domId,
         type: "input",
         action,
         error: hasError,
@@ -467,7 +435,36 @@ export function AlloyInput({ input, output }) {
     }
   };
 
-  // file-specific change handler (single + multiple)
+    // ✅ Auto-commit default for <select> when value is empty
+  const selectAutoCommittedRef = useRef("");
+
+  useEffect(() => {
+    if (input.type !== "select") return;
+
+    const opts = Array.isArray(input.options) ? input.options : [];
+    if (opts.length === 0) return;
+
+    const current = val == null ? "" : String(val);
+    if (current.trim() !== "") return;
+
+    const first = opts[0];
+    const firstVal = first?.value == null ? "" : String(first.value);
+    if (firstVal.trim() === "") return;
+
+    // build a stable signature so we don't re-emit forever
+    const sig =
+      `${input.name}::${firstVal}::${opts.length}`;
+
+    if (selectAutoCommittedRef.current === sig) return;
+    selectAutoCommittedRef.current = sig;
+
+    // commit
+    setVal(firstVal);
+    emit(firstVal, "change");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input.type, input.name, input.options, val]);
+
+
   const handleFileChange = (e) => {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
@@ -479,24 +476,22 @@ export function AlloyInput({ input, output }) {
     setVal(nextVal);
     emit(nextVal, "change");
 
-    // allow re-selecting same file(s)
     e.target.value = "";
   };
 
-  // multiselect change handler
+  // Legacy multiselect(native) change handler
   const handleMultiSelectChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions).map((opt) => opt.value);
     setVal(selectedOptions);
     emit(selectedOptions, "change");
   };
 
-  // shared change handler
   const handleChange = (e) => {
     if (input.type === "file") {
       return handleFileChange(e);
     }
 
-    if (input.type === "multiselect") {
+    if (input.type === "multiselect" && !input.searchable) {
       return handleMultiSelectChange(e);
     }
 
@@ -525,7 +520,6 @@ export function AlloyInput({ input, output }) {
     }
   };
 
-  // onBlur: mark touched + emit blur
   const handleBlur = () => {
     setTouched(true);
 
@@ -549,6 +543,228 @@ export function AlloyInput({ input, output }) {
   };
 
   const withInvalid = (base) => base + (showError ? " is-invalid" : "");
+
+  /* ---------------- MULTISELECT (SEARCHABLE) ---------------- */
+
+  const msKeys = useMemo(() => {
+    const opts = Array.isArray(input.options) ? input.options : [];
+    const sample = opts[0];
+
+    const inferredValueKey =
+      input.valueKey ??
+      (sample && typeof sample === "object" && sample !== null && "value" in sample
+        ? "value"
+        : "id");
+
+    const inferredLabelKey =
+      input.labelKey ??
+      (sample && typeof sample === "object" && sample !== null && "label" in sample
+        ? "label"
+        : "name");
+
+    return { valueKey: inferredValueKey, labelKey: inferredLabelKey };
+  }, [input.options, input.valueKey, input.labelKey]);
+
+  // selected value MUST be string[]
+  const msSelected = Array.isArray(val) ? val.map((x) => String(x)) : [];
+
+  const msSelectedIdSet = useMemo(() => {
+    const set = new Set();
+    msSelected.forEach((x) => {
+      if (x != null) set.add(String(x));
+    });
+    return set;
+  }, [msSelected]);
+
+  const msGetOptId = (opt, idx) => {
+    if (!opt) return String(idx);
+    if (typeof opt === "object") {
+      const k = opt?.[msKeys.valueKey];
+      if (k != null && String(k).trim() !== "") return String(k);
+    }
+    return String(opt ?? idx);
+  };
+
+  const msGetOptLabel = (opt) => {
+    if (!opt) return "";
+    if (typeof opt === "object") {
+      const l = opt?.[msKeys.labelKey];
+      if (l != null) return String(l);
+    }
+    return String(opt);
+  };
+
+  const msDisplayText = useMemo(() => {
+    const opts = Array.isArray(input.options) ? input.options : [];
+    const map = new Map();
+    opts.forEach((o, i) => {
+      const id = msGetOptId(o, i);
+      map.set(String(id), msGetOptLabel(o));
+    });
+
+    const labels = msSelected
+      .map((x) => {
+        if (x != null && map.has(String(x))) return map.get(String(x));
+        return x != null ? String(x) : "";
+      })
+      .filter((s) => typeof s === "string" && s.trim() !== "");
+
+    return labels.join(", ");
+  }, [msSelected, input.options, msKeys.valueKey, msKeys.labelKey]);
+
+  const msFilteredOptions = useMemo(() => {
+    const q = String(msQuery || "").trim().toLowerCase();
+    const opts = Array.isArray(input.options) ? input.options : [];
+    if (!q) return opts;
+
+    return opts.filter((o, i) => {
+      const label = msGetOptLabel(o).toLowerCase();
+      const slug =
+        o && typeof o === "object" && o.slug != null ? String(o.slug).toLowerCase() : "";
+      const id = msGetOptId(o, i).toLowerCase();
+      return label.includes(q) || slug.includes(q) || id.includes(q);
+    });
+  }, [msQuery, input.options]);
+
+  // ✅ FIXED: proper add/removeEventListener with defined handlers
+  useEffect(() => {
+    const onDocDown = (e) => {
+      if (!msWrapRef.current) return;
+      if (!msWrapRef.current.contains(e.target)) setMsOpen(false);
+    };
+
+    const onEsc = (e) => {
+      if (e.key === "Escape") setMsOpen(false);
+    };
+
+    document.addEventListener("mousedown", onDocDown);
+    document.addEventListener("keydown", onEsc);
+
+    return () => {
+      document.removeEventListener("mousedown", onDocDown);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, []);
+
+  // focus search immediately when opening
+  useEffect(() => {
+    if (!msOpen) return;
+    requestAnimationFrame(() => {
+      if (msSearchRef.current) msSearchRef.current.focus();
+    });
+  }, [msOpen]);
+
+  const msToggle = (opt, idx) => {
+    const id = msGetOptId(opt, idx);
+    if (!id) return;
+
+    const next = Array.isArray(msSelected) ? [...msSelected] : [];
+    const hitIndex = next.findIndex((x) => String(x ?? "") === String(id));
+
+    if (hitIndex > -1) {
+      next.splice(hitIndex, 1);
+    } else {
+      next.push(String(id));
+    }
+
+    setVal(next);
+    emit(next, "change");
+  };
+
+  const msClear = () => {
+    setVal([]);
+    emit([], "change");
+  };
+
+  const renderMultiSelectSearch = () => (
+    <div ref={msWrapRef} className="position-relative w-100">
+      <input
+        {...commonControlProps}
+        type="text"
+        value={msDisplayText}
+        readOnly
+        onFocus={() => {
+          if (!disabled) setMsOpen(true);
+        }}
+        onClick={() => {
+          if (!disabled) setMsOpen(true);
+        }}
+        className={withInvalid(input.className)}
+        placeholder={input.placeholder}
+      />
+
+      {msOpen && !disabled && (
+        <div
+          className="dropdown-menu show w-100 p-2 shadow"
+          style={{ maxHeight: 320, overflow: "auto" }}
+        >
+          <input
+            ref={msSearchRef}
+            type="text"
+            className="form-control mb-2"
+            value={msQuery}
+            onChange={(e) => setMsQuery(e.target.value)}
+            placeholder="Search..."
+          />
+
+          {msFilteredOptions.length === 0 ? (
+            <div className="text-muted small px-2 py-2">No results</div>
+          ) : (
+            <div className="list-group">
+              {msFilteredOptions.map((opt, i) => {
+                const id = msGetOptId(opt, i);
+                const label = msGetOptLabel(opt);
+                const checked = msSelectedIdSet.has(String(id));
+                const slug =
+                  opt && typeof opt === "object" && opt.slug != null
+                    ? String(opt.slug)
+                    : "";
+
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className="list-group-item list-group-item-action d-flex align-items-center gap-2"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => msToggle(opt, i)}
+                  >
+                    <input
+                      className="form-check-input m-0"
+                      type="checkbox"
+                      checked={checked}
+                      readOnly
+                    />
+                    <span className="flex-grow-1">{label}</span>
+                    {slug ? <span className="small text-muted">{slug}</span> : null}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="d-flex justify-content-between mt-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={msClear}
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-primary"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setMsOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   /* ---------------- RENDERERS ---------------- */
 
@@ -576,8 +792,7 @@ export function AlloyInput({ input, output }) {
     </select>
   );
 
-  // NEW: Multiselect renderer
-  const renderMultiSelect = () => {
+  const renderMultiSelectNative = () => {
     const selectedValues = Array.isArray(val) ? val : [];
     const visibleSize = input.size ?? 4;
 
@@ -680,12 +895,10 @@ export function AlloyInput({ input, output }) {
   const renderFileValuePreview = () => {
     if (!val) return null;
 
-    // string (single url)
     if (typeof val === "string") {
       return <div className="form-text mt-1 text-break">{val}</div>;
     }
 
-    // string[] (multiple urls)
     if (Array.isArray(val) && val.every((x) => typeof x === "string")) {
       return (
         <div className="form-text mt-1">
@@ -698,7 +911,6 @@ export function AlloyInput({ input, output }) {
       );
     }
 
-    // File (single)
     if (val instanceof File) {
       return (
         <div className="form-text mt-1">
@@ -707,7 +919,6 @@ export function AlloyInput({ input, output }) {
       );
     }
 
-    // File[] (multiple)
     if (Array.isArray(val) && val.every((x) => x instanceof File)) {
       return (
         <div className="form-text mt-1">
@@ -783,7 +994,6 @@ export function AlloyInput({ input, output }) {
     </div>
   );
 
-  // datetime-local renderer
   const renderDateTimeLocal = () => (
     <input
       {...commonControlProps}
@@ -796,7 +1006,6 @@ export function AlloyInput({ input, output }) {
     />
   );
 
-  // NEW: time renderer
   const renderTime = () => (
     <input
       {...commonControlProps}
@@ -826,7 +1035,7 @@ export function AlloyInput({ input, output }) {
       case "select":
         return renderSelect();
       case "multiselect":
-        return renderMultiSelect();
+        return input.searchable ? renderMultiSelectSearch() : renderMultiSelectNative();
       case "radio":
         return renderRadioGroup();
       case "checkbox":
@@ -850,60 +1059,62 @@ export function AlloyInput({ input, output }) {
 
   if (input.layout === "floating") {
     return (
-      <div className="mb-3">
-        <div className="form-floating">
-          {renderControl()}
-          <label htmlFor={domId}>
-            {input.icon && <AlloyIcon icon={input.icon} />}
-            {input.icon && "\u00A0"}
-            {input.label}
-          </label>
+      <div className={wrapClass}>
+        <div className="mb-3">
+          <div className="form-floating">
+            {renderControl()}
+            <label htmlFor={domId}>
+              {input.icon && <AlloyIcon icon={input.icon} />}
+              {input.icon && "\u00A0"}
+              {input.label}
+            </label>
+          </div>
+          {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
         </div>
-        {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
       </div>
     );
   }
 
   if (input.layout === "icon") {
     return (
-      <div className="m-2">
-        {input.label && (
-          <label htmlFor={domId} className="form-label">
-            {input.label}
-          </label>
-        )}
+      <div className={wrapClass}>
+        <div className="m-2">
+          {input.label && (
+            <label htmlFor={domId} className="form-label">
+              {input.label}
+            </label>
+          )}
 
-        <div className="input-group">
-          <span className={input.iconGroupClass}>
-            <AlloyIcon icon={input.icon} />
-          </span>
+          <div className="input-group">
+            <span className={input.iconGroupClass}>
+              <AlloyIcon icon={input.icon} />
+            </span>
 
-          {["radio", "checkbox", "switch"].includes(input.type)
-            ? renderControl()
-            : input.type === "textarea"
-            ? renderTextarea()
-            : input.type === "select"
-            ? renderSelect()
-            : input.type === "multiselect"
-            ? renderMultiSelect()
-            : input.type === "file"
-            ? renderFile()
-            : input.type === "canvas"
-            ? renderCanvas()
-            : input.type === "datetime-local"
-            ? renderDateTimeLocal()
-            : input.type === "time"
-            ? renderTime()
-            : renderTextLike()}
+            {["radio", "checkbox", "switch"].includes(input.type)
+              ? renderControl()
+              : input.type === "textarea"
+              ? renderTextarea()
+              : input.type === "select"
+              ? renderSelect()
+              : input.type === "multiselect"
+              ? (input.searchable ? renderMultiSelectSearch() : renderMultiSelectNative())
+              : input.type === "file"
+              ? renderFile()
+              : input.type === "canvas"
+              ? renderCanvas()
+              : input.type === "datetime-local"
+              ? renderDateTimeLocal()
+              : input.type === "time"
+              ? renderTime()
+              : renderTextLike()}
+          </div>
+
+          {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
         </div>
-
-        {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
       </div>
     );
   }
 
-  // layout: "text" (default)
-  // Types that show label above the input
   const labelTypes = [
     "text",
     "textarea",
@@ -920,16 +1131,18 @@ export function AlloyInput({ input, output }) {
   ];
 
   return (
-    <div className="mb-3">
-      {labelTypes.includes(input.type) && input.label && (
-        <label htmlFor={domId} className="form-label">
-          {input.label}
-        </label>
-      )}
+    <div className={wrapClass}>
+      <div className="mb-3">
+        {labelTypes.includes(input.type) && input.label && (
+          <label htmlFor={domId} className="form-label">
+            {input.label}
+          </label>
+        )}
 
-      {renderControl()}
+        {renderControl()}
 
-      {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
+        {!(input.type === "radio" || input.type === "checkbox" || input.type === "switch") && errorBlock}
+      </div>
     </div>
   );
 }

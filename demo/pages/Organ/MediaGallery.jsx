@@ -1,425 +1,439 @@
 // demo/pages/Organ/MediaGallery.jsx
 import React, { useMemo, useState } from "react";
-
 import { AlloyMediaGallery, MediaGalleryObject } from "../../../src";
 
-const DEFAULT_MASONRY_IMAGE_JSON = JSON.stringify(
+const JSON_BOOTSTRAP_MIXED = JSON.stringify(
   {
-    id: "mgMasonryImage",
-    name: "Masonry • Images",
-    nameClass: "fw-semibold mb-2",
+    id: "mgBootstrapMixed",
+    name: "Bootstrap • Mixed (stacks on mobile)",
+    className: "fw-semibold mb-2",
 
-    layout: "masonry",
-    columns: 12,
+    layout: "bootstrap",
+    columns: 6,
     rowHeight: 180,
     gap: 12,
 
-    className: "position-relative overflow-hidden rounded-4",
-    titlePosition: "overlay",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100 object-fit-cover",
+    items: [
+      {
+        id: "bs-img-carousel",
+        name: { name: "Catch Basin (carousel + thumbs)", href: "/products/catch-basin" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        thumbSize: 72,
+        zoom: {},
+        carousel: { controls: true, indicators: true, keyboard: true },
+        items: [
+          {
+            id: "bs-img-1",
+            url: "https://picsum.photos/seed/bsimg1/1200/800",
+            isPrimary: true,
+            thumbUrl: "https://picsum.photos/seed/bsimg1/240/160",
+          },
+          {
+            id: "bs-img-2",
+            url: "https://picsum.photos/seed/bsimg2/1200/800",
+            thumbUrl: "https://picsum.photos/seed/bsimg2/240/160",
+          },
+        ],
+      },
+
+      {
+        id: "bs-video",
+        name: { name: "Training Video", href: "/training/clip-1" },
+        nameDisplay: { position: "overlay-top-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        vid: { attrs: { autoPlay: true, loop: true, muted: true, playsInline: true, preload: "auto" } },
+        items: [
+          {
+            id: "bs-vid-1",
+            url: "https://www.w3schools.com/html/mov_bbb.mp4",
+            isPrimary: true,
+            thumbUrl: "https://picsum.photos/seed/bsvid1/240/160",
+          },
+        ],
+      },
+
+      {
+        id: "bs-pdf",
+        name: { name: "Spec Sheet (PDF)", href: "/docs/spec" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-danger" },
+        zoom: {},
+        items: [
+          {
+            id: "bs-pdf-1",
+            url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            isPrimary: true,
+          },
+        ],
+      },
+
+      {
+        id: "bs-glb",
+        name: { name: "Astronaut (GLB)", href: "/models/astronaut" },
+        nameDisplay: { position: "below", className: "fw-semibold mt-2" },
+        zoom: {},
+        items: [
+          {
+            id: "bs-glb-1",
+            url: "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+            isPrimary: true,
+          },
+        ],
+      },
+
+      {
+        id: "bs-audio",
+        name: { name: "Audio Guide", href: "/media/audio" },
+        nameDisplay: { position: "below", className: "fw-semibold mt-2" },
+        aud: { attrs: { controls: true, preload: "metadata" } },
+        items: [
+          {
+            id: "bs-aud-1",
+            url: "https://www.w3schools.com/html/horse.mp3",
+            isPrimary: true,
+          },
+        ],
+      },
+    ],
+  },
+  null,
+  2
+);
+
+const JSON_BOOTSTRAP_AUTO = JSON.stringify(
+  {
+    id: "mgBootstrapAuto",
+    name: "Bootstrap • Auto slideshow (images)",
+    className: "fw-semibold mb-2",
+
+    layout: "bootstrap",
+    columns: 4,
+    rowHeight: 180,
+    gap: 12,
 
     items: [
       {
-        id: "mi1",
-        type: "image",
-        url: "https://picsum.photos/seed/mgimg1/1200/800",
-        title: "Septic",
-        colSpan: 7,
-        rowSpan: 2,
-        link: "/products/septic"
+        id: "auto-1",
+        name: { name: "Auto: Plant Tour", href: "/tour" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        auto: { enabled: true, intervalMs: 2500, pauseOnHover: true, pauseOnZoom: true, loop: true },
+        items: [
+          { id: "a1", url: "https://picsum.photos/seed/auto1/1200/800", isPrimary: true, thumbUrl: "https://picsum.photos/seed/auto1/240/160" },
+          { id: "a2", url: "https://picsum.photos/seed/auto2/1200/800", thumbUrl: "https://picsum.photos/seed/auto2/240/160" },
+          { id: "a3", url: "https://picsum.photos/seed/auto3/1200/800", thumbUrl: "https://picsum.photos/seed/auto3/240/160" },
+        ],
       },
       {
-        id: "mi2",
-        type: "image",
-        url: "https://picsum.photos/seed/mgimg2/1200/800",
-        title: "Barrier",
+        id: "auto-2",
+        name: { name: "Auto: Yard", href: "/yard" },
+        nameDisplay: { position: "overlay-top-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        auto: { enabled: true, intervalMs: 1800, pauseOnHover: true, pauseOnZoom: true, loop: true },
+        items: [
+          { id: "b1", url: "https://picsum.photos/seed/auto4/1200/800", isPrimary: true },
+          { id: "b2", url: "https://picsum.photos/seed/auto5/1200/800" },
+        ],
+      },
+    ],
+  },
+  null,
+  2
+);
+
+const JSON_GRID_OVERLAYS = JSON.stringify(
+  {
+    id: "mgGridOverlays",
+    name: "Grid • Overlay positions",
+    className: "fw-semibold mb-2",
+
+    layout: "grid",
+    columns: 4,
+    rowHeight: 180,
+    gap: 12,
+
+    items: [
+      {
+        id: "go-1",
+        name: { name: "Overlay BL", href: "/x" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "go-1-1", url: "https://picsum.photos/seed/ov1/1200/800", isPrimary: true }],
+      },
+      {
+        id: "go-2",
+        name: { name: "Overlay TR", href: "/x" },
+        nameDisplay: { position: "overlay-top-right", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "go-2-1", url: "https://picsum.photos/seed/ov2/1200/800", isPrimary: true }],
+      },
+      {
+        id: "go-3",
+        name: { name: "Overlay TL", href: "/x" },
+        nameDisplay: { position: "overlay-top-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "go-3-1", url: "https://picsum.photos/seed/ov3/1200/800", isPrimary: true }],
+      },
+      {
+        id: "go-4",
+        name: { name: "Below title", href: "/x" },
+        nameDisplay: { position: "below", className: "fw-semibold mt-2" },
+        zoom: {},
+        items: [{ id: "go-4-1", url: "https://picsum.photos/seed/ov4/1200/800", isPrimary: true }],
+      },
+    ],
+  },
+  null,
+  2
+);
+
+const JSON_GRID_THUMBS = JSON.stringify(
+  {
+    id: "mgGridThumbs",
+    name: "Grid • Carousel + thumbs",
+    className: "fw-semibold mb-2",
+
+    layout: "grid",
+    columns: 6,
+    rowHeight: 180,
+    gap: 12,
+
+    items: [
+      {
+        id: "gt-1",
+        name: { name: "PX-Guard™", href: "/products/px-guard" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        thumbSize: 72,
+        zoom: {},
+        carousel: { controls: true, indicators: true, keyboard: true },
+        items: [
+          { id: "gt-1a", url: "https://picsum.photos/seed/gt1/1200/800", isPrimary: true, thumbUrl: "https://picsum.photos/seed/gt1/240/160" },
+          { id: "gt-1b", url: "https://picsum.photos/seed/gt2/1200/800", thumbUrl: "https://picsum.photos/seed/gt2/240/160" },
+          { id: "gt-1c", url: "https://picsum.photos/seed/gt3/1200/800", thumbUrl: "https://picsum.photos/seed/gt3/240/160" },
+        ],
+      },
+      {
+        id: "gt-2",
+        name: { name: "Operator Clip", href: "/training/operator" },
+        nameDisplay: { position: "overlay-top-left", className: "badge bg-dark bg-opacity-75" },
+        thumbSize: 72,
+        zoom: {},
+        items: [
+          { id: "gt-2a", url: "https://www.w3schools.com/html/movie.mp4", isPrimary: true, thumbUrl: "https://picsum.photos/seed/gtv1/240/160" },
+        ],
+      },
+    ],
+  },
+  null,
+  2
+);
+
+const JSON_MASONRY_COLLAGE = JSON.stringify(
+  {
+    id: "mgMasonryCollage",
+    name: "Masonry • Collage (colSpan/rowSpan)",
+    className: "fw-semibold mb-2",
+
+    layout: "masonry",
+    columns: 12,
+    rowHeight: 170,
+    gap: 12,
+
+    items: [
+      {
+        id: "mc-1",
+        colSpan: 7,
+        rowSpan: 3,
+        frameClassName: "h-100",
+        name: { name: "Open", href: "/open" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mc-1a", url: "https://picsum.photos/seed/mc1/1600/900", isPrimary: true }],
+      },
+      {
+        id: "mc-2",
         colSpan: 5,
         rowSpan: 1,
-        link: "/products/barrier"
+        frameClassName: "h-100",
+        name: { name: "View", href: "/view" },
+        nameDisplay: { position: "overlay-top-right", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mc-2a", url: "https://picsum.photos/seed/mc2/1600/900", isPrimary: true }],
       },
       {
-        id: "mi3",
-        type: "image",
-        url: "https://picsum.photos/seed/mgimg3/1200/800",
-        title: "Manhole",
-        colSpan: 4,
-        rowSpan: 1,
-        link: "/products/manhole"
-      },
-      {
-        id: "mi4",
-        type: "image",
-        url: "https://picsum.photos/seed/mgimg4/1200/800",
-        title: "Culvert",
+        id: "mc-3",
         colSpan: 3,
         rowSpan: 1,
-        link: "/products/culvert"
+        frameClassName: "h-100",
+        name: { name: "Go", href: "/go" },
+        nameDisplay: { position: "overlay-top-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mc-3a", url: "https://picsum.photos/seed/mc3/1200/900", isPrimary: true }],
       },
       {
-        id: "mi5",
-        type: "image",
-        url: "https://picsum.photos/seed/mgimg5/1200/800",
-        title: "Tilt Table",
+        id: "mc-4",
+        colSpan: 4,
+        rowSpan: 2,
+        frameClassName: "h-100",
+        name: { name: "Explore", href: "/explore" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-light text-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mc-4a", url: "https://picsum.photos/seed/mc4/1200/900", isPrimary: true }],
+      },
+      {
+        id: "mc-5",
         colSpan: 5,
         rowSpan: 2,
-        link: "/products/tilt-table"
+        frameClassName: "h-100",
+        name: { name: "Open", href: "/open-2" },
+        nameDisplay: { position: "overlay-top-right", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mc-5a", url: "https://picsum.photos/seed/mc5/1200/900", isPrimary: true }],
       },
       {
-        id: "mi6",
-        type: "image",
-        url: "https://picsum.photos/seed/mgimg6/1200/800",
-        title: "Pavers",
-        colSpan: 7,
-        rowSpan: 1,
-        link: "/products/pavers"
-      }
-    ]
+        id: "mc-6",
+        colSpan: 12,
+        rowSpan: 2,
+        frameClassName: "h-100",
+        name: { name: "Details", href: "/details" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mc-6a", url: "https://picsum.photos/seed/mc6/1800/900", isPrimary: true }],
+      },
+    ],
   },
   null,
   2
 );
 
-const DEFAULT_MASONRY_VIDEO_JSON = JSON.stringify(
+const JSON_MASONRY_MIXED = JSON.stringify(
   {
-    id: "mgMasonryVideo",
-    name: "Masonry • Videos",
-    nameClass: "fw-semibold mb-2",
+    id: "mgMasonryMixed",
+    name: "Masonry • Mixed media",
+    className: "fw-semibold mb-2",
 
     layout: "masonry",
     columns: 12,
-    rowHeight: 180,
+    rowHeight: 170,
     gap: 12,
-
-    className: "position-relative overflow-hidden rounded-4",
-    titlePosition: "top",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100",
 
     items: [
       {
-        id: "mv1",
-        type: "video",
-        url: "https://www.w3schools.com/html/mov_bbb.mp4",
-        title: "Training Clip",
-        colSpan: 7,
-        rowSpan: 2,
-        link: "/training/clip-1",
-        meta: { poster: "https://picsum.photos/seed/mgvidp1/1200/800" }
-      },
-      {
-        id: "mv2",
-        type: "video",
-        url: "https://www.w3schools.com/html/movie.mp4",
-        title: "Walkthrough",
-        colSpan: 5,
-        rowSpan: 1,
-        link: "/training/clip-2",
-        meta: { poster: "https://picsum.photos/seed/mgvidp2/1200/800" }
-      },
-      {
-        id: "mv3",
-        type: "video",
-        url: "https://www.w3schools.com/html/mov_bbb.mp4",
-        title: "Safety",
-        colSpan: 5,
-        rowSpan: 1,
-        link: "/training/safety",
-        meta: { poster: "https://picsum.photos/seed/mgvidp3/1200/800" }
-      }
-    ]
-  },
-  null,
-  2
-);
-
-const DEFAULT_MASONRY_GLB_JSON = JSON.stringify(
-  {
-    id: "mgMasonryGlb",
-    name: "Masonry • GLB",
-    nameClass: "fw-semibold mb-2",
-
-    layout: "masonry",
-    columns: 12,
-    rowHeight: 180,
-    gap: 12,
-
-    className: "position-relative overflow-hidden rounded-4 bg-light",
-    titlePosition: "overlay",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100",
-
-    items: [
-      {
-        id: "mg1",
-        type: "glb",
-        url: "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
-        title: "Astronaut",
-        colSpan: 7,
-        rowSpan: 2,
-        link: "/models/astronaut"
-      },
-      {
-        id: "mg2",
-        type: "glb",
-        url: "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
-        title: "Detail View",
-        colSpan: 5,
-        rowSpan: 1,
-        link: "/models/detail"
-      },
-      {
-        id: "mg3",
-        type: "glb",
-        url: "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
-        title: "Alt Angle",
-        colSpan: 5,
-        rowSpan: 1,
-        link: "/models/alt"
-      }
-    ]
-  },
-  null,
-  2
-);
-
-const DEFAULT_MASONRY_ICON_JSON = JSON.stringify(
-  {
-    id: "mgMasonryIcon",
-    name: "Masonry • Icons",
-    nameClass: "fw-semibold mb-2",
-
-    layout: "masonry",
-    columns: 12,
-    rowHeight: 180,
-    gap: 12,
-
-    className: "position-relative overflow-hidden rounded-4 border bg-white",
-    titlePosition: "overlay",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100 d-flex align-items-center justify-content-center fs-1",
-
-    items: [
-      {
-        id: "ic1",
-        type: "icon",
-        iconClass: "fa-solid fa-file-pdf",
-        title: "Spec PDF",
-        colSpan: 4,
-        rowSpan: 1,
-        link: "/docs/spec"
-      },
-      {
-        id: "ic2",
-        type: "icon",
-        iconClass: "fa-solid fa-cube",
-        title: "3D",
-        colSpan: 4,
-        rowSpan: 1,
-        link: "/products/3d"
-      },
-      {
-        id: "ic3",
-        type: "icon",
-        iconClass: "fa-solid fa-video",
-        title: "Video",
-        colSpan: 4,
-        rowSpan: 1,
-        link: "/media/videos"
-      },
-      {
-        id: "ic4",
-        type: "icon",
-        iconClass: "fa-solid fa-image",
-        title: "Gallery",
+        id: "mm-1",
         colSpan: 6,
         rowSpan: 2,
-        link: "/media/images"
+        frameClassName: "h-100",
+        name: { name: "Video", href: "/v" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mm-1a", url: "https://www.w3schools.com/html/mov_bbb.mp4", isPrimary: true }],
       },
       {
-        id: "ic5",
-        type: "icon",
-        iconClass: "fa-solid fa-clipboard-check",
-        title: "Checklist",
+        id: "mm-2",
         colSpan: 6,
         rowSpan: 2,
-        link: "/docs/checklist"
-      }
-    ]
+        frameClassName: "h-100",
+        name: { name: "PDF", href: "/p" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-danger" },
+        zoom: {},
+        items: [{ id: "mm-2a", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", isPrimary: true }],
+      },
+      {
+        id: "mm-3",
+        colSpan: 7,
+        rowSpan: 3,
+        frameClassName: "h-100",
+        name: { name: "Image", href: "/i" },
+        nameDisplay: { position: "overlay-bottom-left", className: "badge bg-dark bg-opacity-75" },
+        zoom: {},
+        items: [{ id: "mm-3a", url: "https://picsum.photos/seed/mm3/1600/900", isPrimary: true }],
+      },
+      {
+        id: "mm-4",
+        colSpan: 5,
+        rowSpan: 3,
+        frameClassName: "h-100",
+        name: { name: "GLB", href: "/g" },
+        nameDisplay: { position: "below", className: "fw-semibold mt-2" },
+        zoom: {},
+        items: [{ id: "mm-4a", url: "https://modelviewer.dev/shared-assets/models/Astronaut.glb", isPrimary: true }],
+      },
+    ],
   },
   null,
   2
 );
 
-const DEFAULT_GRID_IMAGES_JSON = JSON.stringify(
-  {
-    id: "mgGridImages",
-    name: "Grid • Images",
-    nameClass: "fw-semibold mb-2",
-
-    layout: "grid",
-    gap: 12,
-
-    className: "col-12 col-sm-6 col-lg-4 position-relative overflow-hidden rounded-4",
-    titlePosition: "overlay",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100 object-fit-cover",
-
-    items: [
-      {
-        id: "gi1",
-        type: "image",
-        url: "https://picsum.photos/seed/mggrid1/1200/800",
-        title: "ASTRO™",
-        link: "/products/astro"
-      },
-      {
-        id: "gi2",
-        type: "image",
-        url: "https://picsum.photos/seed/mggrid2/1200/800",
-        title: "PX-Guard™",
-        link: "/products/px-guard"
-      },
-      {
-        id: "gi3",
-        type: "image",
-        url: "https://picsum.photos/seed/mggrid3/1200/800",
-        title: "PX-Tilt™",
-        link: "/products/px-tilt"
-      }
-    ]
-  },
-  null,
-  2
-);
-
-const DEFAULT_GRID_MIXED_JSON = JSON.stringify(
-  {
-    id: "mgGridMixed",
-    name: "Grid • Mixed",
-    nameClass: "fw-semibold mb-2",
-
-    layout: "grid",
-    gap: 12,
-
-    className: "col-12 col-md-6 position-relative overflow-hidden rounded-4",
-    titlePosition: "top",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100",
-
-    items: [
-      {
-        id: "gm1",
-        type: "video",
-        url: "https://www.w3schools.com/html/mov_bbb.mp4",
-        title: "Operator",
-        link: "/training/operator",
-        meta: { poster: "https://picsum.photos/seed/mggridvp1/1200/800" }
-      },
-      {
-        id: "gm2",
-        type: "image",
-        url: "https://picsum.photos/seed/mggridm2/1200/800",
-        title: "Plant Layout",
-        link: "/projects/layout"
-      }
-    ]
-  },
-  null,
-  2
-);
-
-const DEFAULT_LIST_ICONS_JSON = JSON.stringify(
-  {
-    id: "mgListIcons",
-    name: "List • Icons (Side)",
-    nameClass: "fw-semibold mb-2",
-
-    layout: "list",
-    gap: 12,
-
-    className: "p-3 border rounded-4 bg-white",
-    titlePosition: "side",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100 d-flex align-items-center justify-content-center fs-2 bg-light rounded-3",
-
-    items: [
-      {
-        id: "li1",
-        type: "icon",
-        iconClass: "fa-solid fa-file-pdf",
-        title: "Spec Sheet (PDF)",
-        link: "/docs/spec"
-      },
-      {
-        id: "li2",
-        type: "icon",
-        iconClass: "fa-solid fa-video",
-        title: "Training Videos",
-        link: "/media/videos"
-      },
-      {
-        id: "li3",
-        type: "icon",
-        iconClass: "fa-solid fa-cube",
-        title: "3D Models",
-        link: "/media/3d"
-      }
-    ]
-  },
-  null,
-  2
-);
-
-const DEFAULT_LIST_MIXED_JSON = JSON.stringify(
+const JSON_LIST_MIXED = JSON.stringify(
   {
     id: "mgListMixed",
-    name: "List • Mixed (Below)",
-    nameClass: "fw-semibold mb-2",
+    name: "List • Mixed (below titles)",
+    className: "fw-semibold mb-2",
 
     layout: "list",
+    columns: 12,
+    rowHeight: 180,
     gap: 12,
-
-    className: "p-3 border rounded-4 bg-white",
-    titlePosition: "below",
-    titleClass: "badge bg-dark bg-opacity-75",
-    mediaClass: "w-100 h-100",
 
     items: [
       {
-        id: "lm1",
-        type: "image",
-        url: "https://picsum.photos/seed/mglist1/1200/800",
-        title: "Gallery Image",
-        link: "/media/images",
-        mediaClass: "w-100 h-100 object-fit-cover rounded-3"
+        id: "lm-1",
+        name: { name: "Gallery Image", href: "/media/images" },
+        nameDisplay: { position: "below", className: "fw-semibold mt-2" },
+        zoom: {},
+        items: [{ id: "lm-1a", url: "https://picsum.photos/seed/lm1/1200/800", isPrimary: true }],
       },
       {
-        id: "lm2",
-        type: "video",
-        url: "https://www.w3schools.com/html/movie.mp4",
-        title: "Walkthrough",
-        link: "/training/walkthrough",
-        meta: { poster: "https://picsum.photos/seed/mglistvp1/1200/800" },
-        mediaClass: "w-100 h-100 rounded-3"
-      }
-    ]
+        id: "lm-2",
+        name: { name: "Training Video", href: "/training" },
+        nameDisplay: { position: "below", className: "fw-semibold mt-2" },
+        zoom: {},
+        items: [{ id: "lm-2a", url: "https://www.w3schools.com/html/movie.mp4", isPrimary: true }],
+      },
+      {
+        id: "lm-3",
+        name: { name: "Spec PDF", href: "/docs/spec" },
+        nameDisplay: { position: "below", className: "fw-semibold mt-2" },
+        zoom: {},
+        items: [{ id: "lm-3a", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", isPrimary: true }],
+      },
+    ],
+  },
+  null,
+  2
+);
+
+const JSON_LIST_MEDIA_ONLY = JSON.stringify(
+  {
+    id: "mgListMediaOnly",
+    name: "List • Media only (no titles)",
+    className: "fw-semibold mb-2",
+
+    layout: "list",
+    columns: 12,
+    rowHeight: 180,
+    gap: 12,
+
+    items: [
+      { id: "lo-1", zoom: {}, items: [{ id: "lo-1a", url: "https://picsum.photos/seed/lo1/1200/800", isPrimary: true }] },
+      { id: "lo-2", zoom: {}, items: [{ id: "lo-2a", url: "https://picsum.photos/seed/lo2/1200/800", isPrimary: true }] },
+    ],
   },
   null,
   2
 );
 
 const TABS = [
-  { key: "masonry-image", label: "Masonry • Image", icon: "fa-regular fa-image", json: DEFAULT_MASONRY_IMAGE_JSON },
-  { key: "masonry-video", label: "Masonry • Video", icon: "fa-solid fa-video", json: DEFAULT_MASONRY_VIDEO_JSON },
-  { key: "masonry-glb", label: "Masonry • GLB", icon: "fa-solid fa-cube", json: DEFAULT_MASONRY_GLB_JSON },
-  { key: "masonry-icon", label: "Masonry • Icon", icon: "fa-solid fa-icons", json: DEFAULT_MASONRY_ICON_JSON },
+  { key: "bs-mixed", label: "Bootstrap • Mixed", icon: "fa-brands fa-bootstrap", json: JSON_BOOTSTRAP_MIXED },
+  { key: "bs-auto", label: "Bootstrap • Auto", icon: "fa-solid fa-arrows-rotate", json: JSON_BOOTSTRAP_AUTO },
 
-  { key: "grid-images", label: "Grid • Images", icon: "fa-solid fa-border-all", json: DEFAULT_GRID_IMAGES_JSON },
-  { key: "grid-mixed", label: "Grid • Mixed", icon: "fa-solid fa-layer-group", json: DEFAULT_GRID_MIXED_JSON },
+  { key: "grid-overlays", label: "Grid • Overlays", icon: "fa-solid fa-border-all", json: JSON_GRID_OVERLAYS },
+  { key: "grid-thumbs", label: "Grid • Thumbs", icon: "fa-solid fa-images", json: JSON_GRID_THUMBS },
 
-  { key: "list-icons", label: "List • Icons", icon: "fa-solid fa-list", json: DEFAULT_LIST_ICONS_JSON },
-  { key: "list-mixed", label: "List • Mixed", icon: "fa-solid fa-bars", json: DEFAULT_LIST_MIXED_JSON }
+  { key: "mas-collage", label: "Masonry • Collage", icon: "fa-solid fa-table-cells-large", json: JSON_MASONRY_COLLAGE },
+  { key: "mas-mixed", label: "Masonry • Mixed", icon: "fa-solid fa-layer-group", json: JSON_MASONRY_MIXED },
+
+  { key: "list-mixed", label: "List • Mixed", icon: "fa-solid fa-list", json: JSON_LIST_MIXED },
+  { key: "list-only", label: "List • Media only", icon: "fa-solid fa-bars", json: JSON_LIST_MEDIA_ONLY },
 ];
 
 export default function MediaGalleryPage() {
@@ -448,22 +462,20 @@ export default function MediaGalleryPage() {
       return new MediaGalleryObject({
         id: "mgFallback",
         name: "Invalid JSON (fallback)",
-        nameClass: "fw-semibold mb-2 text-danger",
-        layout: "grid",
+        className: "fw-semibold mb-2 text-danger",
+        layout: "bootstrap",
+        columns: 6,
+        rowHeight: 180,
         gap: 12,
-        className: "col-12 col-md-6 col-lg-4 position-relative overflow-hidden rounded-4 border",
-        titlePosition: "overlay",
-        titleClass: "badge bg-danger",
-        mediaClass: "w-100 h-100 d-flex align-items-center justify-content-center fs-1 bg-light",
         items: [
           {
-            id: "fallback1",
-            type: "icon",
-            iconClass: "fa-solid fa-triangle-exclamation",
-            title: "Fix JSON to preview",
-            link: ""
-          }
-        ]
+            id: "fb",
+            name: { name: "Fix JSON", href: "" },
+            nameDisplay: { position: "overlay-bottom-left", className: "badge bg-danger" },
+            zoom: {},
+            items: [{ id: "fb1", url: "https://picsum.photos/seed/fallback/1200/800", isPrimary: true }],
+          },
+        ],
       });
     }
   }, [activeJson, activeTab]);
@@ -480,22 +492,12 @@ export default function MediaGalleryPage() {
       const parsed = JSON.parse(activeJson);
       const pretty = JSON.stringify(parsed, null, 2);
       setJsonByTab((prev) => ({ ...prev, [activeTab]: pretty }));
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
   return (
     <div className="container py-3">
-      <h3 className="mb-3 text-center">AlloyMediaGallery Demo (8 tabs)</h3>
-
-      <div className="row mb-3">
-        <div className="col-12 d-flex align-items-center justify-content-center">
-          <pre className="bg-light text-dark border rounded-3 p-3 small mb-0">
-            <code>{`<AlloyMediaGallery mediaGallery={new MediaGalleryObject(mediaGalleryObject)} />`}</code>
-          </pre>
-        </div>
-      </div>
+      <h3 className="mb-3 text-center">AlloyMediaGallery Demo (tabs)</h3>
 
       <ul className="nav nav-tabs mb-3 flex-wrap">
         {TABS.map((t) => (
@@ -526,12 +528,7 @@ export default function MediaGalleryPage() {
               <button type="button" className="btn btn-sm btn-outline-secondary" onClick={resetJson}>
                 Reset
               </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary"
-                onClick={formatJson}
-                title="Format JSON"
-              >
+              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={formatJson}>
                 <i className="fa-solid fa-wand-magic-sparkles me-1" aria-hidden="true" />
                 Format
               </button>
@@ -550,54 +547,29 @@ export default function MediaGalleryPage() {
           />
 
           {activeError && <div className="invalid-feedback d-block mt-1">{activeError}</div>}
-
-          <div className="form-text">
-            <ul className="mb-0">
-              <li>
-                <code>layout</code>: <code>masonry</code> uses <code>colSpan/rowSpan</code> (grid spans).
-              </li>
-              <li>
-                <code>grid</code> + <code>list</code> ignore spans.
-              </li>
-              <li>
-                If <code>link</code> is present, the entire item is clickable.
-              </li>
-              <li>
-                Item types: <code>image</code>, <code>video</code>, <code>glb</code>, <code>icon</code>.
-              </li>
-            </ul>
-          </div>
         </div>
 
         <div className="col-12 col-lg-6">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="fw-semibold">Quick reference</span>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-danger"
-              onClick={() => {
-                // keep simple
-              }}
-              disabled
-            >
-              Clear
-            </button>
           </div>
 
           <textarea
             className="form-control font-monospace"
             rows={22}
             value={
-              `// AlloyMediaGallery\n` +
-              `// Layouts: masonry | grid | list\n` +
-              `// Title positions: overlay | top | below | side\n` +
-              `// Types: image | video | glb | icon\n\n` +
-              `// Key fields\n` +
-              `// - className: default item wrapper class\n` +
-              `// - mediaClass: default media element class\n` +
-              `// - titleClass: title styling (overlay/top)\n` +
-              `// - items[].itemClass / items[].mediaClass: per-item overrides\n` +
-              `// - items[].link: makes whole item clickable\n`
+              `Layouts: bootstrap | grid | masonry | list\n\n` +
+              `MediaGalleryObject:\n` +
+              `- id, name, className\n` +
+              `- layout, columns, rowHeight, gap\n` +
+              `- items: MediaObject[]\n\n` +
+              `MediaObject:\n` +
+              `- className\n` +
+              `- frameClassName (CARD ONLY, for masonry use "h-100")\n` +
+              `- colSpan, rowSpan (masonry only)\n` +
+              `- name (LinkObject-like), nameDisplay.position\n` +
+              `- thumbSize, zoom, carousel, auto\n` +
+              `- items: [{ url, thumbUrl, isPrimary }]\n`
             }
             readOnly
             spellCheck={false}

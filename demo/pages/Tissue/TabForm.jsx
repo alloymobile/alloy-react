@@ -31,15 +31,10 @@ const ALLOY_PAY_DEMO = {
   id: "alloyPayDemo",
   name: "Payment",
   className: "col-12 col-md-8 mx-auto",
-
-  // New: AlloyPay handles <Elements> internally, so pass the key here.
   publicKey:
     (STRIPE_PUBLISHABLE_KEY && STRIPE_PUBLISHABLE_KEY.trim()) || "pk_test_replace_me",
-
-  // (Optional) keep alias for backward compatibility if your PayObject supports it
   publishableKey:
     (STRIPE_PUBLISHABLE_KEY && STRIPE_PUBLISHABLE_KEY.trim()) || "pk_test_replace_me",
-
   brandIcon: { iconClass: "fa-brands fa-cc-stripe fa-2xl", className: "text-primary" },
   cardIcon: { iconClass: "fa-solid fa-credit-card", className: "text-secondary" },
   expiryIcon: { iconClass: "fa-solid fa-calendar-days", className: "text-secondary" },
@@ -134,10 +129,127 @@ const ALLOY_CARD_DEMO_2 = {
   },
 };
 
-/* -------------------------------------------------------
- * TAB FORM CONFIGS (tabs layout + mixed layout)
- * Supported types: inputs, pay, cards
- * ----------------------------------------------------- */
+const BASE_TABS = [
+  {
+    id: "tab-inputs",
+    key: "inputs",
+    type: "inputs",
+    title: "Inputs",
+    subtitle: "Enter account + company details.",
+    order: 1,
+    required: true,
+    stage: "registration",
+    status: "in_progress",
+    icon: { iconClass: "fa-regular fa-pen-to-square" },
+
+    inputClass: "col-12 col-md-8 col-lg-6 mx-auto",
+
+    inputs: [
+      {
+        name: "email",
+        type: "email",
+        label: "Email",
+        placeholder: "you@example.com",
+        layout: "floating",
+        icon: { iconClass: "fa-regular fa-envelope" },
+        required: true,
+        value: "",
+        className: "form-control",
+        colClass: "col-12",
+      },
+      {
+        name: "password",
+        type: "password",
+        label: "Password",
+        placeholder: "Create a password",
+        layout: "floating",
+        icon: { iconClass: "fa-solid fa-lock" },
+        required: true,
+        passwordStrength: true,
+        value: "",
+        className: "form-control",
+        colClass: "col-12 col-md-6",
+      },
+      {
+        name: "confirmPassword",
+        type: "password",
+        label: "Confirm password",
+        placeholder: "Re-enter password",
+        layout: "floating",
+        icon: { iconClass: "fa-solid fa-lock" },
+        required: true,
+        matchWith: "password",
+        value: "",
+        className: "form-control",
+        colClass: "col-12 col-md-6",
+      },
+      {
+        name: "companyName",
+        type: "text",
+        label: "Company name",
+        placeholder: "ACME Concrete Ltd.",
+        layout: "floating",
+        icon: { iconClass: "fa-regular fa-building" },
+        required: true,
+        value: "",
+        className: "form-control",
+        colClass: "col-12",
+      },
+      {
+        name: "country",
+        type: "text",
+        label: "Country",
+        placeholder: "Canada",
+        layout: "floating",
+        icon: { iconClass: "fa-solid fa-globe" },
+        required: true,
+        value: "",
+        className: "form-control",
+        colClass: "col-12 col-md-6",
+      },
+      {
+        name: "website",
+        type: "url",
+        label: "Website (optional)",
+        placeholder: "https://example.com",
+        layout: "floating",
+        icon: { iconClass: "fa-solid fa-link" },
+        required: false,
+        value: "",
+        className: "form-control",
+        colClass: "col-12 col-md-6",
+      },
+    ],
+  },
+
+  {
+    id: "tab-pay",
+    key: "pay",
+    type: "pay",
+    title: "Payment",
+    subtitle: "Enter payment details.",
+    order: 2,
+    required: false,
+    stage: "registration",
+    status: "not_started",
+    icon: { iconClass: "fa-solid fa-credit-card" },
+    pay: ALLOY_PAY_DEMO,
+  },
+
+  {
+    id: "tab-cards",
+    key: "cards",
+    type: "cards",
+    title: "Cards",
+    subtitle: "List of cards rendered by AlloyCard (type: cards).",
+    order: 3,
+    required: false,
+    stage: "registration",
+    status: "not_started",
+    icon: { iconClass: "fa-regular fa-clone" },
+    cards: [ALLOY_CARD_DEMO, ALLOY_CARD_DEMO_2],
+  },
+];
 
 const TAB_FORM_TABS = {
   id: "client-registration-demo",
@@ -169,127 +281,10 @@ const TAB_FORM_TABS = {
     },
   },
 
-  tabs: [
-    {
-      id: "tab-inputs",
-      key: "inputs",
-      type: "inputs",
-      title: "Inputs",
-      subtitle: "Enter account + company details.",
-      order: 1,
-      required: true,
-      stage: "registration",
-      status: "in_progress",
-      icon: { iconClass: "fa-regular fa-pen-to-square" },
-
-      className: "col-12 col-lg-6",
-
-      inputs: [
-        {
-          name: "email",
-          type: "email",
-          label: "Email",
-          placeholder: "you@example.com",
-          layout: "floating",
-          icon: { iconClass: "fa-regular fa-envelope" },
-          required: true,
-          value: "",
-          className: "form-control",
-        },
-        {
-          name: "password",
-          type: "password",
-          label: "Password",
-          placeholder: "Create a password",
-          layout: "floating",
-          icon: { iconClass: "fa-solid fa-lock" },
-          required: true,
-          passwordStrength: true,
-          value: "",
-          className: "form-control",
-        },
-        {
-          name: "confirmPassword",
-          type: "password",
-          label: "Confirm password",
-          placeholder: "Re-enter password",
-          layout: "floating",
-          icon: { iconClass: "fa-solid fa-lock" },
-          required: true,
-          matchWith: "password",
-          value: "",
-          className: "form-control",
-        },
-        {
-          name: "companyName",
-          type: "text",
-          label: "Company name",
-          placeholder: "ACME Concrete Ltd.",
-          layout: "floating",
-          icon: { iconClass: "fa-regular fa-building" },
-          required: true,
-          value: "",
-          className: "form-control",
-        },
-        {
-          name: "country",
-          type: "text",
-          label: "Country",
-          placeholder: "Canada",
-          layout: "floating",
-          icon: { iconClass: "fa-solid fa-globe" },
-          required: true,
-          value: "",
-          className: "form-control",
-        },
-        {
-          name: "website",
-          type: "url",
-          label: "Website (optional)",
-          placeholder: "https://example.com",
-          layout: "floating",
-          icon: { iconClass: "fa-solid fa-link" },
-          required: false,
-          value: "",
-          className: "form-control",
-        },
-      ],
-    },
-
-    {
-      id: "tab-pay",
-      key: "pay",
-      type: "pay",
-      title: "Payment",
-      subtitle: "Enter payment details.",
-      order: 2,
-      required: false,
-      stage: "registration",
-      status: "not_started",
-      icon: { iconClass: "fa-solid fa-credit-card" },
-
-      className: "col-12 col-lg-6",
-
-      pay: ALLOY_PAY_DEMO,
-    },
-
-    {
-      id: "tab-cards",
-      key: "cards",
-      type: "cards",
-      title: "Cards",
-      subtitle: "List of cards rendered by AlloyCard (type: cards).",
-      order: 3,
-      required: false,
-      stage: "registration",
-      status: "not_started",
-      icon: { iconClass: "fa-regular fa-clone" },
-
-      className: "col-12 col-lg-6",
-
-      cards: [ALLOY_CARD_DEMO, ALLOY_CARD_DEMO_2],
-    },
-  ],
+  tabs: BASE_TABS.map((t) => ({
+    ...t,
+    className: "col-12",
+  })),
 };
 
 const TAB_FORM_MIXED = {
@@ -298,6 +293,11 @@ const TAB_FORM_MIXED = {
   name: "Client Registration Flow (Mixed)",
   layout: "mixed",
   currentIndex: 0,
+
+  tabs: BASE_TABS.map((t) => ({
+    ...t,
+    className: "col-12 col-lg-6",
+  })),
 };
 
 const DEFAULT_TAB_FORM = JSON.stringify(TAB_FORM_TABS, null, 2);
@@ -331,17 +331,7 @@ export default function TabFormPage() {
           id: "invalid-config-tabs",
           name: "Invalid config (tabs)",
           tabs: [
-            {
-              id: "error-tab-tabs",
-              key: "error",
-              title: "Invalid JSON",
-              order: 1,
-              required: false,
-              stage: "error",
-              status: "in_progress",
-              type: "inputs",
-              inputs: [],
-            },
+            { id: "error-tab-tabs", key: "error", title: "Invalid JSON", order: 1, type: "inputs", inputs: [] },
           ],
         }),
         parseError: msg,
@@ -362,17 +352,7 @@ export default function TabFormPage() {
           name: "Invalid config (mixed)",
           layout: "mixed",
           tabs: [
-            {
-              id: "error-tab-mixed",
-              key: "error",
-              title: "Invalid JSON",
-              order: 1,
-              required: false,
-              stage: "error",
-              status: "in_progress",
-              type: "inputs",
-              inputs: [],
-            },
+            { id: "error-tab-mixed", key: "error", title: "Invalid JSON", order: 1, type: "inputs", inputs: [] },
           ],
         }),
         parseError: msg,
@@ -461,7 +441,6 @@ export default function TabFormPage() {
       </div>
 
       <div className="tab-content">
-        {/* ----------------------------- TABS LAYOUT DEMO ----------------------------- */}
         <div
           id="demo-tabs-pane"
           className={`tab-pane fade ${activeDemo === "tabs" ? "show active" : ""}`}
@@ -507,23 +486,6 @@ export default function TabFormPage() {
                 {parseErrorTabs && (
                   <div className="invalid-feedback d-block mt-1">{parseErrorTabs}</div>
                 )}
-
-                <div className="form-text">
-                  <ul className="mb-0 ps-3">
-                    <li>
-                      Tab <code>type</code>: <code>"inputs"</code>, <code>"pay"</code>,{" "}
-                      <code>"cards"</code>.
-                    </li>
-                    <li>
-                      For <code>type: "pay"</code>, provide <code>pay.publicKey</code> (Stripe
-                      publishable key).
-                    </li>
-                    <li>
-                      For <code>type: "cards"</code>, provide <code>cards: []</code> (list of
-                      card configs).
-                    </li>
-                  </ul>
-                </div>
               </div>
 
               <div className="col-12 col-lg-6">
@@ -542,7 +504,6 @@ export default function TabFormPage() {
           </div>
         </div>
 
-        {/* ----------------------------- MIXED LAYOUT DEMO ----------------------------- */}
         <div
           id="demo-mixed-pane"
           className={`tab-pane fade ${activeDemo === "mixed" ? "show active" : ""}`}
@@ -589,18 +550,6 @@ export default function TabFormPage() {
                 {parseErrorMixed && (
                   <div className="invalid-feedback d-block mt-1">{parseErrorMixed}</div>
                 )}
-
-                <div className="form-text">
-                  <ul className="mb-0 ps-3">
-                    <li>
-                      Set <code>layout</code> on the form: <code>"tabs"</code> (default) or{" "}
-                      <code>"mixed"</code>.
-                    </li>
-                    <li>
-                      Mixed layout validates all <code>type: "inputs"</code> sections on Finish.
-                    </li>
-                  </ul>
-                </div>
               </div>
 
               <div className="col-12 col-lg-6">
